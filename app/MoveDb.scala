@@ -22,13 +22,10 @@ final class MoveDb @Inject() ()(implicit system: ActorSystem, ec: ExecutionConte
     actor ? Acquire(clientKey) mapTo manifest[Option[Move]]
 
   def postResult(
-    moveId: Work.Id,
-    clientKey: ClientKey,
+    workId: Work.Id,
     data: JsonApi.Request.PostMove
   ): Future[Option[Lila.Move]] =
-    actor ? PostResult(moveId, clientKey, data) mapTo manifest[Option[Lila.Move]]
-
-  def clean = actor ? Clean mapTo manifest[Iterable[Move]]
+    actor ? PostResult(workId, data) mapTo manifest[Option[Lila.Move]]
 
   private val actor = system.actorOf(Props(new Actor {
 
@@ -51,36 +48,37 @@ final class MoveDb @Inject() ()(implicit system: ActorSystem, ec: ExecutionConte
         clearIfFull
         coll += (move.id -> move)
 
-      case Acquire(clientKey) => sender ! coll.values.foldLeft[Option[Move]](None) {
-        case (found, m) if m.nonAcquired => Some {
-          found.fold(m) { a =>
-            if (m.canAcquire(clientKey) && m.createdAt.isBefore(a.createdAt)) m else a
+      case Acquire(clientKey) =>
+        sender ! coll.values.foldLeft[Option[Move]](None) {
+          case (found, m) if m.nonAcquired => Some {
+            found.fold(m) { a =>
+              if (m.canAcquire(clientKey) && m.createdAt.isBefore(a.createdAt)) m else a
+            }
           }
+          case (found, _) => found
+        }.map { m =>
+          val move = m assignTo clientKey
+          coll += (move.id -> move)
+          move
         }
-        case (found, _) => found
-      }.map { m =>
-        val move = m assignTo clientKey
-        coll += (move.id -> move)
-        move
-      }
 
-      case PostResult(moveId, clientKey, data) =>
-        coll get moveId match {
+      case PostResult(workId, data) =>
+        coll get workId match {
           case None =>
-            monitor.notFound(moveId, clientKey)
+            monitor.notFound(workId, data.clientKey)
             sender ! None
-          case Some(move) if move isAcquiredBy clientKey => data.move.uci match {
+          case Some(move) if move isAcquiredBy data.clientKey => data.move.uci match {
             case Some(uci) =>
               sender ! Some(Lila.Move(move.game.id, uci))
               coll -= move.id
             case _ =>
               sender ! None
               updateOrGiveUp(move.invalid)
-              monitor.failure(move, clientKey, new Exception("Missing move"))
+              monitor.failure(move, data.clientKey, new Exception("Missing move"))
           }
           case Some(move) =>
             sender ! None
-            monitor.notAcquired(move, clientKey)
+            monitor.notAcquired(move, data.clientKey)
         }
     }
 
@@ -98,6 +96,14 @@ final class MoveDb @Inject() ()(implicit system: ActorSystem, ec: ExecutionConte
       }
   }))
 
+  system.scheduler.schedule(5.seconds, 3.seconds) {
+    actor ? Clean mapTo manifest[Iterable[Move]] map { moves =>
+      moves foreach { move =>
+        logger.info(s"Timeout move $move")
+      }
+    }
+  }
+
   private val logger = Logger(getClass)
   private val monitor = new Monitor(logger)
 }
@@ -107,11 +113,7 @@ object MoveDb {
   private object Clean
   private case class Add(move: Work.Move)
   private case class Acquire(clientKey: ClientKey)
-  private case class PostResult(
-      moveId: Work.Id,
-      clientKey: ClientKey,
-      data: JsonApi.Request.PostMove
-  )
+  private case class PostResult(workId: Work.Id, data: JsonApi.Request.PostMove)
 
   private final class Monitor(logger: Logger) {
 

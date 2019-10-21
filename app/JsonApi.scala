@@ -63,9 +63,6 @@ object JsonApi {
     implicit val AcquireReads = Json.reads[Request.Acquire]
     implicit val MoveResultReads = Json.reads[Request.MoveResult]
     implicit val PostMoveReads = Json.reads[Request.PostMove]
-    implicit val uciListReads = Reads.of[String] map { str =>
-      ~Uci.readList(str)
-    }
   }
 
   object writers {

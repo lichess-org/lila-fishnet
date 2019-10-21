@@ -2,29 +2,30 @@ package lila.fishnet
 
 import chess.format.{ Uci, FEN }
 import io.lettuce.core._
-import org.joda.time.DateTime
 import io.lettuce.core.pubsub._
 import javax.inject._
+import org.joda.time.DateTime
+import play.api.Configuration
 import play.api.libs.json._
 import play.api.Logger
 
 @Singleton
 final class Lila @Inject() (
-    redisUri: RedisURI,
-    moveDb: MoveDb
+    moveDb: MoveDb,
+    config: Configuration
 ) {
 
   private val logger = Logger(getClass)
-  private val redis = RedisClient create redisUri
+  private val redis = RedisClient create config.get[String]("redis.uri")
 
-  def pubsub[Out](chanIn: String, chanOut: String): Lila.Move => Unit = {
+  def pubsub(chanIn: String, chanOut: String): Lila.Move => Unit = {
 
     val connIn = redis.connectPubSub()
     val connOut = redis.connectPubSub()
 
-    def send(move: Lila.Move): Unit = connIn.async.publish("fishnet-in", move.write)
+    def send(move: Lila.Move): Unit = connIn.async.publish(chanIn, move.write)
 
-    connOut.async.subscribe("fishnet-out")
+    connOut.async.subscribe(chanOut)
 
     connOut.addListener(new RedisPubSubAdapter[String, String] {
       override def message(chan: String, msg: String): Unit =
@@ -43,13 +44,13 @@ object Lila {
   import Util.parseIntOption
 
   case class Move(gameId: String, uci: Uci) {
-    def write = s"${gameId} ${uci}"
+    def write = s"${gameId} ${uci.uci}"
   }
 
-  def readMoveReq(msg: String): Option[Work.Move] = msg.split("|", 6) match {
+  def readMoveReq(msg: String): Option[Work.Move] = msg.split(";", 6) match {
     case Array(gameId, levelS, clockS, variantS, initialFenS, moves) => for {
       level <- parseIntOption(levelS)
-      variant <- parseIntOption(variantS) flatMap chess.variant.Variant.apply
+      variant = chess.variant.Variant.orDefault(variantS)
       initialFen = if (initialFenS.isEmpty) None else Some(FEN(initialFenS))
       clock = readClock(clockS)
     } yield Work.Move(
