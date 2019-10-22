@@ -1,4 +1,4 @@
-Proxy between lila and fishnet
+Proxy between lila and fishnet move clients
 
 ```
 lila <-> redis <-> lila-fishnet <- http <- fishnet-clients

@@ -10,8 +10,6 @@ lazy val root = (project in file("."))
 
 scalaVersion := "2.13.1"
 
-val akkaVersion = "2.5.25"
-
 libraryDependencies += guice
 libraryDependencies += "org.reactivemongo" %% "reactivemongo" % "0.18.7"
 libraryDependencies += "io.lettuce" % "lettuce-core" % "5.2.0.RELEASE"
