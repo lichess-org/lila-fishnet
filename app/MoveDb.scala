@@ -69,7 +69,7 @@ final class MoveDb @Inject() ()(implicit system: ActorSystem, ec: ExecutionConte
             sender ! None
           case Some(move) if move isAcquiredBy data.clientKey => data.move.uci match {
             case Some(uci) =>
-              sender ! Some(Lila.Move(move.game.id, uci))
+              sender ! Some(Lila.Move(move.game.id, move.game.ply, uci))
               coll -= move.id
             case _ =>
               sender ! None
