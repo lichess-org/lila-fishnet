@@ -1,7 +1,7 @@
 #!/bin/sh
 
 REMOTE=$1
-REMOTE_DIR="/home/lila-ws"
+REMOTE_DIR="/home/lila-fishnet"
 
 echo "Deploy to server $REMOTE:$REMOTE_DIR"
 
@@ -33,8 +33,8 @@ echo "rsync complete"
 
 read -n 1 -p "Press [Enter] to continue."
 
-echo "Restart lila-ws"
-ssh $REMOTE "systemctl restart lila-ws"
+echo "Restart lila-fishnet"
+ssh $REMOTE "systemctl restart lila-fishnet"
 
 echo "Deploy complete"
 
