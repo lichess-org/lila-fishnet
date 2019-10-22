@@ -96,7 +96,7 @@ final class MoveDb @Inject() ()(implicit system: ActorSystem, ec: ExecutionConte
       }
   }))
 
-  system.scheduler.schedule(5.seconds, 3.seconds) {
+  system.scheduler.scheduleWithFixedDelay(5.seconds, 3.seconds) { () =>
     actor ? Clean mapTo manifest[Iterable[Move]] map { moves =>
       moves foreach { move =>
         logger.info(s"Timeout move $move")
