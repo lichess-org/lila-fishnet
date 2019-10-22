@@ -35,6 +35,8 @@ final class Lila @Inject() (
         }
     })
 
+    connIn.async.publish(chanIn, "start")
+
     send
   }
 }
