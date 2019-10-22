@@ -17,6 +17,8 @@ class FishnetController @Inject() (
     val controllerComponents: ControllerComponents
 )(implicit ec: ExecutionContext) extends BaseController {
 
+  kamon.Kamon.init()
+
   import JsonApi.readers._
   import JsonApi.writers._
 

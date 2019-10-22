@@ -2,7 +2,9 @@ package lila.fishnet
 
 import akka.actor._
 import akka.pattern.ask
+import java.util.concurrent.TimeUnit
 import javax.inject._
+import kamon.Kamon
 import org.joda.time.DateTime
 import play.api.Logger
 import scala.concurrent.duration._
@@ -16,16 +18,21 @@ final class MoveDb @Inject() ()(implicit system: ActorSystem, ec: ExecutionConte
 
   private implicit val timeout = new akka.util.Timeout(2.seconds)
 
-  def add(move: Move) = actor ! Add(move)
+  def add(move: Move) = {
+    monitor.moveRequest.increment()
+    actor ! Add(move)
+  }
 
-  def acquire(clientKey: ClientKey): Future[Option[Move]] =
+  def acquire(clientKey: ClientKey): Future[Option[Move]] = {
     actor ? Acquire(clientKey) mapTo manifest[Option[Move]]
+  }
 
   def postResult(
     workId: Work.Id,
     data: JsonApi.Request.PostMove
-  ): Future[Option[Lila.Move]] =
+  ): Future[Option[Lila.Move]] = {
     actor ? PostResult(workId, data) mapTo manifest[Option[Lila.Move]]
+  }
 
   private val actor = system.actorOf(Props(new Actor {
 
@@ -36,13 +43,6 @@ final class MoveDb @Inject() ()(implicit system: ActorSystem, ec: ExecutionConte
     def receive = {
 
       case Add(move) if !coll.exists(_._2 similar move) => coll += (move.id -> move)
-
-      case Clean =>
-        val since = DateTime.now minusSeconds 3
-        val timedOut = coll.values.filter(_ acquiredBefore since)
-        if (timedOut.nonEmpty) logger.debug(s"cleaning ${timedOut.size} of ${coll.size} moves")
-        timedOut.foreach { m => updateOrGiveUp(m.timeout) }
-        sender ! timedOut
 
       case Add(move) =>
         clearIfFull
@@ -80,6 +80,18 @@ final class MoveDb @Inject() ()(implicit system: ActorSystem, ec: ExecutionConte
             sender ! None
             monitor.notAcquired(move, data.clientKey)
         }
+
+      case Clean =>
+        val since = DateTime.now minusSeconds 3
+        val timedOut = coll.values.filter(_ acquiredBefore since)
+        if (timedOut.nonEmpty) logger.debug(s"cleaning ${timedOut.size} of ${coll.size} moves")
+        timedOut.foreach { m =>
+          logger.info(s"Timeout move $m")
+          updateOrGiveUp(m.timeout)
+        }
+        monitor.dbSize.update(coll.size)
+        monitor.dbQueued.update(coll.count(_._2.nonAcquired))
+        monitor.dbAcquired.update(coll.count(_._2.isAcquired))
     }
 
     def updateOrGiveUp(move: Move) =
@@ -110,12 +122,28 @@ final class MoveDb @Inject() ()(implicit system: ActorSystem, ec: ExecutionConte
 
 object MoveDb {
 
-  private object Clean
   private case class Add(move: Work.Move)
   private case class Acquire(clientKey: ClientKey)
   private case class PostResult(workId: Work.Id, data: JsonApi.Request.PostMove)
+  private object Clean
 
   private final class Monitor(logger: Logger) {
+
+    val moveRequest = Kamon.counter("move.request").withoutTags
+    val dbSize = Kamon.gauge("db.size").withoutTags
+    val dbQueued = Kamon.gauge("db.queued").withoutTags
+    val dbAcquired = Kamon.gauge("db.acquired").withoutTags
+    val lvl8AcquiredTimeRequest = Kamon.timer("move.acquired.lvl8").withoutTags
+    val lvl1FullTimeRequest = Kamon.timer("move.acquired.lvl8").withoutTags
+
+    def success(work: Work.Move) = {
+      val now = Util.nowMillis
+      if (work.level == 8) work.acquiredAt foreach { acquiredAt =>
+        lvl8AcquiredTimeRequest.record(now - acquiredAt.getMillis, TimeUnit.MILLISECONDS)
+      }
+      if (work.level == 1)
+        lvl1FullTimeRequest.record(now - work.createdAt.getMillis, TimeUnit.MILLISECONDS)
+    }
 
     def failure(work: Work, clientKey: ClientKey, e: Exception) = {
       logger.warn(s"Received invalid move ${work.id} for ${work.game.id} by $clientKey", e)
