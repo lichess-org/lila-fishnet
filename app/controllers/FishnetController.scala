@@ -17,7 +17,10 @@ class FishnetController @Inject() (
     val controllerComponents: ControllerComponents
 )(implicit ec: ExecutionContext) extends BaseController {
 
-  kamon.Kamon.init()
+  if (config.get[String]("kamon.influxdb.hostname").nonEmpty) {
+    play.api.Logger(getClass).info("Kamon is enabled")
+    kamon.Kamon.loadModules()
+  }
 
   import JsonApi.readers._
   import JsonApi.writers._
