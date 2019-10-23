@@ -71,6 +71,7 @@ final class MoveDb @Inject() ()(implicit system: ActorSystem, ec: ExecutionConte
             case Some(uci) =>
               sender ! Some(Lila.Move(move.game.id, move.game.ply, uci))
               coll -= move.id
+              monitor.success(move)
             case _ =>
               sender ! None
               updateOrGiveUp(move.invalid)
