@@ -134,7 +134,7 @@ object MoveDb {
     val dbQueued = Kamon.gauge("db.queued").withoutTags
     val dbAcquired = Kamon.gauge("db.acquired").withoutTags
     val lvl8AcquiredTimeRequest = Kamon.timer("move.acquired.lvl8").withoutTags
-    val lvl1FullTimeRequest = Kamon.timer("move.acquired.lvl8").withoutTags
+    val lvl1FullTimeRequest = Kamon.timer("move.full.lvl1").withoutTags
 
     def success(work: Work.Move) = {
       val now = Util.nowMillis
