@@ -17,10 +17,16 @@ class FishnetController @Inject() (
     val controllerComponents: ControllerComponents
 )(implicit ec: ExecutionContext) extends BaseController {
 
-  if (config.get[String]("kamon.influxdb.hostname").nonEmpty) {
-    play.api.Logger(getClass).info("Kamon is enabled")
-    kamon.Kamon.loadModules()
-  }
+  val logger = play.api.Logger(getClass)
+
+  val version = System.getProperty("java.version")
+  val memory = Runtime.getRuntime().maxMemory() / 1024 / 1024
+  val useKamon = config.get[String]("kamon.influxdb.hostname").nonEmpty
+
+  logger.info(s"lila-fishnet netty kamon=$useKamon")
+  logger.info(s"Java version: $version, memory: ${memory}MB")
+
+  if (useKamon) kamon.Kamon.loadModules()
 
   import JsonApi.readers._
   import JsonApi.writers._
