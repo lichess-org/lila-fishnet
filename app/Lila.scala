@@ -25,8 +25,6 @@ final class Lila @Inject() (
 
     def send(move: Lila.Move): Unit = connIn.async.publish(chanIn, move.write)
 
-    connOut.async.subscribe(chanOut)
-
     connOut.addListener(new RedisPubSubAdapter[String, String] {
       override def message(chan: String, msg: String): Unit =
         Lila.readMoveReq(msg) match {
@@ -35,7 +33,9 @@ final class Lila @Inject() (
         }
     })
 
-    connIn.async.publish(chanIn, "start")
+    connOut.async.subscribe(chanOut) thenRun { () =>
+      connIn.async.publish(chanIn, "start")
+    }
 
     send
   }
