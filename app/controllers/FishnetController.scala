@@ -5,7 +5,7 @@ import play.api.Configuration
 import play.api.http.HeaderNames
 import play.api.libs.json._
 import play.api.mvc._
-import scala.concurrent.{ Future, ExecutionContext }
+import scala.concurrent.{ ExecutionContext, Future }
 
 import lila.fishnet._
 
@@ -15,12 +15,13 @@ class FishnetController @Inject() (
     lila: Lila,
     moveDb: MoveDb,
     val controllerComponents: ControllerComponents
-)(implicit ec: ExecutionContext) extends BaseController {
+)(implicit ec: ExecutionContext)
+    extends BaseController {
 
   val logger = play.api.Logger(getClass)
 
-  val version = System.getProperty("java.version")
-  val memory = Runtime.getRuntime().maxMemory() / 1024 / 1024
+  val version  = System.getProperty("java.version")
+  val memory   = Runtime.getRuntime().maxMemory() / 1024 / 1024
   val useKamon = config.get[String]("kamon.influxdb.hostname").nonEmpty
 
   logger.info(s"lila-fishnet netty kamon=$useKamon")
@@ -47,14 +48,19 @@ class FishnetController @Inject() (
   private def doAcquire(req: JsonApi.Request): Future[Option[JsonApi.Work]] =
     moveDb.acquire(req.clientKey) map { _ map JsonApi.moveFromWork }
 
-  private def ClientAction[A <: JsonApi.Request](f: A => Future[Option[JsonApi.Work]])(implicit reads: Reads[A]) =
+  private def ClientAction[A <: JsonApi.Request](
+      f: A => Future[Option[JsonApi.Work]]
+  )(implicit reads: Reads[A]) =
     Action.async(parse.tolerantJson) { req =>
-      req.body.validate[A].fold(
-        err => Future successful BadRequest(JsError toJson err),
-        data => f(data).map {
-          case Some(work) => Accepted(Json toJson work)
-          case None => NoContent
-        }
-      )
+      req.body
+        .validate[A]
+        .fold(
+          err => Future successful BadRequest(JsError toJson err),
+          data =>
+            f(data).map {
+              case Some(work) => Accepted(Json toJson work)
+              case None       => NoContent
+            }
+        )
     }
 }

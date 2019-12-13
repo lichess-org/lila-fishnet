@@ -16,7 +16,7 @@ final class MoveDb @Inject() ()(implicit system: ActorSystem, ec: ExecutionConte
   import MoveDb._
   import Work.Move
 
-  private implicit val timeout = new akka.util.Timeout(2.seconds)
+  implicit private val timeout = new akka.util.Timeout(2.seconds)
 
   def add(move: Move) = {
     monitor.moveRequest.increment()
@@ -28,8 +28,8 @@ final class MoveDb @Inject() ()(implicit system: ActorSystem, ec: ExecutionConte
   }
 
   def postResult(
-    workId: Work.Id,
-    data: JsonApi.Request.PostMove
+      workId: Work.Id,
+      data: JsonApi.Request.PostMove
   ): Future[Option[Lila.Move]] = {
     actor ? PostResult(workId, data) mapTo manifest[Option[Lila.Move]]
   }
@@ -49,41 +49,45 @@ final class MoveDb @Inject() ()(implicit system: ActorSystem, ec: ExecutionConte
         coll += (move.id -> move)
 
       case Acquire(clientKey) =>
-        sender ! coll.values.foldLeft[Option[Move]](None) {
-          case (found, m) if m.nonAcquired => Some {
-            found.fold(m) { a =>
-              if (m.canAcquire(clientKey) && m.createdAt.isBefore(a.createdAt)) m else a
-            }
+        sender ! coll.values
+          .foldLeft[Option[Move]](None) {
+            case (found, m) if m.nonAcquired =>
+              Some {
+                found.fold(m) { a =>
+                  if (m.canAcquire(clientKey) && m.createdAt.isBefore(a.createdAt)) m else a
+                }
+              }
+            case (found, _) => found
           }
-          case (found, _) => found
-        }.map { m =>
-          val move = m assignTo clientKey
-          coll += (move.id -> move)
-          move
-        }
+          .map { m =>
+            val move = m assignTo clientKey
+            coll += (move.id -> move)
+            move
+          }
 
       case PostResult(workId, data) =>
         coll get workId match {
           case None =>
             monitor.notFound(workId, data.clientKey)
             sender ! None
-          case Some(move) if move isAcquiredBy data.clientKey => data.move.uci match {
-            case Some(uci) =>
-              sender ! Some(Lila.Move(move.game.id, move.game.ply, uci))
-              coll -= move.id
-              monitor.success(move)
-            case _ =>
-              sender ! None
-              updateOrGiveUp(move.invalid)
-              monitor.failure(move, data.clientKey, new Exception("Missing move"))
-          }
+          case Some(move) if move isAcquiredBy data.clientKey =>
+            data.move.uci match {
+              case Some(uci) =>
+                sender ! Some(Lila.Move(move.game.id, move.game.ply, uci))
+                coll -= move.id
+                monitor.success(move)
+              case _ =>
+                sender ! None
+                updateOrGiveUp(move.invalid)
+                monitor.failure(move, data.clientKey, new Exception("Missing move"))
+            }
           case Some(move) =>
             sender ! None
             monitor.notAcquired(move, data.clientKey)
         }
 
       case Clean =>
-        val since = DateTime.now minusSeconds 3
+        val since    = DateTime.now minusSeconds 3
         val timedOut = coll.values.filter(_ acquiredBefore since)
         if (timedOut.nonEmpty) logger.debug(s"cleaning ${timedOut.size} of ${coll.size} moves")
         timedOut.foreach { m =>
@@ -99,8 +103,7 @@ final class MoveDb @Inject() ()(implicit system: ActorSystem, ec: ExecutionConte
       if (move.isOutOfTries) {
         logger.warn(s"Give up on move $move")
         coll -= move.id
-      }
-      else coll += (move.id -> move)
+      } else coll += (move.id -> move)
 
     def clearIfFull =
       if (coll.size > maxSize) {
@@ -117,7 +120,7 @@ final class MoveDb @Inject() ()(implicit system: ActorSystem, ec: ExecutionConte
     }
   }
 
-  private val logger = Logger(getClass)
+  private val logger  = Logger(getClass)
   private val monitor = new Monitor(logger)
 }
 
@@ -128,14 +131,14 @@ object MoveDb {
   private case class PostResult(workId: Work.Id, data: JsonApi.Request.PostMove)
   private object Clean
 
-  private final class Monitor(logger: Logger) {
+  final private class Monitor(logger: Logger) {
 
-    val moveRequest = Kamon.counter("move.request").withoutTags
-    val dbSize = Kamon.gauge("db.size").withoutTags
-    val dbQueued = Kamon.gauge("db.queued").withoutTags
-    val dbAcquired = Kamon.gauge("db.acquired").withoutTags
+    val moveRequest             = Kamon.counter("move.request").withoutTags
+    val dbSize                  = Kamon.gauge("db.size").withoutTags
+    val dbQueued                = Kamon.gauge("db.queued").withoutTags
+    val dbAcquired              = Kamon.gauge("db.acquired").withoutTags
     val lvl8AcquiredTimeRequest = Kamon.timer("move.acquired.lvl8").withoutTags
-    val lvl1FullTimeRequest = Kamon.timer("move.full.lvl1").withoutTags
+    val lvl1FullTimeRequest     = Kamon.timer("move.full.lvl1").withoutTags
 
     def success(work: Work.Move) = {
       val now = Util.nowMillis
@@ -155,7 +158,9 @@ object MoveDb {
     }
 
     def notAcquired(work: Work, clientKey: ClientKey) = {
-      logger.info(s"Received unacquired move ${work.id} for ${work.game.id} by $clientKey. Work current tries: ${work.tries} acquired: ${work.acquired}")
+      logger.info(
+        s"Received unacquired move ${work.id} for ${work.game.id} by $clientKey. Work current tries: ${work.tries} acquired: ${work.acquired}"
+      )
     }
   }
 }

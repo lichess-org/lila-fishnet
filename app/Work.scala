@@ -2,7 +2,7 @@ package lila.fishnet
 
 import org.joda.time.DateTime
 
-import chess.format.{ Uci, FEN }
+import chess.format.{ FEN, Uci }
 import chess.variant.Variant
 
 sealed trait Work {
@@ -15,12 +15,12 @@ sealed trait Work {
 
   def id = _id
 
-  def acquiredAt = acquired.map(_.date)
-  def acquiredByKey = acquired.map(_.clientKey)
+  def acquiredAt                         = acquired.map(_.date)
+  def acquiredByKey                      = acquired.map(_.clientKey)
   def isAcquiredBy(clientKey: ClientKey) = acquiredByKey contains clientKey
-  def isAcquired = acquired.isDefined
-  def nonAcquired = !isAcquired
-  def canAcquire(clientKey: ClientKey) = lastTryByKey.fold(true)(clientKey.!=)
+  def isAcquired                         = acquired.isDefined
+  def nonAcquired                        = !isAcquired
+  def canAcquire(clientKey: ClientKey)   = lastTryByKey.fold(true)(clientKey.!=)
 
   def acquiredBefore(date: DateTime) = acquiredAt.fold(false)(_ isBefore date)
 }
@@ -62,10 +62,12 @@ object Work {
   ) extends Work {
 
     def assignTo(clientKey: ClientKey) = copy(
-      acquired = Some(Acquired(
-        clientKey = clientKey,
-        date = DateTime.now
-      )),
+      acquired = Some(
+        Acquired(
+          clientKey = clientKey,
+          date = DateTime.now
+        )
+      ),
       lastTryByKey = Some(clientKey),
       tries = tries + 1
     )
@@ -77,7 +79,8 @@ object Work {
 
     def similar(to: Move) = game.id == to.game.id && game.moves == to.game.moves
 
-    override def toString = s"id:$id game:${game.id} variant:${game.variant.key} level:$level tries:$tries created:$createdAt acquired:$acquired"
+    override def toString =
+      s"id:$id game:${game.id} variant:${game.variant.key} level:$level tries:$tries created:$createdAt acquired:$acquired"
   }
 
   def makeId = Id(scala.util.Random.alphanumeric.take(8).mkString)
