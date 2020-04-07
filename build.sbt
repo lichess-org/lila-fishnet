@@ -19,7 +19,7 @@ libraryDependencies += "joda-time"   % "joda-time"                    % "2.10.5"
 libraryDependencies += "org.lichess" %% "scalachess"                  % "9.0.27"
 libraryDependencies += "io.kamon"    %% "kamon-core"                  % kamonVersion
 libraryDependencies += "io.kamon"    %% "kamon-influxdb"              % "2.1.0"
-libraryDependencies += "io.kamon"    %% "kamon-system-metrics"        % "2.0.2"
+libraryDependencies += "io.kamon"    %% "kamon-system-metrics"        % "2.1.0"
 
 resolvers += "lila-maven" at "https://raw.githubusercontent.com/ornicar/lila-maven/master"
 
