@@ -13,13 +13,13 @@ scalaVersion := "2.13.1"
 val kamonVersion = "2.0.4"
 
 libraryDependencies += guice
-libraryDependencies += "io.lettuce"  % "lettuce-core"                 % "5.3.0.RELEASE"
-libraryDependencies += "io.netty"    % "netty-transport-native-epoll" % "4.1.49.Final" classifier "linux-x86_64"
-libraryDependencies += "joda-time"   % "joda-time"                    % "2.10.6"
-libraryDependencies += "org.lichess" %% "scalachess"                  % "9.0.27"
-libraryDependencies += "io.kamon"    %% "kamon-core"                  % kamonVersion
-libraryDependencies += "io.kamon"    %% "kamon-influxdb"              % "2.1.0"
-libraryDependencies += "io.kamon"    %% "kamon-system-metrics"        % "2.1.0"
+libraryDependencies += "io.lettuce"   % "lettuce-core"                 % "5.3.0.RELEASE"
+libraryDependencies += "io.netty"     % "netty-transport-native-epoll" % "4.1.49.Final" classifier "linux-x86_64"
+libraryDependencies += "joda-time"    % "joda-time"                    % "2.10.6"
+libraryDependencies += "org.lichess" %% "scalachess"                   % "9.0.27"
+libraryDependencies += "io.kamon"    %% "kamon-core"                   % kamonVersion
+libraryDependencies += "io.kamon"    %% "kamon-influxdb"               % "2.1.0"
+libraryDependencies += "io.kamon"    %% "kamon-system-metrics"         % "2.1.0"
 
 resolvers += "lila-maven" at "https://raw.githubusercontent.com/ornicar/lila-maven/master"
 

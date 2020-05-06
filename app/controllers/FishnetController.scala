@@ -34,16 +34,15 @@ class FishnetController @Inject() (
 
   val sendMove = lila.pubsub("fishnet-in", "fishnet-out")
 
-  def acquire = ClientAction[JsonApi.Request.Acquire] { req =>
-    doAcquire(req)
-  }
+  def acquire = ClientAction[JsonApi.Request.Acquire](doAcquire)
 
-  def move(workId: String) = ClientAction[JsonApi.Request.PostMove] { data =>
-    moveDb.postResult(Work.Id(workId), data) flatMap { move =>
-      move foreach sendMove
-      doAcquire(data)
+  def move(workId: String) =
+    ClientAction[JsonApi.Request.PostMove] { data =>
+      moveDb.postResult(Work.Id(workId), data) flatMap { move =>
+        move foreach sendMove
+        doAcquire(data)
+      }
     }
-  }
 
   private def doAcquire(req: JsonApi.Request): Future[Option[JsonApi.Work]] =
     moveDb.acquire(req.clientKey) map { _ map JsonApi.moveFromWork }
