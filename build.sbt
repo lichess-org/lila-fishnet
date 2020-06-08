@@ -13,7 +13,7 @@ scalaVersion := "2.13.2"
 val kamonVersion = "2.1.0"
 
 libraryDependencies += guice
-libraryDependencies += "io.lettuce"   % "lettuce-core"                 % "5.3.0.RELEASE"
+libraryDependencies += "io.lettuce"   % "lettuce-core"                 % "5.3.1.RELEASE"
 libraryDependencies += "io.netty"     % "netty-transport-native-epoll" % "4.1.50.Final" classifier "linux-x86_64"
 libraryDependencies += "joda-time"    % "joda-time"                    % "2.10.6"
 libraryDependencies += "org.lichess" %% "scalachess"                   % "9.2.1"
