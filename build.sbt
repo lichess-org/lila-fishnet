@@ -10,7 +10,7 @@ lazy val root = (project in file("."))
 
 scalaVersion := "2.13.2"
 
-val kamonVersion = "2.1.0"
+val kamonVersion = "2.1.1"
 
 libraryDependencies += guice
 libraryDependencies += "io.lettuce"   % "lettuce-core"                 % "5.3.0.RELEASE"
