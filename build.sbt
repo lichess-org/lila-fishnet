@@ -14,7 +14,7 @@ val kamonVersion = "2.1.3"
 
 libraryDependencies += guice
 libraryDependencies += "io.lettuce"   % "lettuce-core"                 % "5.3.1.RELEASE"
-libraryDependencies += "io.netty"     % "netty-transport-native-epoll" % "4.1.50.Final" classifier "linux-x86_64"
+libraryDependencies += "io.netty"     % "netty-transport-native-epoll" % "4.1.51.Final" classifier "linux-x86_64"
 libraryDependencies += "joda-time"    % "joda-time"                    % "2.10.6"
 libraryDependencies += "org.lichess" %% "scalachess"                   % "9.2.1"
 libraryDependencies += "io.kamon"    %% "kamon-core"                   % kamonVersion
