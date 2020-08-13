@@ -45,11 +45,11 @@ final class MoveDb @Inject() ()(implicit system: ActorSystem, ec: ExecutionConte
       case Add(move) if !coll.exists(_._2 similar move) => coll += (move.id -> move)
 
       case Add(move) =>
-        clearIfFull
+        clearIfFull()
         coll += (move.id -> move)
 
       case Acquire(clientKey) =>
-        sender ! coll.values
+        sender() ! coll.values
           .foldLeft[Option[Move]](None) {
             case (found, m) if m.nonAcquired =>
               Some {
@@ -69,20 +69,20 @@ final class MoveDb @Inject() ()(implicit system: ActorSystem, ec: ExecutionConte
         coll get workId match {
           case None =>
             monitor.notFound(workId, data.clientKey)
-            sender ! None
+            sender() ! None
           case Some(move) if move isAcquiredBy data.clientKey =>
             data.move.uci match {
               case Some(uci) =>
-                sender ! Some(Lila.Move(move.game.id, move.game.ply, uci))
+                sender() ! Some(Lila.Move(move.game.id, move.game.ply, uci))
                 coll -= move.id
                 monitor.success(move)
               case _ =>
-                sender ! None
+                sender() ! None
                 updateOrGiveUp(move.invalid)
                 monitor.failure(move, data.clientKey, new Exception("Missing move"))
             }
           case Some(move) =>
-            sender ! None
+            sender() ! None
             monitor.notAcquired(move, data.clientKey)
         }
 
@@ -94,9 +94,9 @@ final class MoveDb @Inject() ()(implicit system: ActorSystem, ec: ExecutionConte
           logger.info(s"Timeout move $m")
           updateOrGiveUp(m.timeout)
         }
-        monitor.dbSize.update(coll.size)
-        monitor.dbQueued.update(coll.count(_._2.nonAcquired))
-        monitor.dbAcquired.update(coll.count(_._2.isAcquired))
+        monitor.dbSize.update(coll.size.toDouble)
+        monitor.dbQueued.update(coll.count(_._2.nonAcquired).toDouble)
+        monitor.dbAcquired.update(coll.count(_._2.isAcquired).toDouble)
     }
 
     def updateOrGiveUp(move: Move) =
@@ -105,7 +105,7 @@ final class MoveDb @Inject() ()(implicit system: ActorSystem, ec: ExecutionConte
         coll -= move.id
       } else coll += (move.id -> move)
 
-    def clearIfFull =
+    def clearIfFull() =
       if (coll.size > maxSize) {
         logger.warn(s"MoveDB collection is full! maxSize=$maxSize. Dropping all now!")
         coll.clear()
@@ -131,12 +131,12 @@ object MoveDb {
 
   final private class Monitor(logger: Logger) {
 
-    val moveRequest             = Kamon.counter("move.request").withoutTags
-    val dbSize                  = Kamon.gauge("db.size").withoutTags
-    val dbQueued                = Kamon.gauge("db.queued").withoutTags
-    val dbAcquired              = Kamon.gauge("db.acquired").withoutTags
-    val lvl8AcquiredTimeRequest = Kamon.timer("move.acquired.lvl8").withoutTags
-    val lvl1FullTimeRequest     = Kamon.timer("move.full.lvl1").withoutTags
+    val moveRequest             = Kamon.counter("move.request").withoutTags()
+    val dbSize                  = Kamon.gauge("db.size").withoutTags()
+    val dbQueued                = Kamon.gauge("db.queued").withoutTags()
+    val dbAcquired              = Kamon.gauge("db.acquired").withoutTags()
+    val lvl8AcquiredTimeRequest = Kamon.timer("move.acquired.lvl8").withoutTags()
+    val lvl1FullTimeRequest     = Kamon.timer("move.full.lvl1").withoutTags()
 
     def success(work: Work.Move) = {
       val now = Util.nowMillis

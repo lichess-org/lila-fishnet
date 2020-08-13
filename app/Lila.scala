@@ -6,7 +6,6 @@ import io.lettuce.core.pubsub._
 import javax.inject._
 import org.joda.time.DateTime
 import play.api.Configuration
-import play.api.libs.json._
 import play.api.Logger
 
 @Singleton

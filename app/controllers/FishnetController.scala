@@ -2,7 +2,6 @@ package controllers
 
 import javax.inject._
 import play.api.Configuration
-import play.api.http.HeaderNames
 import play.api.libs.json._
 import play.api.mvc._
 import scala.concurrent.{ ExecutionContext, Future }
