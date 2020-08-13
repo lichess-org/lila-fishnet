@@ -4,9 +4,9 @@ version := "2.0"
 
 maintainer := "lichess.org"
 
-lazy val root = (project in file("."))
+lazy val root = Project("lila-fishnet", file("."))
   .enablePlugins(PlayScala, PlayNettyServer)
-  .disablePlugins(PlayAkkaHttpServer)
+  .disablePlugins(PlayFilters, PlayAkkaHttpServer)
 
 scalaVersion := "2.13.3"
 
@@ -24,8 +24,6 @@ libraryDependencies += "io.kamon"    %% "kamon-system-metrics"         % kamonVe
 resolvers += "lila-maven" at "https://raw.githubusercontent.com/ornicar/lila-maven/master"
 
 scalacOptions ++= Seq(
-    "-encoding",
-    "utf-8",
     "-explaintypes",
     "-feature",
     "-language:higherKinds",
@@ -33,7 +31,7 @@ scalacOptions ++= Seq(
     "-language:postfixOps",
     "-Ymacro-annotations",
     // Warnings as errors!
-    "-Xfatal-warnings",
+    // "-Xfatal-warnings",
     // Linting options
     "-unchecked",
     "-Xcheckinit",
