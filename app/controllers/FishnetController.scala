@@ -1,6 +1,5 @@
 package controllers
 
-import javax.inject._
 import play.api.Configuration
 import play.api.libs.json._
 import play.api.mvc._
@@ -8,8 +7,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 import lila.fishnet._
 
-@Singleton
-class FishnetController @Inject() (
+class FishnetController(
     config: Configuration,
     lila: Lila,
     moveDb: MoveDb,

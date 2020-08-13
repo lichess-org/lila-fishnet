@@ -3,15 +3,13 @@ package lila.fishnet
 import akka.actor._
 import akka.pattern.ask
 import java.util.concurrent.TimeUnit
-import javax.inject._
 import kamon.Kamon
 import org.joda.time.DateTime
 import play.api.Logger
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 
-@Singleton
-final class MoveDb @Inject() ()(implicit system: ActorSystem, ec: ExecutionContext) {
+final class MoveDb(implicit system: ActorSystem, ec: ExecutionContext) {
 
   import MoveDb._
   import Work.Move

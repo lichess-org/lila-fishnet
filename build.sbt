@@ -9,10 +9,10 @@ lazy val root = Project("lila-fishnet", file("."))
   .disablePlugins(PlayFilters, PlayAkkaHttpServer)
 
 scalaVersion := "2.13.3"
+resourceDirectory in Compile := baseDirectory.value / "conf"
 
 val kamonVersion = "2.1.4"
 
-libraryDependencies += guice
 libraryDependencies += "io.lettuce"   % "lettuce-core"                 % "5.3.3.RELEASE"
 libraryDependencies += "io.netty"     % "netty-transport-native-epoll" % "4.1.51.Final" classifier "linux-x86_64"
 libraryDependencies += "joda-time"    % "joda-time"                    % "2.10.6"
