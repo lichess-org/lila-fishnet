@@ -14,7 +14,7 @@ resourceDirectory in Compile := baseDirectory.value / "conf"
 val kamonVersion = "2.1.8"
 
 libraryDependencies += "io.lettuce"   % "lettuce-core"                 % "5.3.5.RELEASE"
-libraryDependencies += "io.netty"     % "netty-transport-native-epoll" % "4.1.53.Final" classifier "linux-x86_64"
+libraryDependencies += "io.netty"     % "netty-transport-native-epoll" % "4.1.54.Final" classifier "linux-x86_64"
 libraryDependencies += "joda-time"    % "joda-time"                    % "2.10.8"
 libraryDependencies += "org.lichess" %% "scalachess"                   % "10.0.1"
 libraryDependencies += "io.kamon"    %% "kamon-core"                   % kamonVersion
