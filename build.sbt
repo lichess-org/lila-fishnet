@@ -61,6 +61,8 @@ scalacOptions ++= Seq(
     /* "-Wvalue-discard" */
 )
 
+javaOptions ++= Seq("-Xms64m", "-Xmx128m")
+
 sources in (Compile, doc) := Seq.empty
 
 publishArtifact in (Compile, packageDoc) := false
