@@ -34,7 +34,7 @@ echo "rsync complete"
 read -n 1 -p "Press [Enter] to continue."
 
 echo "Restart lila-fishnet"
-ssh $REMOTE "systemctl restart lila-fishnet"
+ssh $REMOTE "chown -R lila-fishnet:lila-fishnet /home/lila-fishnet && systemctl restart lila-fishnet"
 
 echo "Deploy complete"
 
