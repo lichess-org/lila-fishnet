@@ -8,15 +8,15 @@ lazy val root = Project("lila-fishnet", file("."))
   .enablePlugins(PlayScala, PlayNettyServer)
   .disablePlugins(PlayAkkaHttpServer)
 
-scalaVersion := "2.13.3"
+scalaVersion := "2.13.4"
 resourceDirectory in Compile := baseDirectory.value / "conf"
 
 val kamonVersion = "2.1.9"
 
 libraryDependencies += "io.lettuce"   % "lettuce-core"                 % "5.3.5.RELEASE"
-libraryDependencies += "io.netty"     % "netty-transport-native-epoll" % "4.1.54.Final" classifier "linux-x86_64"
-libraryDependencies += "joda-time"    % "joda-time"                    % "2.10.8"
-libraryDependencies += "org.lichess" %% "scalachess"                   % "10.1.1"
+libraryDependencies += "io.netty"     % "netty-transport-native-epoll" % "4.1.56.Final" classifier "linux-x86_64"
+libraryDependencies += "joda-time"    % "joda-time"                    % "2.10.9"
+libraryDependencies += "org.lichess" %% "scalachess"                   % "10.1.6"
 libraryDependencies += "io.kamon"    %% "kamon-core"                   % kamonVersion
 libraryDependencies += "io.kamon"    %% "kamon-influxdb"               % kamonVersion
 libraryDependencies += "io.kamon"    %% "kamon-system-metrics"         % kamonVersion
