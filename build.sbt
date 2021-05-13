@@ -11,7 +11,7 @@ lazy val root = Project("lila-fishnet", file("."))
 scalaVersion := "2.13.5"
 resourceDirectory in Compile := baseDirectory.value / "conf"
 
-val kamonVersion = "2.1.16"
+val kamonVersion = "2.1.18"
 
 libraryDependencies += "io.lettuce"   % "lettuce-core"                 % "6.1.2.RELEASE"
 libraryDependencies += "io.netty"     % "netty-transport-native-epoll" % "4.1.63.Final" classifier "linux-x86_64"
