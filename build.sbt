@@ -11,10 +11,10 @@ lazy val root = Project("lila-fishnet", file("."))
 scalaVersion := "2.13.6"
 resourceDirectory in Compile := baseDirectory.value / "conf"
 
-val kamonVersion = "2.1.18"
+val kamonVersion = "2.2.1"
 
-libraryDependencies += "io.lettuce"   % "lettuce-core"                 % "6.1.2.RELEASE"
-libraryDependencies += "io.netty"     % "netty-transport-native-epoll" % "4.1.65.Final" classifier "linux-x86_64"
+libraryDependencies += "io.lettuce"   % "lettuce-core"                 % "6.1.3.RELEASE"
+libraryDependencies += "io.netty"     % "netty-transport-native-epoll" % "4.1.64.Final" classifier "linux-x86_64"
 libraryDependencies += "joda-time"    % "joda-time"                    % "2.10.10"
 libraryDependencies += "org.lichess" %% "scalachess"                   % "10.1.6"
 libraryDependencies += "io.kamon"    %% "kamon-core"                   % kamonVersion
