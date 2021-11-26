@@ -8,7 +8,7 @@ lazy val root = Project("lila-fishnet", file("."))
   .enablePlugins(PlayScala, PlayNettyServer)
   .disablePlugins(PlayAkkaHttpServer)
 
-scalaVersion := "2.13.6"
+scalaVersion := "2.13.7"
 resourceDirectory in Compile := baseDirectory.value / "conf"
 
 val kamonVersion = "2.4.1"
