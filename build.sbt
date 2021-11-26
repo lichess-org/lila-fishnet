@@ -1,22 +1,22 @@
 name := "lila-fishnet"
 
-version := "1.0-SNAPSHOT"
+version := "2.0"
 
 maintainer := "lichess.org"
 
-lazy val root = (project in file("."))
+lazy val root = Project("lila-fishnet", file("."))
   .enablePlugins(PlayScala, PlayNettyServer)
-  .disablePlugins(PlayFilters, PlayAkkaHttpServer)
+  .disablePlugins(PlayAkkaHttpServer)
 
-scalaVersion := "2.13.2"
+scalaVersion := "2.13.7"
+resourceDirectory in Compile := baseDirectory.value / "conf"
 
-val kamonVersion = "2.1.4"
+val kamonVersion = "2.4.1"
 
-libraryDependencies += guice
-libraryDependencies += "io.lettuce"   % "lettuce-core"                 % "5.3.2.RELEASE"
-libraryDependencies += "io.netty"     % "netty-transport-native-epoll" % "4.1.51.Final" classifier "linux-x86_64"
-libraryDependencies += "joda-time"    % "joda-time"                    % "2.10.6"
-libraryDependencies += "org.lichess" %% "scalachess"                   % "9.2.1"
+libraryDependencies += "io.lettuce"   % "lettuce-core"                 % "6.1.5.RELEASE"
+libraryDependencies += "io.netty"     % "netty-transport-native-epoll" % "4.1.70.Final" classifier "linux-x86_64"
+libraryDependencies += "joda-time"    % "joda-time"                    % "2.10.13"
+libraryDependencies += "org.lichess" %% "scalachess"                   % "10.1.6"
 libraryDependencies += "io.kamon"    %% "kamon-core"                   % kamonVersion
 libraryDependencies += "io.kamon"    %% "kamon-influxdb"               % kamonVersion
 libraryDependencies += "io.kamon"    %% "kamon-system-metrics"         % kamonVersion
@@ -24,11 +24,44 @@ libraryDependencies += "io.kamon"    %% "kamon-system-metrics"         % kamonVe
 resolvers += "lila-maven" at "https://raw.githubusercontent.com/ornicar/lila-maven/master"
 
 scalacOptions ++= Seq(
-  "-language:implicitConversions",
+  "-explaintypes",
   "-feature",
-  "-deprecation",
-  "-Xfatal-warnings"
+  "-language:higherKinds",
+  "-language:implicitConversions",
+  "-language:postfixOps",
+  "-Ymacro-annotations",
+  // Warnings as errors!
+  // "-Xfatal-warnings",
+  // Linting options
+  "-unchecked",
+  "-Xcheckinit",
+  "-Xlint:adapted-args",
+  "-Xlint:constant",
+  "-Xlint:delayedinit-select",
+  "-Xlint:deprecation",
+  "-Xlint:inaccessible",
+  "-Xlint:infer-any",
+  "-Xlint:missing-interpolator",
+  "-Xlint:nullary-unit",
+  "-Xlint:option-implicit",
+  "-Xlint:package-object-classes",
+  "-Xlint:poly-implicit-overload",
+  "-Xlint:private-shadow",
+  "-Xlint:stars-align",
+  "-Xlint:type-parameter-shadow",
+  "-Wdead-code",
+  "-Wextra-implicit",
+  "-Wnumeric-widen",
+  "-Wunused:imports",
+  "-Wunused:locals",
+  "-Wunused:patvars",
+  "-Wunused:privates",
+  "-Wunused:implicits",
+  "-Wunused:params"
+  /* "-Wvalue-discard" */
 )
+
+javaOptions ++= Seq("-Xms64m", "-Xmx128m")
 
 sources in (Compile, doc) := Seq.empty
 

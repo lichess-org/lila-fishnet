@@ -3,14 +3,11 @@ package lila.fishnet
 import chess.format.{ FEN, Uci }
 import io.lettuce.core._
 import io.lettuce.core.pubsub._
-import javax.inject._
 import org.joda.time.DateTime
 import play.api.Configuration
-import play.api.libs.json._
 import play.api.Logger
 
-@Singleton
-final class Lila @Inject() (
+final class Lila(
     moveDb: MoveDb,
     config: Configuration
 ) {

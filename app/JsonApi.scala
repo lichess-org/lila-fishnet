@@ -1,6 +1,5 @@
 package lila.fishnet
 
-import org.joda.time.DateTime
 import play.api.libs.json._
 
 import chess.format.{ FEN, Uci }
@@ -39,7 +38,7 @@ object JsonApi {
   def fromGame(g: W.Game) =
     Game(
       game_id = g.id,
-      position = g.initialFen | FEN(g.variant.initialFen),
+      position = g.initialFen | g.variant.initialFen,
       variant = g.variant,
       moves = g.moves
     )
@@ -58,7 +57,6 @@ object JsonApi {
   def moveFromWork(m: Work.Move) = Move(m.id.value, m.level, fromGame(m.game), m.clock)
 
   object readers {
-    import play.api.libs.functional.syntax._
     implicit val ClientKeyReads  = Reads.of[String].map(new ClientKey(_))
     implicit val FishnetReads    = Json.reads[Request.Fishnet]
     implicit val AcquireReads    = Json.reads[Request.Acquire]
