@@ -38,8 +38,9 @@ final class Lila(
 
 object Lila {
 
-  case class Move(gameId: String, ply: Int, uci: Uci) {
-    def write = s"$gameId $ply ${uci.uci}"
+  case class Move(game: Work.Game, uci: Uci) {
+    def sign  = game.moves.takeRight(20).replace(" ", "")
+    def write = s"${game.id} $sign ${uci.uci}"
   }
 
   def readMoveReq(msg: String): Option[Work.Move] =

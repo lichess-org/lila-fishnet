@@ -43,9 +43,7 @@ object Work {
       initialFen: Option[FEN],
       variant: Variant,
       moves: String
-  ) {
-    def ply = if (moves.isEmpty) 0 else moves.count(' '.==) + 1
-  }
+  )
 
   case class Clock(wtime: Int, btime: Int, inc: Int)
 

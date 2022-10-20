@@ -71,7 +71,7 @@ final class MoveDb(implicit system: ActorSystem, ec: ExecutionContext) {
           case Some(move) if move isAcquiredBy data.clientKey =>
             data.move.uci match {
               case Some(uci) =>
-                sender() ! Some(Lila.Move(move.game.id, move.game.ply, uci))
+                sender() ! Some(Lila.Move(move.game, uci))
                 coll -= move.id
                 monitor.success(move)
               case _ =>
