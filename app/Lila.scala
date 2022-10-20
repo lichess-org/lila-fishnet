@@ -38,8 +38,6 @@ final class Lila(
 
 object Lila {
 
-  import Util.parseIntOption
-
   case class Move(gameId: String, ply: Int, uci: Uci) {
     def write = s"$gameId $ply ${uci.uci}"
   }
@@ -48,7 +46,7 @@ object Lila {
     msg.split(";", 6) match {
       case Array(gameId, levelS, clockS, variantS, initialFenS, moves) =>
         for {
-          level <- parseIntOption(levelS)
+          level <- levelS.toIntOption
           variant    = chess.variant.Variant.orDefault(variantS)
           initialFen = if (initialFenS.isEmpty) None else Some(FEN(initialFenS))
           clock      = readClock(clockS)
@@ -74,9 +72,9 @@ object Lila {
     s split ' ' match {
       case Array(ws, bs, incs) =>
         for {
-          wtime <- parseIntOption(ws)
-          btime <- parseIntOption(bs)
-          inc   <- parseIntOption(incs)
+          wtime <- ws.toIntOption
+          btime <- bs.toIntOption
+          inc   <- incs.toIntOption
         } yield Work.Clock(wtime, btime, inc)
       case _ => None
     }

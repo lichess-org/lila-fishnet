@@ -33,7 +33,7 @@ object Work {
       date: DateTime
   ) {
 
-    def ageInMillis = Util.nowMillis - date.getMillis
+    def ageInMillis = System.currentTimeMillis - date.getMillis
 
     override def toString = s"by $clientKey at $date"
   }

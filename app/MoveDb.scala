@@ -137,7 +137,7 @@ object MoveDb {
     val lvl1FullTimeRequest     = Kamon.timer("move.full.lvl1").withoutTags()
 
     def success(work: Work.Move) = {
-      val now = Util.nowMillis
+      val now = System.currentTimeMillis
       if (work.level == 8) work.acquiredAt foreach { acquiredAt =>
         lvl8AcquiredTimeRequest.record(now - acquiredAt.getMillis, TimeUnit.MILLISECONDS)
       }
