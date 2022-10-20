@@ -16,10 +16,7 @@ final class MoveDb(implicit system: ActorSystem, ec: ExecutionContext) {
 
   implicit private val timeout = new akka.util.Timeout(2.seconds)
 
-  def add(move: Move) = {
-    monitor.moveRequest.increment()
-    actor ! Add(move)
-  }
+  def add(move: Move) = actor ! Add(move)
 
   def acquire(clientKey: ClientKey): Future[Option[Move]] = {
     actor ? Acquire(clientKey) mapTo manifest[Option[Move]]
@@ -129,7 +126,6 @@ object MoveDb {
 
   final private class Monitor(logger: Logger) {
 
-    val moveRequest             = Kamon.counter("move.request").withoutTags()
     val dbSize                  = Kamon.gauge("db.size").withoutTags()
     val dbQueued                = Kamon.gauge("db.queued").withoutTags()
     val dbAcquired              = Kamon.gauge("db.acquired").withoutTags()
