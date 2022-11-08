@@ -64,7 +64,5 @@ scalacOptions ++= Seq(
 
 javaOptions ++= Seq("-Xms64m", "-Xmx128m")
 
-//sources in (Compile, doc) := Seq.empty
-Compile / doc / sources := Seq.empty 
+Compile / doc / sources := Seq.empty
 Compile / packageDoc / publishArtifact := false
-//publishArtifact in (Compile, packageDoc) := false
