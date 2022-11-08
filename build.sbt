@@ -9,7 +9,7 @@ lazy val root = Project("lila-fishnet", file("."))
   .disablePlugins(PlayAkkaHttpServer)
 
 scalaVersion := "2.13.10"
-resourceDirectory in Compile := baseDirectory.value / "conf"
+Compile / resourceDirectory := baseDirectory.value / "conf"
 
 val kamonVersion = "2.5.11"
 
@@ -64,6 +64,7 @@ scalacOptions ++= Seq(
 
 javaOptions ++= Seq("-Xms64m", "-Xmx128m")
 
-sources in (Compile, doc) := Seq.empty
-
-publishArtifact in (Compile, packageDoc) := false
+//sources in (Compile, doc) := Seq.empty
+Compile / doc / sources := Seq.empty 
+Compile / packageDoc / publishArtifact := false
+//publishArtifact in (Compile, packageDoc) := false
