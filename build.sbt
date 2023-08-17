@@ -13,7 +13,7 @@ Compile / resourceDirectory := baseDirectory.value / "conf"
 
 val kamonVersion = "2.5.11"
 
-libraryDependencies += "io.lettuce" % "lettuce-core"                 % "6.2.5.RELEASE"
+libraryDependencies += "io.lettuce" % "lettuce-core"                 % "6.2.6.RELEASE"
 libraryDependencies += "io.netty"   % "netty-transport-native-epoll" % "4.1.95.Final" classifier "linux-x86_64"
 libraryDependencies += "joda-time"  % "joda-time"                    % "2.12.5"
 
