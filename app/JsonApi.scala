@@ -57,20 +57,20 @@ object JsonApi {
   def moveFromWork(m: Work.Move) = Move(m.id.value, m.level, fromGame(m.game), m.clock)
 
   object readers {
-    implicit val ClientKeyReads  = Reads.of[String].map(new ClientKey(_))
-    implicit val FishnetReads    = Json.reads[Request.Fishnet]
-    implicit val AcquireReads    = Json.reads[Request.Acquire]
-    implicit val MoveResultReads = Json.reads[Request.MoveResult]
-    implicit val PostMoveReads   = Json.reads[Request.PostMove]
+    implicit val ClientKeyReads: Reads[ClientKey]           = Reads.of[String].map(new ClientKey(_))
+    implicit val FishnetReads: Reads[Request.Fishnet]       = Json.reads[Request.Fishnet]
+    implicit val AcquireReads: Reads[Request.Acquire]       = Json.reads[Request.Acquire]
+    implicit val MoveResultReads: Reads[Request.MoveResult] = Json.reads[Request.MoveResult]
+    implicit val PostMoveReads: Reads[Request.PostMove]     = Json.reads[Request.PostMove]
   }
 
   object writers {
-    implicit val VariantWrites                   = Writes[Variant] { v => JsString(v.key) }
-    implicit val FENWrites                       = Writes[FEN] { fen => JsString(fen.value) }
+    implicit val VariantWrites: Writes[Variant]  = Writes[Variant] { v => JsString(v.key) }
+    implicit val FENWrites: Writes[FEN]          = Writes[FEN] { fen => JsString(fen.value) }
     implicit val GameWrites: Writes[Game]        = Json.writes[Game]
     implicit val ClockWrites: Writes[Work.Clock] = Json.writes[Work.Clock]
-    implicit val WorkIdWrites                    = Writes[Work.Id] { id => JsString(id.value) }
-    implicit val WorkWrites = OWrites[Work] { work =>
+    implicit val WorkIdWrites: Writes[Work.Id]   = Writes[Work.Id] { id => JsString(id.value) }
+    implicit val WorkWrites: OWrites[Work] = OWrites[Work] { work =>
       (work match {
         case m: Move =>
           Json.obj(
