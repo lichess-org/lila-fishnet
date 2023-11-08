@@ -1,9 +1,9 @@
 package lila.app
 
 import play.api._
-import scala.annotation.nowarn
 import play.api.routing.{ Router, SimpleRouter }
 import play.api.routing.sird._
+import akka.actor.ActorSystem
 
 final class AppLoader extends ApplicationLoader {
   def load(ctx: ApplicationLoader.Context): Application = new LilaComponents(ctx).application
@@ -25,7 +25,7 @@ final class LilaComponents(ctx: ApplicationLoader.Context) extends BuiltInCompon
 
   import _root_.controllers._
 
-  implicit def system = actorSystem
+  implicit def system: ActorSystem = actorSystem
 
   lazy val moveDb     = new lila.fishnet.MoveDb
   lazy val redis      = new lila.fishnet.Lila(moveDb, configuration)
