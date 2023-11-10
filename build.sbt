@@ -6,7 +6,6 @@ maintainer := "lichess.org"
 
 lazy val root = Project("lila-fishnet", file("."))
   .enablePlugins(PlayScala, PlayNettyServer)
-  .disablePlugins(PlayAkkaHttpServer)
 
 scalaVersion := "2.13.12"
 Compile / resourceDirectory := baseDirectory.value / "conf"

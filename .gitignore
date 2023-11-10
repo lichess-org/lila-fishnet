@@ -1,4 +1,8 @@
+.bloop/
+.metals/
 logs/
+project/metals.sbt
+project/project/
 target/
 RUNNING_PID
 # docker sbt
