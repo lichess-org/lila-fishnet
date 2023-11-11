@@ -1,2 +1,0 @@
-POST  /fishnet/acquire                   controllers.FishnetController.acquire
-POST  /fishnet/move/:workId              controllers.FishnetController.move(workId: String)
