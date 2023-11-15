@@ -7,12 +7,12 @@ import scala.concurrent.duration.*
 
 object MoveDb:
 
-  private case class Add(move: Work.Move)
-  private case class Acquire(clientKey: ClientKey)
+  case class Add(move: Work.Move)
+  case class Acquire(clientKey: ClientKey)
   // private case class PostResult(workId: Work.Id, data: JsonApi.Request.PostMove)
-  private object Clean
+  object Clean
 
-  final private class Monitor:
+  private class Monitor:
 
     val dbSize                  = Kamon.gauge("db.size").withoutTags()
     val dbQueued                = Kamon.gauge("db.queued").withoutTags()
@@ -22,10 +22,11 @@ object MoveDb:
 
     def success(work: Work.Move) =
       val now = System.currentTimeMillis
-      if (work.level == 8) work.acquiredAt foreach { acquiredAt =>
-        lvl8AcquiredTimeRequest.record(now - acquiredAt.getMillis, TimeUnit.MILLISECONDS)
-      }
-      if (work.level == 1)
+      if work.level == 8 then
+        work.acquiredAt foreach { acquiredAt =>
+          lvl8AcquiredTimeRequest.record(now - acquiredAt.getMillis, TimeUnit.MILLISECONDS)
+        }
+      if work.level == 1 then
         lvl1FullTimeRequest.record(now - work.createdAt.getMillis, TimeUnit.MILLISECONDS)
 
     def failure(work: Work, clientKey: ClientKey, e: Exception) = {
@@ -41,4 +42,3 @@ object MoveDb:
       //   s"Received unacquired move ${work.id} for ${work.game.id} by $clientKey. Work current tries: ${work.tries} acquired: ${work.acquired}"
       // )
     }
-

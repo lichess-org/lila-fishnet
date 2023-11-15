@@ -11,6 +11,7 @@ inThisBuild(
 )
 
 lazy val app = project
+  .in(file("app"))
   .settings(
     scalacOptions -= "-Xfatal-warnings",
     scalacOptions ++= Seq("-source:future", "-rewrite", "-indent", "-explain", "-Wunused:all"),
@@ -25,12 +26,13 @@ lazy val app = project
       cirisCore,
       cirisHtt4s,
       fs2,
+      http4sClient,
       jodaTime,
       kamonCore,
       kamonInflux,
       kamonSystemMetrics,
-      http4sClient,
       log4Cats,
+      monocleCore,
       weaver,
       weaverScalaCheck,
     ),

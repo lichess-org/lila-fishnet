@@ -38,6 +38,8 @@ object Dependencies {
   val kamonInflux = "io.kamon"    %% "kamon-influxdb"       % V.kamon
   val kamonSystemMetrics = "io.kamon"    %% "kamon-system-metrics" % V.kamon
 
+  val monocleCore = "dev.optics"         %% "monocle-core" % "3.2.0"
+
   val http4sDsl    = http4s("dsl")
   val http4sServer = http4s("ember-server")
   val http4sClient = http4s("ember-client")

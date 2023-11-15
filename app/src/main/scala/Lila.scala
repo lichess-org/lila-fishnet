@@ -14,9 +14,9 @@ object Lila:
   def readClock(s: String) =
     s split ' ' match
       case Array(ws, bs, incs) =>
-        for {
+        for
           wtime <- ws.toIntOption
           btime <- bs.toIntOption
           inc   <- incs.toIntOption
-        } yield Work.Clock(wtime, btime, inc)
+        yield Work.Clock(wtime, btime, inc)
       case _ => None

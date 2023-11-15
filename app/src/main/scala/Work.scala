@@ -15,7 +15,7 @@ sealed trait Work:
   def id = _id
 
   def acquiredAt                         = acquired.map(_.date)
-  def acquiredByKey                      = acquired.map(_.clientKey)
+  def acquiredByKey: Option[ClientKey]   = acquired.map(_.clientKey)
   def isAcquiredBy(clientKey: ClientKey) = acquiredByKey contains clientKey
   def isAcquired                         = acquired.isDefined
   def nonAcquired                        = !isAcquired
@@ -29,7 +29,7 @@ object Work:
 
   case class Acquired(
       clientKey: ClientKey,
-      date: DateTime
+      date: DateTime,
   ):
 
     def ageInMillis = System.currentTimeMillis - date.getMillis
@@ -40,7 +40,7 @@ object Work:
       id: String, // can be a study chapter ID, if studyId is set
       initialFen: Option[Fen.Epd],
       variant: Variant,
-      moves: String
+      moves: String,
   )
 
   case class Clock(wtime: Int, btime: Int, inc: Int)
@@ -53,7 +53,7 @@ object Work:
       tries: Int,
       lastTryByKey: Option[ClientKey],
       acquired: Option[Acquired],
-      createdAt: DateTime
+      createdAt: DateTime,
   ) extends Work:
 
     def assignTo(clientKey: ClientKey) =
@@ -61,11 +61,11 @@ object Work:
         acquired = Some(
           Acquired(
             clientKey = clientKey,
-            date = DateTime.now
+            date = DateTime.now,
           )
         ),
         lastTryByKey = Some(clientKey),
-        tries = tries + 1
+        tries = tries + 1,
       )
 
     def timeout = copy(acquired = None)
