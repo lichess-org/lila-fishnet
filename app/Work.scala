@@ -2,9 +2,9 @@ package lila.fishnet
 
 import org.joda.time.DateTime
 import chess.variant.Variant
-import chess.format.FEN
+import chess.format.Fen
 
-sealed trait Work {
+sealed trait Work:
   def _id: Work.Id
   def game: Work.Game
   def tries: Int
@@ -21,26 +21,24 @@ sealed trait Work {
   def nonAcquired                        = !isAcquired
   def canAcquire(clientKey: ClientKey)   = lastTryByKey.fold(true)(clientKey.!=)
 
-  def acquiredBefore(date: DateTime) = acquiredAt.fold(false)(_ isBefore date)
-}
+  def acquiredBefore(date: DateTime) = acquiredAt.fold(false)(_ `isBefore` date)
 
-object Work {
+object Work:
 
   case class Id(value: String) extends AnyVal with StringValue
 
   case class Acquired(
       clientKey: ClientKey,
       date: DateTime
-  ) {
+  ):
 
     def ageInMillis = System.currentTimeMillis - date.getMillis
 
     override def toString = s"by $clientKey at $date"
-  }
 
   case class Game(
       id: String, // can be a study chapter ID, if studyId is set
-      initialFen: Option[FEN],
+      initialFen: Option[Fen.Epd],
       variant: Variant,
       moves: String
   )
@@ -56,7 +54,7 @@ object Work {
       lastTryByKey: Option[ClientKey],
       acquired: Option[Acquired],
       createdAt: DateTime
-  ) extends Work {
+  ) extends Work:
 
     def assignTo(clientKey: ClientKey) =
       copy(
@@ -79,7 +77,5 @@ object Work {
 
     override def toString =
       s"id:$id game:${game.id} variant:${game.variant.key} level:$level tries:$tries created:$createdAt acquired:$acquired"
-  }
 
   def makeId = Id(scala.util.Random.alphanumeric.take(8).mkString)
-}

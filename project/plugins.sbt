@@ -1,6 +1,4 @@
-resolvers += Resolver.url(
-  "lila-maven-sbt",
-  url("https://raw.githubusercontent.com/ornicar/lila-maven/master")
-)(Resolver.ivyStylePatterns)
-addSbtPlugin("com.typesafe.play" % "sbt-plugin"   % "2.8.18-lila_1.21")
-addSbtPlugin("org.scalameta"     % "sbt-scalafmt" % "2.5.2")
+addSbtPlugin("org.typelevel"  % "sbt-tpolecat"       % "0.5.0")
+addSbtPlugin("com.github.sbt" % "sbt-github-actions" % "0.19.0")
+addSbtPlugin("org.scalameta"  % "sbt-scalafmt"       % "2.5.2")
+addSbtPlugin("nl.gn0s1s"      % "sbt-dotenv"         % "3.0.0")
