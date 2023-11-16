@@ -58,9 +58,9 @@ object Executor:
       def updateOrGiveUp(state: State, move: Work.Move): (State, IO[Unit]) =
         val newState = state - move.id
         val io = if move.isOutOfTries then
-          workQueue.offer(move)
-        else
           IO.unit
+        else
+          workQueue.offer(move.copy(tries = move.tries + 1))
         newState -> io
 
       // report not found
