@@ -9,7 +9,7 @@ object Dependencies {
     val circe  = "0.14.6"
     val http4s = "0.23.23"
     val ciris  = "3.4.0"
-    val kamon = "2.5.11"
+    val kamon  = "2.5.11"
   }
 
   def http4s(artifact: String) = "org.http4s" %% s"http4s-$artifact" % V.http4s
@@ -34,11 +34,9 @@ object Dependencies {
 
   val jodaTime = "joda-time" % "joda-time" % "2.12.5"
 
-  val kamonCore = "io.kamon"    %% "kamon-core"           % V.kamon
-  val kamonInflux = "io.kamon"    %% "kamon-influxdb"       % V.kamon
-  val kamonSystemMetrics = "io.kamon"    %% "kamon-system-metrics" % V.kamon
-
-  val monocleCore = "dev.optics"         %% "monocle-core" % "3.2.0"
+  val kamonCore          = "io.kamon" %% "kamon-core"           % V.kamon
+  val kamonInflux        = "io.kamon" %% "kamon-influxdb"       % V.kamon
+  val kamonSystemMetrics = "io.kamon" %% "kamon-system-metrics" % V.kamon
 
   val http4sDsl    = http4s("dsl")
   val http4sServer = http4s("ember-server")
@@ -48,6 +46,7 @@ object Dependencies {
   val log4Cats = "org.typelevel" %% "log4cats-slf4j"  % "2.6.0"
   val logback  = "ch.qos.logback" % "logback-classic" % "1.4.11"
 
+  val monocleCore      = "dev.optics"          %% "monocle-core"               % "3.2.0"  % Test
   val log4CatsNoop     = "org.typelevel"       %% "log4cats-noop"              % "2.6.0"  % Test
   val testContainers   = "com.dimafeng"        %% "testcontainers-scala-redis" % "0.41.0" % Test
   val weaver           = "com.disneystreaming" %% "weaver-cats"                % "0.8.3"  % Test

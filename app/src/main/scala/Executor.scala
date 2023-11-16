@@ -20,6 +20,7 @@ trait Executor:
   def acquire(accquire: MoveDb.Acquire): IO[Option[Work.Move]]
   // get Work from Map => send to lila
   def move(workId: Work.Id, result: Fishnet.PostMove): IO[Unit]
+  // add work to queue
   def add(work: Work.Move): IO[Unit]
 
 object Executor:
