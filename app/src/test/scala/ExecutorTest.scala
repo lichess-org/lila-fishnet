@@ -33,13 +33,13 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
   val validMove   = Fishnet.PostMove(Fishnet.Fishnet(key), Fishnet.MoveResult("e2e4"))
   val invalidMove = Fishnet.PostMove(Fishnet.Fishnet(key), Fishnet.MoveResult("ee4"))
 
-  test("acqurired => none"):
+  test("acquire when there is no work should return none"):
     for
       executor <- createExecutor()
       acquired <- executor.acquire(acquiredKey)
     yield assert(acquired.isEmpty)
 
-  test("add => acqurired => work.some"):
+  test("acquire when there is work should return work.some"):
     for
       executor       <- createExecutor()
       _              <- executor.add(work)
@@ -47,7 +47,7 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       acquired = acquiredOption.get
     yield assert(acquired.acquired.get.clientKey == key) `and` assert(acquired.copy(acquired = None) == work)
 
-  test("add => acqurired => acquired => none"):
+  test("after acquire the only work, acquire again should return none"):
     for
       executor <- createExecutor()
       _        <- executor.add(work)
@@ -55,7 +55,7 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       acquired <- executor.acquire(acquiredKey)
     yield assert(acquired.isEmpty)
 
-  test("add => acqurired => move => done"):
+  test("post move after acquire should send move"):
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
@@ -66,7 +66,7 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       move     <- ref.get.map(_.head)
     yield assert(move == Lila.Move(work.game, chess.format.Uci.Move("e2e4").get))
 
-  test("add => acqurired => post invalid move => no send"):
+  test("post an invalid move should not send move"):
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
@@ -77,7 +77,7 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       moves    <- ref.get
     yield assert(moves.isEmpty)
 
-  test("add => acqurired => post invalid move => acquired => work.some"):
+  test("after post an invalid move, acquire again should return work.some"):
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
