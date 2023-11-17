@@ -1,18 +1,14 @@
 package lila.fishnet
 
 import kamon.Kamon
-import org.joda.time.DateTime
 import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.*
 
 object MoveDb:
 
   case class Add(move: Work.Move)
   case class Acquire(clientKey: ClientKey)
-  // private case class PostResult(workId: Work.Id, data: JsonApi.Request.PostMove)
-  object Clean
 
-  private class Monitor:
+  class Monitor:
 
     val dbSize                  = Kamon.gauge("db.size").withoutTags()
     val dbQueued                = Kamon.gauge("db.queued").withoutTags()
@@ -29,7 +25,7 @@ object MoveDb:
       if work.level == 1 then
         lvl1FullTimeRequest.record(now - work.createdAt.getMillis, TimeUnit.MILLISECONDS)
 
-    def failure(work: Work, clientKey: ClientKey, e: Exception) = {
+    def failure(work: Work.Move, clientKey: ClientKey, e: Exception) = {
       // logger.warn(s"Received invalid move ${work.id} for ${work.game.id} by $clientKey", e)
     }
 
@@ -37,7 +33,7 @@ object MoveDb:
       // logger.info(s"Received unknown work $id by $clientKey")
     }
 
-    def notAcquired(work: Work, clientKey: ClientKey) = {
+    def notAcquired(work: Work.Move, clientKey: ClientKey) = {
       // logger.info(
       //   s"Received unacquired move ${work.id} for ${work.game.id} by $clientKey. Work current tries: ${work.tries} acquired: ${work.acquired}"
       // )

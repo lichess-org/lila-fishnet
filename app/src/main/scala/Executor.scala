@@ -9,12 +9,19 @@ import org.joda.time.DateTime
 import lila.fishnet.Work.Move
 
 trait FishnetClient:
-  def acquire(accquire: MoveDb.Acquire): IO[Option[Work]]
+  def acquire(accquire: MoveDb.Acquire): IO[Option[Work.Move]]
   def move(workId: Work.Id): IO[Option[Lila.Move]]
 
 trait LilaClient:
   def send(move: Lila.Move): IO[Unit]
 
+/**
+ * Executor is responsible for:
+ * store work in memory
+ * - getting work from the queue
+ * - sending work to lila
+ * - adding work to the queue
+ */
 trait Executor:
   // get a move from the queue return Work
   def acquire(accquire: MoveDb.Acquire): IO[Option[Work.Move]]
@@ -36,6 +43,8 @@ object Executor:
       def add(work: Work.Move): IO[Unit] =
         workQueue.offer(work)
 
+      // acquire the earlist work
+      // and lastAcquiredByKey != clientKey
       def acquire(accquire: MoveDb.Acquire): IO[Option[Work.Move]] =
         for
           work <- workQueue.tryTake

@@ -4,44 +4,15 @@ import org.joda.time.DateTime
 import chess.variant.Variant
 import chess.format.Fen
 
-sealed trait Work:
-  def _id: Work.Id
-  def game: Work.Game
-  def tries: Int
-  def lastTryByKey: Option[ClientKey]
-  def acquired: Option[Work.Acquired]
-  def createdAt: DateTime
-
-  def id = _id
-
-  def acquiredAt                         = acquired.map(_.date)
-  def acquiredByKey: Option[ClientKey]   = acquired.map(_.clientKey)
-  def isAcquiredBy(clientKey: ClientKey) = acquiredByKey contains clientKey
-  def isAcquired                         = acquired.isDefined
-  def nonAcquired                        = !isAcquired
-  def canAcquire(clientKey: ClientKey)   = lastTryByKey.fold(true)(clientKey.!=)
-
-  def acquiredBefore(date: DateTime) = acquiredAt.fold(false)(_ `isBefore` date)
-
 object Work:
 
   case class Id(value: String) extends AnyVal with StringValue
 
-  case class Acquired(
-      clientKey: ClientKey,
-      date: DateTime,
-  ):
-
-    def ageInMillis = System.currentTimeMillis - date.getMillis
-
+  case class Acquired(clientKey: ClientKey, date: DateTime):
+    def ageInMillis       = System.currentTimeMillis - date.getMillis
     override def toString = s"by $clientKey at $date"
 
-  case class Game(
-      id: String, // can be a study chapter ID, if studyId is set
-      initialFen: Option[Fen.Epd],
-      variant: Variant,
-      moves: String,
-  )
+  case class Game(id: String, initialFen: Option[Fen.Epd], variant: Variant, moves: String)
 
   case class Clock(wtime: Int, btime: Int, inc: Int)
 
@@ -54,7 +25,16 @@ object Work:
       lastTryByKey: Option[ClientKey],
       acquired: Option[Acquired],
       createdAt: DateTime,
-  ) extends Work:
+  ):
+
+    def id                                 = _id
+    def acquiredAt                         = acquired.map(_.date)
+    def acquiredByKey: Option[ClientKey]   = acquired.map(_.clientKey)
+    def isAcquiredBy(clientKey: ClientKey) = acquiredByKey contains clientKey
+    def isAcquired                         = acquired.isDefined
+    def nonAcquired                        = !isAcquired
+    def canAcquire(clientKey: ClientKey)   = lastTryByKey.fold(true)(clientKey.!=)
+    def acquiredBefore(date: DateTime)     = acquiredAt.fold(false)(_ `isBefore` date)
 
     def assignTo(clientKey: ClientKey) =
       copy(

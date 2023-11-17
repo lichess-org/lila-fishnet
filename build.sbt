@@ -4,7 +4,6 @@ inThisBuild(
   Seq(
     scalaVersion  := "3.3.1",
     versionScheme := Some("early-semver"),
-    name          := "lila-fishnet",
     version       := "2.0",
     run / fork    := true,
   )
