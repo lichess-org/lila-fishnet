@@ -17,9 +17,9 @@ object Dependencies {
 
   val chess = "org.lichess" %% "scalachess" % "15.6.11"
 
-  val catsCore = "org.typelevel" %% "cats-core" % "2.10.0"
-
-  val catsEffect = "org.typelevel" %% "cats-effect" % "3.5.0"
+  val catsCore        = "org.typelevel" %% "cats-core"             % "2.10.0"
+  val catsEffect      = "org.typelevel" %% "cats-effect"           % "3.5.0"
+  val catsCollections = "org.typelevel" %% "cats-collections-core" % "0.9.8"
 
   val fs2   = "co.fs2" %% "fs2-core" % V.fs2
   val fs2IO = "co.fs2" %% "fs2-io"   % V.fs2

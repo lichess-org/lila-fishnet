@@ -17,6 +17,7 @@ lazy val app = project
     resolvers ++= Seq(Dependencies.lilaMaven),
     libraryDependencies ++= Seq(
       catsCore,
+      catsCollections,
       catsEffect,
       chess,
       circeCore,
