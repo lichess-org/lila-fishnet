@@ -2,9 +2,7 @@ package lila.fishnet
 
 import cats.syntax.all.*
 import cats.effect.IO
-import cats.effect.std.Queue
 import cats.effect.kernel.Ref
-import lila.fishnet.Work.Acquired
 import org.joda.time.DateTime
 import lila.fishnet.Work.Move
 
@@ -29,53 +27,92 @@ trait Executor:
   def move(workId: Work.Id, result: Fishnet.PostMove): IO[Unit]
   // add work to queue
   def add(work: Work.Move): IO[Unit]
+  def clean(before: DateTime): IO[Unit]
 
 object Executor:
 
+  val maxSize = 300
+
+  type State = Map[Work.Id, Work.Move]
   def instance(client: LilaClient): IO[Executor] =
-    for
-      workQueue <- Queue.unbounded[IO, Work.Move]
-      waitingQueue <-
-        Ref.of[IO, Map[Work.Id, Work.Move]](Map.empty) // Verify concurrent access with AtomicCell
-    yield new Executor:
-      type State = Map[Work.Id, Work.Move]
+    Ref.of[IO, State](Map.empty).map: ref =>
+      new Executor:
 
-      def add(work: Work.Move): IO[Unit] =
-        workQueue.offer(work)
+        def add(work: Work.Move): IO[Unit] =
+          ref.update: m =>
+            // if m.exists(_._2.similar(work)) then
+            // logger.info(s"Add coll exist: $move")
+            // clearIfFull()
+            m + (work.id -> work)
 
-      // acquire the earlist work
-      // and lastAcquiredByKey != clientKey
-      def acquire(accquire: MoveDb.Acquire): IO[Option[Work.Move]] =
-        for
-          work <- workQueue.tryTake
-          acquiredWork = work.map(_.copy(acquired = Work.Acquired(accquire.clientKey, DateTime.now).some))
-          _ <- acquiredWork.fold(IO.unit)(w => waitingQueue.update(_ + (w.id -> w)))
-        yield acquiredWork
+        def acquire(accquire: MoveDb.Acquire): IO[Option[Work.Move]] =
+          ref.modify: coll =>
+            coll.values
+              .foldLeft[Option[Move]](None):
+                case (found, m) if m.nonAcquired =>
+                  Some(found.fold(m): a =>
+                    if m.canAcquire(accquire.clientKey) && m.createdAt.isBefore(a.createdAt) then m else a)
+                case (found, _) => found
+              .map: m =>
+                val move = m.assignTo(accquire.clientKey)
+                (coll + (move.id -> move)) -> move.some
+              .getOrElse(coll -> none[Work.Move])
 
-      def move(id: Work.Id, result: Fishnet.PostMove): IO[Unit] =
-        waitingQueue.flatModify: m =>
-          m.get(id).fold(m -> notFound(id, result.fishnet.apikey).void): work =>
-            if work.isAcquiredBy(result.fishnet.apikey) then
-              result.move.uci match
-                case Some(uci) =>
-                  val move = Lila.Move(work.game, uci)
-                  (m - id) -> client.send(move)
-                case _ => updateOrGiveUp(m, work.invalid)
+        def move(workId: Work.Id, data: Fishnet.PostMove): IO[Unit] =
+          ref.flatModify: coll =>
+            coll get workId match
+              case None =>
+                coll -> notFound(workId, data.fishnet.apikey)
+              case Some(move) if move.isAcquiredBy(data.fishnet.apikey) =>
+                data.move.uci match
+                  case Some(uci) =>
+                    coll - move.id -> (success(move) >> client.send(Lila.Move(move.game, uci)))
+                  case _ =>
+                    updateOrGiveUp(coll, move.invalid) ->
+                      failure(move, data.fishnet.apikey, new Exception("Missing move"))
+              case Some(move) =>
+                coll -> notAcquired(move, data.fishnet.apikey)
+
+        def clean(since: DateTime): IO[Unit] =
+          ref.update: coll =>
+            val timedOut = coll.values.filter(_.acquiredBefore(since))
+            // if (timedOut.nonEmpty)
+            // logger.debug(s"cleaning ${timedOut.size} of ${coll.size} moves")
+            timedOut.foldLeft(coll) { (coll, m) =>
+              // logger.info(s"Timeout move $m")
+              updateOrGiveUp(coll, m.timeout)
+            }
+          // monitor.dbSize.update(coll.size.toDouble)
+          // monitor.dbQueued.update(coll.count(_._2.nonAcquired).toDouble)
+          // monitor.dbAcquired.update(coll.count(_._2.isAcquired).toDouble)
+
+        def clearIfFull(): IO[Unit] =
+          ref.update: coll =>
+            if coll.size > maxSize then
+              // logger.warn(s"MoveDB collection is full! maxSize=$maxSize. Dropping all now!")
+              Map.empty
             else
-              m -> notAcquired(work, result.fishnet.apikey)
+              coll
 
-      def updateOrGiveUp(state: State, move: Work.Move): (State, IO[Unit]) =
-        val newState = state - move.id
-        val io = if move.isOutOfTries then
-          IO.unit
-        else
-          workQueue.offer(move.copy(tries = move.tries + 1))
-        newState -> io
+        def updateOrGiveUp(state: State, move: Work.Move): State =
+          val newState = state - move.id
+          if move.isOutOfTries then
+            newState
+          else
+            newState + (move.id -> move)
 
-      // report not found
-      def notFound(id: Work.Id, key: ClientKey): IO[Unit] =
-        IO.println(s"not found $id, $key")
+        // report not found
+        def notFound(id: Work.Id, key: ClientKey): IO[Unit] =
+          IO.println(s"not found $id, $key")
 
-      // report not acquired
-      def notAcquired(work: Work.Move, key: ClientKey): IO[Unit] =
-        IO.println(s"not acquired $work, $key")
+        // report not acquired
+        def notAcquired(work: Work.Move, key: ClientKey): IO[Unit] =
+          IO.println(s"not acquired $work, $key")
+
+        // success
+        def success(move: Work.Move): IO[Unit] =
+          IO.println(s"success $move")
+
+        // failure
+        def failure(move: Work.Move, client: ClientKey, ex: Throwable): IO[Unit] =
+          IO.println(s"failure $move, $client, $ex")
