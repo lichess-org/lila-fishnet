@@ -11,14 +11,15 @@ object App extends IOApp.Simple:
 
   given Logger[IO] = Slf4jLogger.getLogger[IO]
 
-  given client: LilaClient = new LilaClient:
-    def send(move: Lila.Move): IO[Unit] =
-      IO.println(s"send $move")
-
   override def run: IO[Unit] = Config
     .load
     .flatMap: cfg =>
-      Executor.apply.flatMap: ec =>
-        val app = HttpApi(ec, HealthCheck()).httpApp
-        MkHttpServer.apply.newEmber(cfg.server, app)
-          .useForever
+      Logger[IO].info(s"Starting lila-fishnet with config: $cfg") *>
+      AppResources.instance(cfg.redis)
+        .evalMap: res =>
+          given lilaClient: LilaClient = LilaClient(res.redisPubsub)
+          Executor.apply.map: ec =>
+            HttpApi(ec, HealthCheck()).httpApp
+        .flatMap: app =>
+          MkHttpServer.apply.newEmber(cfg.server, app)
+        .useForever

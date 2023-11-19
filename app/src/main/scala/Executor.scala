@@ -7,13 +7,6 @@ import lila.fishnet.Work.Move
 import java.time.Instant
 import lila.fishnet.Lila.Request
 
-trait FishnetClient:
-  def acquire(accquire: MoveDb.Acquire): IO[Option[Work.Move]]
-  def move(workId: Work.Id): IO[Option[Lila.Move]]
-
-trait LilaClient:
-  def send(move: Lila.Move): IO[Unit]
-
 /**
  * Executor is responsible for:
  * store work in memory

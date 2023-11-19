@@ -15,10 +15,7 @@ object Config:
     HttpServerConfig.config,
   ).parMapN(AppConfig.apply)
 
-case class AppConfig(
-    postgres: RedisConfig,
-    server: HttpServerConfig,
-)
+case class AppConfig(redis: RedisConfig, server: HttpServerConfig)
 
 case class HttpServerConfig(host: Host, port: Port)
 

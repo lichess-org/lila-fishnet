@@ -34,6 +34,7 @@ lazy val app = project
       kamonSystemMetrics,
       log4Cats,
       logback,
+      redis,
       chessTestKit,
       monocleCore,
       munit,
