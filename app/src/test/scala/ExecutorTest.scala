@@ -9,22 +9,29 @@ import java.time.Instant
 
 object ExecutorTest extends SimpleIOSuite with Checkers:
 
-  val workId = Work.Id("id")
-  val work = Work.Move(
-    _id = workId,
-    game = Work.Game(
-      id = "id",
-      initialFen = None,
-      variant = chess.variant.Standard,
-      moves = "",
-    ),
+  val game = Work.Game(
+    id = "id",
+    initialFen = None,
+    variant = chess.variant.Standard,
+    moves = "",
+  )
+
+  val request: Lila.Request = Lila.Request(
+    game = game,
     level = 1,
     clock = None,
-    tries = 0,
-    lastTryByKey = None,
-    acquired = None,
-    createdAt = Instant.now,
   )
+
+  // val work = Work.Move(
+  //   _id = workId,
+  //   game = game,
+  //   level = 1,
+  //   clock = None,
+  //   tries = 0,
+  //   lastTryByKey = None,
+  //   acquired = None,
+  //   createdAt = Instant.now,
+  // )
 
   val key = ClientKey("key")
 
@@ -42,18 +49,18 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
   test("acquire when there is work should return work.some"):
     for
       executor       <- createExecutor()
-      _              <- executor.add(work)
+      _              <- executor.add(request)
       acquiredOption <- executor.acquire(acquiredKey)
       acquired = acquiredOption.get
     yield assert(acquired.acquired.get.clientKey == key)
       `and` assert(acquired.tries == 1)
       `and` assert(acquired.lastTryByKey == key.some)
-      `and` assert(acquired.copy(acquired = None, tries = 0, lastTryByKey = None) == work)
+      `and` assert(acquired.toRequest == request)
 
   test("after acquire the only work, acquire again should return none"):
     for
       executor <- createExecutor()
-      _        <- executor.add(work)
+      _        <- executor.add(request)
       _        <- executor.acquire(acquiredKey)
       acquired <- executor.acquire(acquiredKey)
     yield assert(acquired.isEmpty)
@@ -63,21 +70,21 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
       executor <- Executor.instance(client)
-      _        <- executor.add(work)
-      _        <- executor.acquire(acquiredKey)
-      _        <- executor.move(workId, validMove)
+      _        <- executor.add(request)
+      acquired <- executor.acquire(acquiredKey)
+      _        <- executor.move(acquired.get.id, validMove)
       move     <- ref.get.map(_.head)
-    yield assert(move == Lila.Move(work.game, chess.format.Uci.Move("e2e4").get))
+    yield assert(move == Lila.Move(request.game, chess.format.Uci.Move("e2e4").get))
 
   test("post move after timeout should not send move"):
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
       executor <- Executor.instance(client)
-      _        <- executor.add(work)
-      _        <- executor.acquire(acquiredKey)
+      _        <- executor.add(request)
+      acquired <- executor.acquire(acquiredKey)
       _        <- executor.clean(Instant.now.plusSeconds(37))
-      _        <- executor.move(workId, validMove)
+      _        <- executor.move(acquired.get.id, validMove)
       moves    <- ref.get
     yield assert(moves.isEmpty)
 
@@ -86,22 +93,22 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
       executor <- Executor.instance(client)
-      _        <- executor.add(work)
+      _        <- executor.add(request)
       _        <- executor.acquire(acquiredKey)
       _        <- executor.clean(Instant.now.plusSeconds(37))
-      _        <- executor.acquire(acquiredKey)
-      _        <- executor.move(workId, validMove)
+      acquired <- executor.acquire(acquiredKey)
+      _        <- executor.move(acquired.get.id, validMove)
       move     <- ref.get.map(_.head)
-    yield assert(move == Lila.Move(work.game, chess.format.Uci.Move("e2e4").get))
+    yield assert(move == Lila.Move(request.game, chess.format.Uci.Move("e2e4").get))
 
   test("post an invalid move should not send move"):
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
       executor <- Executor.instance(client)
-      _        <- executor.add(work)
-      _        <- executor.acquire(acquiredKey)
-      _        <- executor.move(workId, invalidMove)
+      _        <- executor.add(request)
+      acquired <- executor.acquire(acquiredKey)
+      _        <- executor.move(acquired.get.id, invalidMove)
       moves    <- ref.get
     yield assert(moves.isEmpty)
 
@@ -110,23 +117,23 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
       executor       <- Executor.instance(client)
-      _              <- executor.add(work)
-      _              <- executor.acquire(acquiredKey)
-      _              <- executor.move(workId, invalidMove)
+      _              <- executor.add(request)
+      acquired       <- executor.acquire(acquiredKey)
+      _              <- executor.move(acquired.get.id, invalidMove)
       acquiredOption <- executor.acquire(acquiredKey)
       acquired = acquiredOption.get
     yield assert(acquired.acquired.get.clientKey == key)
       `and` assert(acquired.tries == 2)
       `and` assert(acquired.lastTryByKey == key.some)
-      `and` assert(acquired.copy(acquired = none, tries = 0, lastTryByKey = none) == work)
+      `and` assert(acquired.toRequest == request)
 
   test("should not give up after 2 tries"):
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
       executor <- Executor.instance(client)
-      _        <- executor.add(work)
-      _        <- (executor.acquire(acquiredKey) >> executor.move(workId, invalidMove)).replicateA_(2)
+      _        <- executor.add(request)
+      _        <- (executor.acquire(acquiredKey).flatMap(x => executor.move(x.get.id, invalidMove))).replicateA_(2)
       acquired <- executor.acquire(acquiredKey)
     yield assert(acquired.isDefined)
 
@@ -135,8 +142,8 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
       executor <- Executor.instance(client)
-      _        <- executor.add(work)
-      _        <- (executor.acquire(acquiredKey) >> executor.move(workId, invalidMove)).replicateA_(3)
+      _        <- executor.add(request)
+      _        <- (executor.acquire(acquiredKey).flatMap(x => executor.move(x.get.id, invalidMove))).replicateA_(3)
       acquired <- executor.acquire(acquiredKey)
     yield assert(acquired.isEmpty)
 
@@ -151,3 +158,11 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
     new LilaClient:
       def send(move: Lila.Move): IO[Unit] =
         ref.update(_ :+ move)
+
+  extension (move: Work.Move)
+    def toRequest =
+      Lila.Request(
+        game = move.game,
+        level = move.level,
+        clock = move.clock,
+      )

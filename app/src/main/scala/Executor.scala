@@ -5,6 +5,7 @@ import cats.effect.IO
 import cats.effect.kernel.Ref
 import lila.fishnet.Work.Move
 import java.time.Instant
+import lila.fishnet.Lila.Request
 
 trait FishnetClient:
   def acquire(accquire: MoveDb.Acquire): IO[Option[Work.Move]]
@@ -26,7 +27,7 @@ trait Executor:
   // get Work from Map => send to lila
   def move(workId: Work.Id, result: Fishnet.PostMove): IO[Unit]
   // add work to queue
-  def add(work: Work.Move): IO[Unit]
+  def add(work: Lila.Request): IO[Unit]
   def clean(before: Instant): IO[Unit]
 
 object Executor:
@@ -38,12 +39,12 @@ object Executor:
     Ref.of[IO, State](Map.empty).map: ref =>
       new Executor:
 
-        def add(work: Work.Move): IO[Unit] =
-          ref.update: m =>
-            // if m.exists(_._2.similar(work)) then
-            // logger.info(s"Add coll exist: $move")
-            // clearIfFull()
-            m + (work.id -> work)
+        def add(work: Request): IO[Unit] =
+          fromRequest(work).flatMap: move =>
+            ref.update: m =>
+              // if m.exists(_._2.similar(work)) then
+              // logger.info(s"Add coll exist: $move")
+              clearIfFull(m) + (move.id -> move)
 
         def acquire(accquire: MoveDb.Acquire): IO[Option[Work.Move]] =
           ref.modify: coll =>
@@ -86,13 +87,12 @@ object Executor:
           // monitor.dbQueued.update(coll.count(_._2.nonAcquired).toDouble)
           // monitor.dbAcquired.update(coll.count(_._2.isAcquired).toDouble)
 
-        def clearIfFull(): IO[Unit] =
-          ref.update: coll =>
-            if coll.size > maxSize then
-              // logger.warn(s"MoveDB collection is full! maxSize=$maxSize. Dropping all now!")
-              Map.empty
-            else
-              coll
+        def clearIfFull(coll: State): State =
+          if coll.size > maxSize then
+            // logger.warn(s"MoveDB collection is full! maxSize=$maxSize. Dropping all now!")
+            Map.empty
+          else
+            coll
 
         def updateOrGiveUp(state: State, move: Work.Move): State =
           val newState = state - move.id
@@ -116,3 +116,16 @@ object Executor:
         // failure
         def failure(move: Work.Move, client: ClientKey, ex: Throwable): IO[Unit] =
           IO.println(s"failure $move, $client, $ex")
+
+  def fromRequest(req: Lila.Request): IO[Move] =
+    (IO.delay(Work.makeId), IO.realTimeInstant).mapN: (id, now) =>
+      Move(
+        _id = id,
+        game = req.game,
+        level = req.level,
+        clock = req.clock,
+        tries = 0,
+        lastTryByKey = None,
+        acquired = None,
+        createdAt = now,
+      )

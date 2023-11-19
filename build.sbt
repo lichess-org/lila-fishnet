@@ -1,4 +1,4 @@
-import Dependencies._
+import Dependencies.*
 
 inThisBuild(
   Seq(
@@ -33,10 +33,10 @@ lazy val app = project
       log4Cats,
       chessTestKit,
       monocleCore,
-      weaver,
-      weaverScalaCheck,
       munit,
       munitScalacheck,
+      weaver,
+      weaverScalaCheck,
     ),
   )
 
