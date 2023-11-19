@@ -3,8 +3,8 @@ package lila.fishnet
 import cats.syntax.all.*
 import cats.effect.IO
 import cats.effect.kernel.Ref
-import org.joda.time.DateTime
 import lila.fishnet.Work.Move
+import java.time.Instant
 
 trait FishnetClient:
   def acquire(accquire: MoveDb.Acquire): IO[Option[Work.Move]]
@@ -27,7 +27,7 @@ trait Executor:
   def move(workId: Work.Id, result: Fishnet.PostMove): IO[Unit]
   // add work to queue
   def add(work: Work.Move): IO[Unit]
-  def clean(before: DateTime): IO[Unit]
+  def clean(before: Instant): IO[Unit]
 
 object Executor:
 
@@ -73,7 +73,7 @@ object Executor:
               case Some(move) =>
                 coll -> notAcquired(move, data.fishnet.apikey)
 
-        def clean(since: DateTime): IO[Unit] =
+        def clean(since: Instant): IO[Unit] =
           ref.update: coll =>
             val timedOut = coll.values.filter(_.acquiredBefore(since))
             // if (timedOut.nonEmpty)

@@ -1,15 +1,15 @@
 package lila.fishnet
 
-import org.joda.time.DateTime
 import chess.variant.Variant
 import chess.format.Fen
+import java.time.Instant
 
 object Work:
 
   case class Id(value: String) extends AnyVal with StringValue
 
-  case class Acquired(clientKey: ClientKey, date: DateTime):
-    def ageInMillis       = System.currentTimeMillis - date.getMillis
+  case class Acquired(clientKey: ClientKey, date: Instant):
+    def ageInMillis       = System.currentTimeMillis - date.toEpochMilli
     override def toString = s"by $clientKey at $date"
 
   case class Game(id: String, initialFen: Option[Fen.Epd], variant: Variant, moves: String)
@@ -24,7 +24,7 @@ object Work:
       tries: Int,
       lastTryByKey: Option[ClientKey],
       acquired: Option[Acquired],
-      createdAt: DateTime,
+      createdAt: Instant,
   ):
 
     def id                                 = _id
@@ -34,14 +34,14 @@ object Work:
     def isAcquired                         = acquired.isDefined
     def nonAcquired                        = !isAcquired
     def canAcquire(clientKey: ClientKey)   = lastTryByKey.fold(true)(clientKey.!=)
-    def acquiredBefore(date: DateTime)     = acquiredAt.fold(false)(_ `isBefore` date)
+    def acquiredBefore(date: Instant)      = acquiredAt.fold(false)(_.isBefore(date))
 
     def assignTo(clientKey: ClientKey) =
       copy(
         acquired = Some(
           Acquired(
             clientKey = clientKey,
-            date = DateTime.now,
+            date = Instant.now,
           )
         ),
         lastTryByKey = Some(clientKey),

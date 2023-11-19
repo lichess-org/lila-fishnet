@@ -5,8 +5,7 @@ import weaver.*
 import weaver.scalacheck.Checkers
 import cats.effect.IO
 import cats.effect.kernel.Ref
-import org.joda.time.DateTime
-import monocle.syntax.all.*
+import java.time.Instant
 
 object ExecutorTest extends SimpleIOSuite with Checkers:
 
@@ -24,7 +23,7 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
     tries = 0,
     lastTryByKey = None,
     acquired = None,
-    createdAt = DateTime.now,
+    createdAt = Instant.now,
   )
 
   val key = ClientKey("key")
@@ -77,7 +76,7 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       executor <- Executor.instance(client)
       _        <- executor.add(work)
       _        <- executor.acquire(acquiredKey)
-      _        <- executor.clean(DateTime.now.plusMinutes(1))
+      _        <- executor.clean(Instant.now.plusSeconds(37))
       _        <- executor.move(workId, validMove)
       moves    <- ref.get
     yield assert(moves.isEmpty)
@@ -89,11 +88,10 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       executor <- Executor.instance(client)
       _        <- executor.add(work)
       _        <- executor.acquire(acquiredKey)
-      _        <- executor.clean(DateTime.now.plusMinutes(1))
-
-      _    <- executor.acquire(acquiredKey)
-      _    <- executor.move(workId, validMove)
-      move <- ref.get.map(_.head)
+      _        <- executor.clean(Instant.now.plusSeconds(37))
+      _        <- executor.acquire(acquiredKey)
+      _        <- executor.move(workId, validMove)
+      move     <- ref.get.map(_.head)
     yield assert(move == Lila.Move(work.game, chess.format.Uci.Move("e2e4").get))
 
   test("post an invalid move should not send move"):

@@ -27,7 +27,6 @@ lazy val app = project
       cirisHtt4s,
       fs2,
       http4sClient,
-      jodaTime,
       kamonCore,
       kamonInflux,
       kamonSystemMetrics,

@@ -34,8 +34,6 @@ object Dependencies {
   val cirisHtt4s   = "is.cir" %% "ciris-http4s"  % V.ciris
   val cirisRefined = "is.cir" %% "ciris-refined" % V.ciris
 
-  val jodaTime = "joda-time" % "joda-time" % "2.12.5"
-
   val kamonCore          = "io.kamon" %% "kamon-core"           % V.kamon
   val kamonInflux        = "io.kamon" %% "kamon-influxdb"       % V.kamon
   val kamonSystemMetrics = "io.kamon" %% "kamon-system-metrics" % V.kamon

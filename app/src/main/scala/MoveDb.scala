@@ -20,10 +20,10 @@ object MoveDb:
       val now = System.currentTimeMillis
       if work.level == 8 then
         work.acquiredAt foreach { acquiredAt =>
-          lvl8AcquiredTimeRequest.record(now - acquiredAt.getMillis, TimeUnit.MILLISECONDS)
+          lvl8AcquiredTimeRequest.record(now - acquiredAt.toEpochMilli(), TimeUnit.MILLISECONDS)
         }
       if work.level == 1 then
-        lvl1FullTimeRequest.record(now - work.createdAt.getMillis, TimeUnit.MILLISECONDS)
+        lvl1FullTimeRequest.record(now - work.createdAt.toEpochMilli(), TimeUnit.MILLISECONDS)
 
     def failure(work: Work.Move, clientKey: ClientKey, e: Exception) = {
       // logger.warn(s"Received invalid move ${work.id} for ${work.game.id} by $clientKey", e)
