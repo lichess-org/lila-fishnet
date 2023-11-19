@@ -32,9 +32,12 @@ lazy val app = project
       kamonInflux,
       kamonSystemMetrics,
       log4Cats,
+      chessTestKit,
       monocleCore,
       weaver,
       weaverScalaCheck,
+      munit,
+      munitScalacheck,
     ),
   )
 

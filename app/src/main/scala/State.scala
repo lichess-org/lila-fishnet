@@ -8,11 +8,18 @@ import cats.collections.Heap
 import cats.kernel.Order
 import chess.format.Uci
 
-case class State[A](
+// refactor heap to normal queue because we want to get the oldest request
+trait State[A]:
+  def add(request: A, id: Work.Id, at: Instant): State[A]
+  def acquire(key: ClientKey): Option[(A, State[A])]
+  def pop(key: AcquiredKey, bestMove: Uci): Either[MoveError, State[A]]
+  def clean(before: Instant): State[A]
+
+case class StateImpl[A](
     queue: Heap[Request[A]],
     failed: Heap[AcquiredRequest[A]],
     acquired: Map[AcquiredKey, AcquiredRequest[A]],
-):
+) extends State[A]:
 
   def add(request: A, id: Work.Id, at: Instant): State[A] =
     copy(queue = queue.add(State.Request(request, id, at)))
@@ -34,7 +41,7 @@ case class State[A](
 
 object State:
 
-  def empty[A]: State[A] = State(Heap.empty, Heap.empty, Map.empty)
+  def empty[A]: State[A] = StateImpl(Heap.empty, Heap.empty, Map.empty)
 
   enum MoveError:
     case KeyNotFound(key: AcquiredKey)
@@ -42,13 +49,13 @@ object State:
 
   given [A]: Order[Request[A]] with
     def compare(x: Request[A], y: Request[A]): Int =
-      val compareCreatedAt = x.createdAt.compareTo(y.createdAt)
+      val compareCreatedAt = y.createdAt.compareTo(x.createdAt)
       if compareCreatedAt != 0 then compareCreatedAt
       else x.id.value.compareTo(y.id.value)
 
   given [A]: Order[AcquiredRequest[A]] with
     def compare(x: AcquiredRequest[A], y: AcquiredRequest[A]): Int =
-      val compareCreatedAt = x.request.createdAt.compareTo(y.request.createdAt)
+      val compareCreatedAt = y.request.createdAt.compareTo(x.request.createdAt)
       if compareCreatedAt != 0 then compareCreatedAt
       else x.request.id.value.compareTo(y.request.id.value)
 
@@ -58,6 +65,7 @@ object State:
   case class AcquiredRequest[A](request: Request[A], acquired: Acquired, tries: Int = 0):
     def canAcquired(key: ClientKey): Boolean = acquired.clientKey != key
     def isAcquired(workId: Work.Id): Boolean = request.id == workId
+    def key: AcquiredKey                     = AcquiredKey(acquired.clientKey, request.id)
 
     def updateOrGiveUp(): Option[AcquiredRequest[A]] =
       if tries >= 3 then None
