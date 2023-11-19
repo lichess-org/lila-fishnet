@@ -126,7 +126,6 @@ object Executor:
         level = req.level,
         clock = req.clock,
         tries = 0,
-        lastTryByKey = None,
         acquired = None,
         createdAt = now,
       )

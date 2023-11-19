@@ -22,17 +22,6 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
     clock = None,
   )
 
-  // val work = Work.Move(
-  //   _id = workId,
-  //   game = game,
-  //   level = 1,
-  //   clock = None,
-  //   tries = 0,
-  //   lastTryByKey = None,
-  //   acquired = None,
-  //   createdAt = Instant.now,
-  // )
-
   val key = ClientKey("key")
 
   val acquiredKey = MoveDb.Acquire(key)
@@ -54,7 +43,7 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       acquired = acquiredOption.get
     yield assert(acquired.acquired.get.clientKey == key)
       `and` assert(acquired.tries == 1)
-      `and` assert(acquired.lastTryByKey == key.some)
+      `and` assert(acquired.acquired.get.clientKey == key)
       `and` assert(acquired.toRequest == request)
 
   test("after acquire the only work, acquire again should return none"):
@@ -124,7 +113,7 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       acquired = acquiredOption.get
     yield assert(acquired.acquired.get.clientKey == key)
       `and` assert(acquired.tries == 2)
-      `and` assert(acquired.lastTryByKey == key.some)
+      `and` assert(acquired.acquired.get.clientKey == key)
       `and` assert(acquired.toRequest == request)
 
   test("should not give up after 2 tries"):

@@ -22,7 +22,6 @@ object Work:
       level: Int,
       clock: Option[Work.Clock],
       tries: Int,
-      lastTryByKey: Option[ClientKey],
       acquired: Option[Acquired],
       createdAt: Instant,
   ):
@@ -33,7 +32,7 @@ object Work:
     def isAcquiredBy(clientKey: ClientKey) = acquiredByKey contains clientKey
     def isAcquired                         = acquired.isDefined
     def nonAcquired                        = !isAcquired
-    def canAcquire(clientKey: ClientKey)   = lastTryByKey.fold(true)(clientKey.!=)
+    def canAcquire(clientKey: ClientKey)   = acquired.fold(true)(_.clientKey != clientKey)
     def acquiredBefore(date: Instant)      = acquiredAt.fold(false)(_.isBefore(date))
 
     def assignTo(clientKey: ClientKey, at: Instant) =
@@ -44,7 +43,6 @@ object Work:
             date = at,
           )
         ),
-        lastTryByKey = Some(clientKey),
         tries = tries + 1,
       )
 
