@@ -5,6 +5,7 @@ import chess.format.{ Fen, Uci }
 import chess.variant.Variant
 import chess.variant.Variant.LilaKey
 import lila.fishnet.Work.Clock
+import io.circe.Encoder
 
 object Lila:
 
@@ -13,7 +14,7 @@ object Lila:
     def write = s"${game.id} $sign ${uci.uci}"
 
   // TODO: move game's fileds => Request
-  case class Request(game: Work.Game, level: Int, clock: Option[Work.Clock])
+  case class Request(game: Work.Game, level: Int, clock: Option[Work.Clock]) derives Encoder.AsObject
 
   def readMoveReq(msg: String): Option[Request] =
     msg.split(";", 6) match

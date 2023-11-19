@@ -3,21 +3,27 @@ package lila.fishnet
 import chess.variant.Variant
 import chess.format.Fen
 import java.time.Instant
+import io.circe.{ Codec, Decoder, Encoder }
 
 object Work:
 
-  case class Id(value: String) extends AnyVal with StringValue
+  case class Id(value: String) derives Codec.AsObject
+
+  case class RequestWithId(id: Id, request: Lila.Request) derives Encoder.AsObject
 
   case class Acquired(clientKey: ClientKey, date: Instant):
-    def ageInMillis       = System.currentTimeMillis - date.toEpochMilli
     override def toString = s"by $clientKey at $date"
 
   case class Game(id: String, initialFen: Option[Fen.Epd], variant: Variant, moves: String)
+      derives Encoder.AsObject
 
-  case class Clock(wtime: Int, btime: Int, inc: Int)
+  given Encoder[Fen.Epd] = Encoder.encodeString.contramap(_.value)
+  given Encoder[Variant] = Encoder.encodeString.contramap(_.name)
+
+  case class Clock(wtime: Int, btime: Int, inc: Int) derives Codec.AsObject
 
   case class Move(
-      _id: Work.Id, // random
+      id: Work.Id, // random
       game: Game,
       level: Int,
       clock: Option[Work.Clock],
@@ -26,7 +32,16 @@ object Work:
       createdAt: Instant,
   ):
 
-    def id                                 = _id
+    def toRequest =
+      Lila.Request(
+        game = game,
+        level = level,
+        clock = clock,
+      )
+
+    def toRequestWithId =
+      RequestWithId(id, toRequest)
+
     def acquiredAt                         = acquired.map(_.date)
     def acquiredByKey: Option[ClientKey]   = acquired.map(_.clientKey)
     def isAcquiredBy(clientKey: ClientKey) = acquiredByKey contains clientKey

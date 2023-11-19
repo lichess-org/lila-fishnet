@@ -41,10 +41,7 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       _              <- executor.add(request)
       acquiredOption <- executor.acquire(acquiredKey)
       acquired = acquiredOption.get
-    yield assert(acquired.acquired.get.clientKey == key)
-      `and` assert(acquired.tries == 1)
-      `and` assert(acquired.acquired.get.clientKey == key)
-      `and` assert(acquired.toRequest == request)
+    yield assert(acquired.request == request)
 
   test("after acquire the only work, acquire again should return none"):
     for
@@ -105,16 +102,14 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
-      executor       <- Executor.instance(client)
-      _              <- executor.add(request)
-      acquired       <- executor.acquire(acquiredKey)
-      _              <- executor.move(acquired.get.id, invalidMove)
+      executor <- Executor.instance(client)
+      _        <- executor.add(request)
+      acquired <- executor.acquire(acquiredKey)
+      workId = acquired.get.id
+      _              <- executor.move(workId, invalidMove)
       acquiredOption <- executor.acquire(acquiredKey)
       acquired = acquiredOption.get
-    yield assert(acquired.acquired.get.clientKey == key)
-      `and` assert(acquired.tries == 2)
-      `and` assert(acquired.acquired.get.clientKey == key)
-      `and` assert(acquired.toRequest == request)
+    yield assert(acquired == Work.RequestWithId(workId, request))
 
   test("should not give up after 2 tries"):
     for
@@ -147,11 +142,3 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
     new LilaClient:
       def send(move: Lila.Move): IO[Unit] =
         ref.update(_ :+ move)
-
-  extension (move: Work.Move)
-    def toRequest =
-      Lila.Request(
-        game = move.game,
-        level = move.level,
-        clock = move.clock,
-      )

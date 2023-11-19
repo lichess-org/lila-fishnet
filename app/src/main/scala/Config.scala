@@ -1,0 +1,35 @@
+package lila.fishnet
+
+import cats.syntax.all.*
+import ciris.*
+import ciris.http4s.*
+import com.comcast.ip4s.{ Host, Port }
+import cats.effect.IO
+
+object Config:
+
+  def load: IO[AppConfig] = appConfig.load[IO]
+
+  def appConfig = (
+    RedisConfig.config,
+    HttpServerConfig.config,
+  ).parMapN(AppConfig.apply)
+
+case class AppConfig(
+    postgres: RedisConfig,
+    server: HttpServerConfig,
+)
+
+case class HttpServerConfig(host: Host, port: Port)
+
+object HttpServerConfig:
+  def host   = env("HTTP_SERVER_HOST").or(prop("http.server.host")).as[Host]
+  def port   = env("HTTP_SERVER_PORT").or(prop("http.server.port")).as[Port]
+  def config = (host, port).parMapN(HttpServerConfig.apply)
+
+case class RedisConfig(host: Host, port: Port)
+
+object RedisConfig:
+  private def host[F[_]] = env("REDIS_HOST").or(prop("redis.host")).as[Host]
+  private def port[F[_]] = env("REDIS_PORT").or(prop("redis.port")).as[Port]
+  def config[F[_]]       = (host, port).parMapN(RedisConfig.apply)

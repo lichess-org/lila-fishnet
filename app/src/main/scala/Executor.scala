@@ -23,7 +23,7 @@ trait LilaClient:
  */
 trait Executor:
   // get a move from the queue return Work
-  def acquire(accquire: MoveDb.Acquire): IO[Option[Work.Move]]
+  def acquire(accquire: MoveDb.Acquire): IO[Option[Work.RequestWithId]]
   // get Work from Map => send to lila
   def move(workId: Work.Id, result: Fishnet.PostMove): IO[Unit]
   // add work to queue
@@ -46,19 +46,19 @@ object Executor:
               // logger.info(s"Add coll exist: $move")
               clearIfFull(m) + (move.id -> move)
 
-        def acquire(accquire: MoveDb.Acquire): IO[Option[Work.Move]] =
+        def acquire(accquire: MoveDb.Acquire): IO[Option[Work.RequestWithId]] =
           IO.realTimeInstant.flatMap: at =>
             ref.modify: coll =>
               coll.values
-                .foldLeft[Option[Move]](None):
+                .foldLeft[Option[Work.Move]](none):
                   case (found, m) if m.nonAcquired =>
                     Some(found.fold(m): a =>
                       if m.canAcquire(accquire.clientKey) && m.createdAt.isBefore(a.createdAt) then m else a)
                   case (found, _) => found
                 .map: m =>
                   val move = m.assignTo(accquire.clientKey, at)
-                  (coll + (move.id -> move)) -> move.some
-                .getOrElse(coll -> none[Work.Move])
+                  (coll + (move.id -> move)) -> move.toRequestWithId.some
+                .getOrElse(coll -> none)
 
         def move(workId: Work.Id, data: Fishnet.PostMove): IO[Unit] =
           ref.flatModify: coll =>
@@ -121,7 +121,7 @@ object Executor:
   def fromRequest(req: Lila.Request): IO[Move] =
     (IO.delay(Work.makeId), IO.realTimeInstant).mapN: (id, now) =>
       Move(
-        _id = id,
+        id = id,
         game = req.game,
         level = req.level,
         clock = req.clock,

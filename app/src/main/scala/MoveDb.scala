@@ -2,11 +2,12 @@ package lila.fishnet
 
 import kamon.Kamon
 import java.util.concurrent.TimeUnit
+import io.circe.Codec
 
 object MoveDb:
 
   case class Add(move: Work.Move)
-  case class Acquire(clientKey: ClientKey)
+  case class Acquire(clientKey: ClientKey) derives Codec.AsObject
 
   class Monitor:
 
