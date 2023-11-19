@@ -36,12 +36,12 @@ object Work:
     def canAcquire(clientKey: ClientKey)   = lastTryByKey.fold(true)(clientKey.!=)
     def acquiredBefore(date: Instant)      = acquiredAt.fold(false)(_.isBefore(date))
 
-    def assignTo(clientKey: ClientKey) =
+    def assignTo(clientKey: ClientKey, at: Instant) =
       copy(
         acquired = Some(
           Acquired(
             clientKey = clientKey,
-            date = Instant.now,
+            date = at,
           )
         ),
         lastTryByKey = Some(clientKey),

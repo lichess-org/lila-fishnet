@@ -47,17 +47,18 @@ object Executor:
               clearIfFull(m) + (move.id -> move)
 
         def acquire(accquire: MoveDb.Acquire): IO[Option[Work.Move]] =
-          ref.modify: coll =>
-            coll.values
-              .foldLeft[Option[Move]](None):
-                case (found, m) if m.nonAcquired =>
-                  Some(found.fold(m): a =>
-                    if m.canAcquire(accquire.clientKey) && m.createdAt.isBefore(a.createdAt) then m else a)
-                case (found, _) => found
-              .map: m =>
-                val move = m.assignTo(accquire.clientKey)
-                (coll + (move.id -> move)) -> move.some
-              .getOrElse(coll -> none[Work.Move])
+          IO.realTimeInstant.flatMap: at =>
+            ref.modify: coll =>
+              coll.values
+                .foldLeft[Option[Move]](None):
+                  case (found, m) if m.nonAcquired =>
+                    Some(found.fold(m): a =>
+                      if m.canAcquire(accquire.clientKey) && m.createdAt.isBefore(a.createdAt) then m else a)
+                  case (found, _) => found
+                .map: m =>
+                  val move = m.assignTo(accquire.clientKey, at)
+                  (coll + (move.id -> move)) -> move.some
+                .getOrElse(coll -> none[Work.Move])
 
         def move(workId: Work.Id, data: Fishnet.PostMove): IO[Unit] =
           ref.flatModify: coll =>
