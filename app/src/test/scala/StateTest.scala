@@ -19,6 +19,5 @@ class StateImplTest extends ScalaCheckSuite:
 
   test("when there is no failed work acquire should return the latest work"):
     forAll: (state: StateImpl[Int], request: Int, id: Work.Id, key: ClientKey) =>
-      val oldState = state.copy(failed = Heap.empty)
-      val newState = oldState.add(request, id, Instant.now)
+      val newState = state.copy(failed = Heap.empty).add(request, id, Instant.now)
       assertEquals(newState.acquire(key).get._1, request)

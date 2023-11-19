@@ -6,14 +6,17 @@ import cats.syntax.all.*
 import State.*
 import cats.collections.Heap
 import cats.kernel.Order
-import chess.format.Uci
 
 // refactor heap to normal queue because we want to get the oldest request
 trait State[A]:
   def add(request: A, id: Work.Id, at: Instant): State[A]
   def acquire(key: ClientKey): Option[(A, State[A])]
-  def pop(key: AcquiredKey, bestMove: Uci): Either[MoveError, State[A]]
+  def pop(key: AcquiredKey): Option[State[A]]
+  def fail(key: AcquiredKey): Option[State[A]]
   def clean(before: Instant): State[A]
+
+  // ???
+  def size(): Int = ???
 
 case class StateImpl[A](
     queue: Heap[Request[A]],
@@ -29,10 +32,15 @@ case class StateImpl[A](
       .map((r, h) => (r.request.request, copy(failed = h)))
       .orElse(queue.pop.map((r, h) => (r.request, copy(queue = h))))
 
-  def pop(key: AcquiredKey, bestMove: Uci): Either[MoveError, State[A]] =
-    acquired.get(key).fold(MoveError.KeyNotFound(key).asLeft): job =>
-      val newAcquiredMap = acquired - key
-      copy(acquired = newAcquiredMap).asRight[MoveError]
+  def pop(key: AcquiredKey): Option[State[A]] =
+    acquired.get(key).map: job =>
+      copy(acquired = acquired - key)
+
+  def fail(key: AcquiredKey): Option[State[A]] =
+    acquired.get(key).map: job =>
+      val newState = copy(acquired = acquired - key)
+      job.updateOrGiveUp().fold(newState): updatedJob =>
+        newState.copy(failed = failed.add(updatedJob))
 
   def clean(before: Instant): State[A] =
     val newAcqruied = acquired.flatMap: (k, v) =>
@@ -42,10 +50,6 @@ case class StateImpl[A](
 object State:
 
   def empty[A]: State[A] = StateImpl(Heap.empty, Heap.empty, Map.empty)
-
-  enum MoveError:
-    case KeyNotFound(key: AcquiredKey)
-    case OutOfTries(workId: Work.Id, key: ClientKey)
 
   given [A]: Order[Request[A]] with
     def compare(x: Request[A], y: Request[A]): Int =
