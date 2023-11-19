@@ -32,9 +32,12 @@ trait Executor:
 
 object Executor:
 
-  val maxSize = 300
+  def apply(using client: LilaClient): IO[Executor] =
+    instance(client)
 
+  val maxSize = 300
   type State = Map[Work.Id, Work.Move]
+
   def instance(client: LilaClient): IO[Executor] =
     Ref.of[IO, State](Map.empty).map: ref =>
       new Executor:

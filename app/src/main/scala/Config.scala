@@ -30,6 +30,6 @@ object HttpServerConfig:
 case class RedisConfig(host: Host, port: Port)
 
 object RedisConfig:
-  private def host[F[_]] = env("REDIS_HOST").or(prop("redis.host")).as[Host]
-  private def port[F[_]] = env("REDIS_PORT").or(prop("redis.port")).as[Port]
-  def config[F[_]]       = (host, port).parMapN(RedisConfig.apply)
+  private def host = env("REDIS_HOST").or(prop("redis.host")).as[Host]
+  private def port = env("REDIS_PORT").or(prop("redis.port")).as[Port]
+  def config       = (host, port).parMapN(RedisConfig.apply)

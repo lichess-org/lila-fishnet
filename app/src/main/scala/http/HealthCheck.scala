@@ -10,4 +10,7 @@ trait HealthCheck:
 
 object HealthCheck:
 
+  def apply(): HealthCheck = new HealthCheck:
+    def status: IO[AppStatus] = IO.pure(AppStatus(true))
+
   case class AppStatus(status: Boolean) derives Codec.AsObject
