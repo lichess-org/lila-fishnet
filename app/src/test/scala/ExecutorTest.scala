@@ -5,27 +5,22 @@ import weaver.scalacheck.Checkers
 import cats.effect.IO
 import cats.effect.kernel.Ref
 import java.time.Instant
-import Fishnet.*
 
 object ExecutorTest extends SimpleIOSuite with Checkers:
 
-  val game = Work.Game(
-    id = "id",
-    initialFen = None,
+  val request: Lila.Request = Lila.Request(
+    id = GameId("id"),
+    initialFen = chess.variant.Standard.initialFen,
     variant = chess.variant.Standard,
     moves = "",
-  )
-
-  val request: Lila.Request = Lila.Request(
-    game = game,
     level = 1,
     clock = None,
   )
 
   val key = ClientKey("key")
 
-  val validMove   = PostMove(key, BestMove("e2e4"))
-  val invalidMove = PostMove(key, BestMove("ee4"))
+  val validMove   = Fishnet.PostMove(key, BestMove("e2e4"))
+  val invalidMove = Fishnet.PostMove(key, BestMove("ee4"))
 
   test("acquire when there is no work should return none"):
     for
@@ -58,7 +53,7 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       acquired <- executor.acquire(key)
       _        <- executor.move(acquired.get.id, validMove)
       move     <- ref.get.map(_.head)
-    yield assert(move == Lila.Move(request.game, chess.format.Uci.Move("e2e4").get))
+    yield assert(move == Lila.Move(request.id, request.moves, chess.format.Uci.Move("e2e4").get))
 
   test("post move after timeout should not send move"):
     for
@@ -83,7 +78,7 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       acquired <- executor.acquire(key)
       _        <- executor.move(acquired.get.id, validMove)
       move     <- ref.get.map(_.head)
-    yield assert(move == Lila.Move(request.game, chess.format.Uci.Move("e2e4").get))
+    yield assert(move == Lila.Move(request.id, request.moves, chess.format.Uci.Move("e2e4").get))
 
   test("post an invalid move should not send move"):
     for

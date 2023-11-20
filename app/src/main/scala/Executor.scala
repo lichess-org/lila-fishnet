@@ -18,7 +18,7 @@ trait Executor:
   // get a move from the queue return Work
   def acquire(accquire: ClientKey): IO[Option[Work.RequestWithId]]
   // get Work from Map => send to lila
-  def move(workId: Work.Id, result: Fishnet.PostMove): IO[Unit]
+  def move(workId: WorkId, result: Fishnet.PostMove): IO[Unit]
   // add work to queue
   def add(work: Lila.Request): IO[Unit]
   def clean(before: Instant): IO[Unit]
@@ -29,7 +29,7 @@ object Executor:
     instance(client)
 
   val maxSize = 300
-  type State = Map[Work.Id, Work.Move]
+  type State = Map[WorkId, Work.Move]
 
   def instance(client: LilaClient): IO[Executor] =
     Ref.of[IO, State](Map.empty).map: ref =>
@@ -56,7 +56,7 @@ object Executor:
                   (coll + (move.id -> move)) -> move.toRequestWithId.some
                 .getOrElse(coll -> none)
 
-        def move(workId: Work.Id, data: Fishnet.PostMove): IO[Unit] =
+        def move(workId: WorkId, data: Fishnet.PostMove): IO[Unit] =
           ref.flatModify: coll =>
             coll get workId match
               case None =>
@@ -64,7 +64,11 @@ object Executor:
               case Some(move) if move.isAcquiredBy(data.key) =>
                 data.move.uci match
                   case Some(uci) =>
-                    coll - move.id -> (success(move) >> client.send(Lila.Move(move.game, uci)))
+                    coll - move.id -> (success(move) >> client.send(Lila.Move(
+                      move.request.id,
+                      move.request.moves,
+                      uci,
+                    )))
                   case _ =>
                     updateOrGiveUp(coll, move.invalid) ->
                       failure(move, data.key, new Exception("Missing move"))
@@ -99,7 +103,7 @@ object Executor:
             newState + (move.id -> move)
 
         // report not found
-        def notFound(id: Work.Id, key: ClientKey): IO[Unit] =
+        def notFound(id: WorkId, key: ClientKey): IO[Unit] =
           IO.println(s"not found $id, $key")
 
         // report not acquired
@@ -118,9 +122,7 @@ object Executor:
     (IO.delay(Work.makeId), IO.realTimeInstant).mapN: (id, now) =>
       Move(
         id = id,
-        game = req.game,
-        level = req.level,
-        clock = req.clock,
+        request = req,
         tries = 0,
         acquired = None,
         createdAt = now,

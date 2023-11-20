@@ -21,6 +21,7 @@ final class UserRoutes(executor: Executor) extends Http4sDsl[IO]:
         .decode[Fishnet.Acquire]: acquire =>
           executor
             .acquire(acquire.fishnet.apikey)
+            .map(_.map(_.toResponse))
             .flatMap(_.fold(NoContent())(Ok(_)))
             .recoverWith:
               case x => InternalServerError(x.getMessage().nn)
@@ -30,6 +31,7 @@ final class UserRoutes(executor: Executor) extends Http4sDsl[IO]:
         .decode[Fishnet.PostMove]: move =>
           executor.move(id, move)
             >> executor.acquire(move.key)
+              .map(_.map(_.toResponse))
               .flatMap(_.fold(NoContent())(Ok(_)))
               .recoverWith:
                 case x => InternalServerError(x.getMessage().nn)
@@ -37,5 +39,5 @@ final class UserRoutes(executor: Executor) extends Http4sDsl[IO]:
   val routes: HttpRoutes[IO] = Router(prefixPath -> httpRoutes)
 
 object WorkIdVar:
-  def unapply(str: String): Option[Work.Id] =
-    Work.Id(str).some
+  def unapply(str: String): Option[WorkId] =
+    WorkId(str).some

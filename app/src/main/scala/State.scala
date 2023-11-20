@@ -9,7 +9,7 @@ import cats.kernel.Order
 
 // refactor heap to normal queue because we want to get the oldest request
 trait State[A]:
-  def add(request: A, id: Work.Id, at: Instant): State[A]
+  def add(request: A, id: WorkId, at: Instant): State[A]
   def acquire(key: ClientKey): Option[(A, State[A])]
   def pop(key: AcquiredKey): Option[State[A]]
   def fail(key: AcquiredKey): Option[State[A]]
@@ -24,7 +24,7 @@ case class StateImpl[A](
     acquired: Map[AcquiredKey, AcquiredRequest[A]],
 ) extends State[A]:
 
-  def add(request: A, id: Work.Id, at: Instant): State[A] =
+  def add(request: A, id: WorkId, at: Instant): State[A] =
     copy(queue = queue.add(State.Request(request, id, at)))
 
   def acquire(key: ClientKey): Option[(A, State[A])] =
@@ -63,12 +63,12 @@ object State:
       if compareCreatedAt != 0 then compareCreatedAt
       else x.request.id.value.compareTo(y.request.id.value)
 
-  case class AcquiredKey(key: ClientKey, id: Work.Id)
+  case class AcquiredKey(key: ClientKey, id: WorkId)
   case class Acquired(clientKey: ClientKey, at: Instant)
-  case class Request[A](request: A, id: Work.Id, createdAt: Instant)
+  case class Request[A](request: A, id: WorkId, createdAt: Instant)
   case class AcquiredRequest[A](request: Request[A], acquired: Acquired, tries: Int = 0):
     def canAcquired(key: ClientKey): Boolean = acquired.clientKey != key
-    def isAcquired(workId: Work.Id): Boolean = request.id == workId
+    def isAcquired(workId: WorkId): Boolean  = request.id == workId
     def key: AcquiredKey                     = AcquiredKey(acquired.clientKey, request.id)
 
     def updateOrGiveUp(): Option[AcquiredRequest[A]] =

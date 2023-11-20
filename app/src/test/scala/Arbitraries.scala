@@ -9,14 +9,14 @@ import cats.Order
 
 object Arbitraries:
 
-  given Arbitrary[Work.Id]   = Arbitrary(Gen.stringOfN(8, Gen.alphaNumChar).map(Work.Id.apply))
+  given Arbitrary[WorkId]    = Arbitrary(Gen.stringOfN(8, Gen.alphaNumChar).map(WorkId.apply))
   given Arbitrary[ClientKey] = Arbitrary(Gen.uuid.map(_.toString).map(ClientKey.apply))
   given Arbitrary[Instant]   = Arbitrary(Gen.choose(0, 300).map(Instant.now.minusSeconds(_)))
 
   given Arbitrary[AcquiredKey] = Arbitrary:
     for
       key <- arbitrary[ClientKey]
-      id  <- arbitrary[Work.Id]
+      id  <- arbitrary[WorkId]
     yield AcquiredKey(key, id)
 
   given Arbitrary[Acquired] = Arbitrary:
@@ -28,7 +28,7 @@ object Arbitraries:
   given [A](using Arbitrary[A]): Arbitrary[Request[A]] = Arbitrary:
     for
       request   <- arbitrary[A]
-      id        <- arbitrary[Work.Id]
+      id        <- arbitrary[WorkId]
       createdAt <- arbitrary[Instant]
     yield Request(request, id, createdAt)
 
