@@ -16,7 +16,7 @@ import lila.fishnet.Lila.Request
  */
 trait Executor:
   // get a move from the queue return Work
-  def acquire(accquire: MoveDb.Acquire): IO[Option[Work.RequestWithId]]
+  def acquire(accquire: Fishnet.Acquire): IO[Option[Work.RequestWithId]]
   // get Work from Map => send to lila
   def move(workId: Work.Id, result: Fishnet.PostMove): IO[Unit]
   // add work to queue
@@ -42,17 +42,17 @@ object Executor:
               // logger.info(s"Add coll exist: $move")
               clearIfFull(m) + (move.id -> move)
 
-        def acquire(accquire: MoveDb.Acquire): IO[Option[Work.RequestWithId]] =
+        def acquire(accquire: Fishnet.Acquire): IO[Option[Work.RequestWithId]] =
           IO.realTimeInstant.flatMap: at =>
             ref.modify: coll =>
               coll.values
                 .foldLeft[Option[Work.Move]](none):
                   case (found, m) if m.nonAcquired =>
                     Some(found.fold(m): a =>
-                      if m.canAcquire(accquire.clientKey) && m.createdAt.isBefore(a.createdAt) then m else a)
+                      if m.canAcquire(accquire.fishnet) && m.createdAt.isBefore(a.createdAt) then m else a)
                   case (found, _) => found
                 .map: m =>
-                  val move = m.assignTo(accquire.clientKey, at)
+                  val move = m.assignTo(accquire.fishnet, at)
                   (coll + (move.id -> move)) -> move.toRequestWithId.some
                 .getOrElse(coll -> none)
 
@@ -60,16 +60,16 @@ object Executor:
           ref.flatModify: coll =>
             coll get workId match
               case None =>
-                coll -> notFound(workId, data.fishnet.apikey)
-              case Some(move) if move.isAcquiredBy(data.fishnet.apikey) =>
+                coll -> notFound(workId, data.key)
+              case Some(move) if move.isAcquiredBy(data.key) =>
                 data.move.uci match
                   case Some(uci) =>
                     coll - move.id -> (success(move) >> client.send(Lila.Move(move.game, uci)))
                   case _ =>
                     updateOrGiveUp(coll, move.invalid) ->
-                      failure(move, data.fishnet.apikey, new Exception("Missing move"))
+                      failure(move, data.key, new Exception("Missing move"))
               case Some(move) =>
-                coll -> notAcquired(move, data.fishnet.apikey)
+                coll -> notAcquired(move, data.key)
 
         def clean(since: Instant): IO[Unit] =
           ref.update: coll =>

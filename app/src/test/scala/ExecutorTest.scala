@@ -24,10 +24,10 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
 
   val key = ClientKey("key")
 
-  val acquiredKey = MoveDb.Acquire(key)
+  val acquiredKey = Fishnet.Acquire(key)
 
-  val validMove   = Fishnet.PostMove(Fishnet.Fishnet(key), Fishnet.MoveResult("e2e4"))
-  val invalidMove = Fishnet.PostMove(Fishnet.Fishnet(key), Fishnet.MoveResult("ee4"))
+  val validMove   = Fishnet.PostMove(key, BestMove("e2e4"))
+  val invalidMove = Fishnet.PostMove(key, BestMove("ee4"))
 
   test("acquire when there is no work should return none"):
     for

@@ -18,7 +18,7 @@ final class UserRoutes(executor: Executor) extends Http4sDsl[IO]:
 
     case req @ POST -> Root / "acquire" =>
       req
-        .decode[MoveDb.Acquire]: acquire =>
+        .decode[Fishnet.Acquire]: acquire =>
           executor
             .acquire(acquire)
             .flatMap(_.fold(NoContent())(Ok(_)))
@@ -29,7 +29,7 @@ final class UserRoutes(executor: Executor) extends Http4sDsl[IO]:
       req
         .decode[Fishnet.PostMove]: move =>
           executor.move(id, move)
-            >> executor.acquire(MoveDb.Acquire(move.fishnet.apikey))
+            >> executor.acquire(Fishnet.Acquire(move.key))
               .flatMap(_.fold(NoContent())(Ok(_)))
               .recoverWith:
                 case x => InternalServerError(x.getMessage().nn)

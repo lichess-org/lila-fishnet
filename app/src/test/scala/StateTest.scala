@@ -1,6 +1,5 @@
 package lila.fishnet
 
-import cats.syntax.all.*
 import cats.collections.Heap
 import munit.ScalaCheckSuite
 import org.scalacheck.Prop.{ forAll, propBoolean }
