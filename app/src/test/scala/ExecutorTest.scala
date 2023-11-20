@@ -1,11 +1,11 @@
 package lila.fishnet
 
-import cats.syntax.all.*
 import weaver.*
 import weaver.scalacheck.Checkers
 import cats.effect.IO
 import cats.effect.kernel.Ref
 import java.time.Instant
+import Fishnet.*
 
 object ExecutorTest extends SimpleIOSuite with Checkers:
 
@@ -24,22 +24,20 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
 
   val key = ClientKey("key")
 
-  val acquiredKey = Fishnet.Acquire(key)
-
-  val validMove   = Fishnet.PostMove(key, BestMove("e2e4"))
-  val invalidMove = Fishnet.PostMove(key, BestMove("ee4"))
+  val validMove   = PostMove(key, BestMove("e2e4"))
+  val invalidMove = PostMove(key, BestMove("ee4"))
 
   test("acquire when there is no work should return none"):
     for
       executor <- createExecutor()
-      acquired <- executor.acquire(acquiredKey)
+      acquired <- executor.acquire(key)
     yield assert(acquired.isEmpty)
 
   test("acquire when there is work should return work.some"):
     for
       executor       <- createExecutor()
       _              <- executor.add(request)
-      acquiredOption <- executor.acquire(acquiredKey)
+      acquiredOption <- executor.acquire(key)
       acquired = acquiredOption.get
     yield assert(acquired.request == request)
 
@@ -47,8 +45,8 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
     for
       executor <- createExecutor()
       _        <- executor.add(request)
-      _        <- executor.acquire(acquiredKey)
-      acquired <- executor.acquire(acquiredKey)
+      _        <- executor.acquire(key)
+      acquired <- executor.acquire(key)
     yield assert(acquired.isEmpty)
 
   test("post move after acquire should send move"):
@@ -57,7 +55,7 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       client = createLilaClient(ref)
       executor <- Executor.instance(client)
       _        <- executor.add(request)
-      acquired <- executor.acquire(acquiredKey)
+      acquired <- executor.acquire(key)
       _        <- executor.move(acquired.get.id, validMove)
       move     <- ref.get.map(_.head)
     yield assert(move == Lila.Move(request.game, chess.format.Uci.Move("e2e4").get))
@@ -68,7 +66,7 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       client = createLilaClient(ref)
       executor <- Executor.instance(client)
       _        <- executor.add(request)
-      acquired <- executor.acquire(acquiredKey)
+      acquired <- executor.acquire(key)
       _        <- executor.clean(Instant.now.plusSeconds(37))
       _        <- executor.move(acquired.get.id, validMove)
       moves    <- ref.get
@@ -80,9 +78,9 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       client = createLilaClient(ref)
       executor <- Executor.instance(client)
       _        <- executor.add(request)
-      _        <- executor.acquire(acquiredKey)
+      _        <- executor.acquire(key)
       _        <- executor.clean(Instant.now.plusSeconds(37))
-      acquired <- executor.acquire(acquiredKey)
+      acquired <- executor.acquire(key)
       _        <- executor.move(acquired.get.id, validMove)
       move     <- ref.get.map(_.head)
     yield assert(move == Lila.Move(request.game, chess.format.Uci.Move("e2e4").get))
@@ -93,7 +91,7 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       client = createLilaClient(ref)
       executor <- Executor.instance(client)
       _        <- executor.add(request)
-      acquired <- executor.acquire(acquiredKey)
+      acquired <- executor.acquire(key)
       _        <- executor.move(acquired.get.id, invalidMove)
       moves    <- ref.get
     yield assert(moves.isEmpty)
@@ -104,10 +102,10 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       client = createLilaClient(ref)
       executor <- Executor.instance(client)
       _        <- executor.add(request)
-      acquired <- executor.acquire(acquiredKey)
+      acquired <- executor.acquire(key)
       workId = acquired.get.id
       _              <- executor.move(workId, invalidMove)
-      acquiredOption <- executor.acquire(acquiredKey)
+      acquiredOption <- executor.acquire(key)
       acquired = acquiredOption.get
     yield assert(acquired == Work.RequestWithId(workId, request))
 
@@ -117,8 +115,8 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       client = createLilaClient(ref)
       executor <- Executor.instance(client)
       _        <- executor.add(request)
-      _        <- (executor.acquire(acquiredKey).flatMap(x => executor.move(x.get.id, invalidMove))).replicateA_(2)
-      acquired <- executor.acquire(acquiredKey)
+      _        <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, invalidMove))).replicateA_(2)
+      acquired <- executor.acquire(key)
     yield assert(acquired.isDefined)
 
   test("should give up after 3 tries"):
@@ -127,8 +125,8 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
       client = createLilaClient(ref)
       executor <- Executor.instance(client)
       _        <- executor.add(request)
-      _        <- (executor.acquire(acquiredKey).flatMap(x => executor.move(x.get.id, invalidMove))).replicateA_(3)
-      acquired <- executor.acquire(acquiredKey)
+      _        <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, invalidMove))).replicateA_(3)
+      acquired <- executor.acquire(key)
     yield assert(acquired.isEmpty)
 
   def createExecutor(): IO[Executor] =

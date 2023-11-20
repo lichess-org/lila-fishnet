@@ -16,7 +16,7 @@ import lila.fishnet.Lila.Request
  */
 trait Executor:
   // get a move from the queue return Work
-  def acquire(accquire: Fishnet.Acquire): IO[Option[Work.RequestWithId]]
+  def acquire(accquire: ClientKey): IO[Option[Work.RequestWithId]]
   // get Work from Map => send to lila
   def move(workId: Work.Id, result: Fishnet.PostMove): IO[Unit]
   // add work to queue
@@ -42,17 +42,17 @@ object Executor:
               // logger.info(s"Add coll exist: $move")
               clearIfFull(m) + (move.id -> move)
 
-        def acquire(accquire: Fishnet.Acquire): IO[Option[Work.RequestWithId]] =
+        def acquire(key: ClientKey): IO[Option[Work.RequestWithId]] =
           IO.realTimeInstant.flatMap: at =>
             ref.modify: coll =>
               coll.values
                 .foldLeft[Option[Work.Move]](none):
                   case (found, m) if m.nonAcquired =>
                     Some(found.fold(m): a =>
-                      if m.canAcquire(accquire.fishnet) && m.createdAt.isBefore(a.createdAt) then m else a)
+                      if m.canAcquire(key) && m.createdAt.isBefore(a.createdAt) then m else a)
                   case (found, _) => found
                 .map: m =>
-                  val move = m.assignTo(accquire.fishnet, at)
+                  val move = m.assignTo(key, at)
                   (coll + (move.id -> move)) -> move.toRequestWithId.some
                 .getOrElse(coll -> none)
 

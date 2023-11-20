@@ -26,7 +26,8 @@ object BestMove:
     def uci: Option[Uci] = Uci(bm)
 
 object Fishnet:
-  case class Acquire(fishnet: ClientKey) derives Codec.AsObject
+  case class Acquire(fishnet: Fishnet) derives Codec.AsObject
+  case class Fishnet(version: String, apikey: ClientKey) derives Codec.AsObject
   case class PostMove(key: ClientKey, move: BestMove) derives Codec.AsObject
 
 object Lila:
