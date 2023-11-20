@@ -26,15 +26,9 @@ object App extends IOApp.Simple:
               .map: ec =>
                 subscribe(ec, res.redisPubsub) -> HttpApi(ec, HealthCheck()).httpApp
           .flatMap: (io, app) =>
-            // sf.compile.drain.background
-            // io.background
-            // .flatMap: _ =>
-            // MkHttpServer.apply.newEmber(cfg.server, app)
             MkHttpServer.apply.newEmber(cfg.server, app)
               .flatMap: server =>
-                // here is my attempt to run `subscribe` IO in background
                 io.background.map(_ => server)
-            // sf.compile.drain.background.map(_ => server)
           .useForever
 
   import scala.concurrent.duration.*
@@ -59,4 +53,4 @@ object App extends IOApp.Simple:
             Lila.readMoveReq(msg.message).match
               case Some(request) => executor.add(request)
               case None          => Logger[IO].error(s"Failed to parse message: $msg"),
-      )
+      ) *> pubsub.runMessages
