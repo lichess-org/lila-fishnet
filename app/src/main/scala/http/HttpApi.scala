@@ -11,10 +11,10 @@ import org.http4s.server.middleware.*
 
 final class HttpApi(executor: Executor, healthCheck: HealthCheck):
 
-  private val userRoutes   = UserRoutes(executor).routes
-  private val healthRoutes = HealthRoutes(healthCheck).routes
+  private val fishnetRoutes = FishnetRoutes(executor).routes
+  private val healthRoutes  = HealthRoutes(healthCheck).routes
 
-  private val routes: HttpRoutes[IO] = userRoutes <+> healthRoutes
+  private val routes: HttpRoutes[IO] = fishnetRoutes <+> healthRoutes
 
   type Middleware = HttpRoutes[IO] => HttpRoutes[IO]
 

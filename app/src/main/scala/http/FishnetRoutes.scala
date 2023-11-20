@@ -10,7 +10,7 @@ import org.http4s.server.Router
 import org.http4s.circe.CirceEntityDecoder.*
 import org.http4s.circe.CirceEntityEncoder.*
 
-final class UserRoutes(executor: Executor) extends Http4sDsl[IO]:
+final class FishnetRoutes(executor: Executor) extends Http4sDsl[IO]:
 
   private[http] val prefixPath = "/fishnet"
 
