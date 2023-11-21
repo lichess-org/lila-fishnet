@@ -47,7 +47,8 @@ object Fishnet:
 
   case class Acquire(fishnet: Fishnet) derives Codec.AsObject
   case class Fishnet(version: String, apikey: ClientKey) derives Codec.AsObject
-  case class PostMove(key: ClientKey, move: BestMove) derives Codec.AsObject
+  case class PostMove(fishnet: Fishnet, move: Move) derives Codec.AsObject
+  case class Move(bestmove: BestMove)
 
   case class Work(id: WorkId, level: Int, clock: Option[Lila.Clock], `type`: String = "move")
       derives Encoder.AsObject

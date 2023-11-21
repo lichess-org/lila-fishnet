@@ -24,7 +24,7 @@ final class HttpApi(executor: Executor, healthCheck: HealthCheck):
   private val middleware = autoSlash andThen timeout
 
   private val loggers: HttpApp[IO] => HttpApp[IO] =
-    RequestLogger.httpApp[IO](true, true) andThen
-      ResponseLogger.httpApp[IO, Request[IO]](true, true)
+    RequestLogger.httpApp[IO](false, true) andThen
+      ResponseLogger.httpApp[IO, Request[IO]](false, true)
 
   val httpApp: HttpApp[IO] = loggers(middleware(routes).orNotFound)

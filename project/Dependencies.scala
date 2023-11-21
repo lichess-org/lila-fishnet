@@ -29,6 +29,7 @@ object Dependencies {
   val circeCore    = circe("core")
   val circeParser  = circe("parser")
   val circeGeneric = circe("generic")
+  val circeLiteral = circe("literal") % Test
 
   val cirisCore    = "is.cir" %% "ciris"         % V.ciris
   val cirisHtt4s   = "is.cir" %% "ciris-http4s"  % V.ciris
@@ -40,7 +41,7 @@ object Dependencies {
 
   val http4sDsl    = http4s("dsl")
   val http4sServer = http4s("ember-server")
-  val http4sClient = http4s("ember-client")
+  val http4sClient = http4s("ember-client") % Test
   val http4sCirce  = http4s("circe")
 
   val log4Cats = "org.typelevel" %% "log4cats-slf4j"  % "2.6.0"

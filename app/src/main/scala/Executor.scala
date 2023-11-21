@@ -60,9 +60,9 @@ object Executor:
           ref.flatModify: coll =>
             coll get workId match
               case None =>
-                coll -> notFound(workId, data.key)
-              case Some(move) if move.isAcquiredBy(data.key) =>
-                data.move.uci match
+                coll -> notFound(workId, data.fishnet.apikey)
+              case Some(move) if move.isAcquiredBy(data.fishnet.apikey) =>
+                data.move.bestmove.uci match
                   case Some(uci) =>
                     coll - move.id -> (success(move) >> client.send(Lila.Move(
                       move.request.id,
@@ -71,9 +71,9 @@ object Executor:
                     )))
                   case _ =>
                     updateOrGiveUp(coll, move.invalid) ->
-                      failure(move, data.key, new Exception("Missing move"))
+                      failure(move, data.fishnet.apikey, new Exception("Missing move"))
               case Some(move) =>
-                coll -> notAcquired(move, data.key)
+                coll -> notAcquired(move, data.fishnet.apikey)
 
         def clean(since: Instant): IO[Unit] =
           ref.update: coll =>

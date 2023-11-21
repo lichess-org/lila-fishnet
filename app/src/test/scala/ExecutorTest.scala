@@ -1,12 +1,11 @@
 package lila.fishnet
 
 import weaver.*
-import weaver.scalacheck.Checkers
 import cats.effect.IO
 import cats.effect.kernel.Ref
 import java.time.Instant
 
-object ExecutorTest extends SimpleIOSuite with Checkers:
+object ExecutorTest extends SimpleIOSuite:
 
   val request: Lila.Request = Lila.Request(
     id = GameId("id"),
@@ -19,8 +18,8 @@ object ExecutorTest extends SimpleIOSuite with Checkers:
 
   val key = ClientKey("key")
 
-  val validMove   = Fishnet.PostMove(key, BestMove("e2e4"))
-  val invalidMove = Fishnet.PostMove(key, BestMove("ee4"))
+  val validMove   = Fishnet.PostMove(Fishnet.Fishnet("v1", key), Fishnet.Move(BestMove("e2e4")))
+  val invalidMove = Fishnet.PostMove(Fishnet.Fishnet("v1", key), Fishnet.Move(BestMove("2e4")))
 
   test("acquire when there is no work should return none"):
     for

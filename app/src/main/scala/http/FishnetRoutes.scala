@@ -30,7 +30,7 @@ final class FishnetRoutes(executor: Executor) extends Http4sDsl[IO]:
       req
         .decode[Fishnet.PostMove]: move =>
           executor.move(id, move)
-            >> executor.acquire(move.key)
+            >> executor.acquire(move.fishnet.apikey)
               .map(_.map(_.toResponse))
               .flatMap(_.fold(NoContent())(Ok(_)))
               .recoverWith:

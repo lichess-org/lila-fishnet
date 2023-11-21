@@ -41,6 +41,8 @@ lazy val app = project
       munitScalacheck,
       weaver,
       weaverScalaCheck,
+      http4sClient,
+      circeLiteral,
     ),
   )
 
