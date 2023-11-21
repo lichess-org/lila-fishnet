@@ -18,7 +18,7 @@ trait Executor:
   // get a move from the queue return Work
   def acquire(accquire: ClientKey): IO[Option[Work.RequestWithId]]
   // get Work from Map => send to lila
-  def move(workId: WorkId, result: Fishnet.PostMove): IO[Unit]
+  def move(workId: WorkId, fishnetKey: ClientKey, move: BestMove): IO[Unit]
   // add work to queue
   def add(work: Lila.Request): IO[Unit]
   def clean(before: Instant): IO[Unit]
@@ -56,24 +56,24 @@ object Executor:
                   (coll + (move.id -> move)) -> move.toRequestWithId.some
                 .getOrElse(coll -> none)
 
-        def move(workId: WorkId, data: Fishnet.PostMove): IO[Unit] =
+        def move(workId: WorkId, apikey: ClientKey, move: BestMove): IO[Unit] =
           ref.flatModify: coll =>
             coll get workId match
               case None =>
-                coll -> notFound(workId, data.fishnet.apikey)
-              case Some(move) if move.isAcquiredBy(data.fishnet.apikey) =>
-                data.move.bestmove.uci match
+                coll -> notFound(workId, apikey)
+              case Some(work) if work.isAcquiredBy(apikey) =>
+                move.uci match
                   case Some(uci) =>
-                    coll - move.id -> (success(move) >> client.send(Lila.Move(
-                      move.request.id,
-                      move.request.moves,
+                    coll - work.id -> (success(work) >> client.send(Lila.Move(
+                      work.request.id,
+                      work.request.moves,
                       uci,
                     )))
                   case _ =>
-                    updateOrGiveUp(coll, move.invalid) ->
-                      failure(move, data.fishnet.apikey, new Exception("Missing move"))
+                    updateOrGiveUp(coll, work.invalid) ->
+                      failure(work, apikey, new Exception("Missing move"))
               case Some(move) =>
-                coll -> notAcquired(move, data.fishnet.apikey)
+                coll -> notAcquired(move, apikey)
 
         def clean(since: Instant): IO[Unit] =
           ref.update: coll =>

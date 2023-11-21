@@ -18,8 +18,8 @@ object ExecutorTest extends SimpleIOSuite:
 
   val key = ClientKey("key")
 
-  val validMove   = Fishnet.PostMove(Fishnet.Fishnet("v1", key), Fishnet.Move(BestMove("e2e4")))
-  val invalidMove = Fishnet.PostMove(Fishnet.Fishnet("v1", key), Fishnet.Move(BestMove("2e4")))
+  val validMove   = BestMove("e2e4")
+  val invalidMove = BestMove("2e4")
 
   test("acquire when there is no work should return none"):
     for
@@ -50,7 +50,7 @@ object ExecutorTest extends SimpleIOSuite:
       executor <- Executor.instance(client)
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
-      _        <- executor.move(acquired.get.id, validMove)
+      _        <- executor.move(acquired.get.id, key, validMove)
       move     <- ref.get.map(_.head)
     yield assert(move == Lila.Move(request.id, request.moves, chess.format.Uci.Move("e2e4").get))
 
@@ -62,7 +62,7 @@ object ExecutorTest extends SimpleIOSuite:
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
       _        <- executor.clean(Instant.now.plusSeconds(37))
-      _        <- executor.move(acquired.get.id, validMove)
+      _        <- executor.move(acquired.get.id, key, validMove)
       moves    <- ref.get
     yield assert(moves.isEmpty)
 
@@ -75,7 +75,7 @@ object ExecutorTest extends SimpleIOSuite:
       _        <- executor.acquire(key)
       _        <- executor.clean(Instant.now.plusSeconds(37))
       acquired <- executor.acquire(key)
-      _        <- executor.move(acquired.get.id, validMove)
+      _        <- executor.move(acquired.get.id, key, validMove)
       move     <- ref.get.map(_.head)
     yield assert(move == Lila.Move(request.id, request.moves, chess.format.Uci.Move("e2e4").get))
 
@@ -86,7 +86,7 @@ object ExecutorTest extends SimpleIOSuite:
       executor <- Executor.instance(client)
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
-      _        <- executor.move(acquired.get.id, invalidMove)
+      _        <- executor.move(acquired.get.id, key, invalidMove)
       moves    <- ref.get
     yield assert(moves.isEmpty)
 
@@ -98,7 +98,7 @@ object ExecutorTest extends SimpleIOSuite:
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
       workId = acquired.get.id
-      _              <- executor.move(workId, invalidMove)
+      _              <- executor.move(workId, key, invalidMove)
       acquiredOption <- executor.acquire(key)
       acquired = acquiredOption.get
     yield assert(acquired == Work.RequestWithId(workId, request))
@@ -109,7 +109,7 @@ object ExecutorTest extends SimpleIOSuite:
       client = createLilaClient(ref)
       executor <- Executor.instance(client)
       _        <- executor.add(request)
-      _        <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, invalidMove))).replicateA_(2)
+      _        <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(2)
       acquired <- executor.acquire(key)
     yield assert(acquired.isDefined)
 
@@ -119,7 +119,7 @@ object ExecutorTest extends SimpleIOSuite:
       client = createLilaClient(ref)
       executor <- Executor.instance(client)
       _        <- executor.add(request)
-      _        <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, invalidMove))).replicateA_(3)
+      _        <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(3)
       acquired <- executor.acquire(key)
     yield assert(acquired.isEmpty)
 

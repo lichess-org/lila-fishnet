@@ -29,7 +29,7 @@ final class FishnetRoutes(executor: Executor) extends Http4sDsl[IO]:
     case req @ POST -> Root / "move" / WorkIdVar(id) =>
       req
         .decode[Fishnet.PostMove]: move =>
-          executor.move(id, move)
+          executor.move(id, move.fishnet.apikey, move.move.bestmove)
             >> executor.acquire(move.fishnet.apikey)
               .map(_.map(_.toResponse))
               .flatMap(_.fold(NoContent())(Ok(_)))
