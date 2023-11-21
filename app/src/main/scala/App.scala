@@ -21,9 +21,11 @@ object App extends IOApp.Simple:
       res    <- AppResources.instance(config.redis)
       lilaClient = LilaClient(res.redisPubsub)
       executor <- Resource.eval(Executor.instance(lilaClient))
-      job     = RedisSubscriberJob(executor, res.redisPubsub)
-      httpApi = HttpApi(executor, HealthCheck())
+      workListenerJob = RedisSubscriberJob(executor, res.redisPubsub)
+      cleanJob        = CleanJob(executor)
+      httpApi         = HttpApi(executor, HealthCheck())
       server <- MkHttpServer.apply.newEmber(config.server, httpApi.httpApp)
-      _      <- job.run().background
+      _      <- workListenerJob.run().background
+      _      <- cleanJob.run().background
       _      <- Resource.eval(Logger[IO].info(s"Starting server on ${config.server.host}:${config.server.port}"))
     yield ()

@@ -66,7 +66,7 @@ object ExecutorTest extends SimpleIOSuite:
       moves    <- ref.get
     yield assert(moves.isEmpty)
 
-  test("after timeout should move can be acruired again"):
+  test("after timeout move should be able to acquired again"):
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)

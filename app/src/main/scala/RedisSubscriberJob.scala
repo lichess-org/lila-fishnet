@@ -7,6 +7,8 @@ import io.chrisdavenport.rediculous.RedisPubSub
 import org.typelevel.log4cats.Logger
 import Lila.Request
 
+import scala.concurrent.duration.*
+
 trait RedisSubscriberJob:
   def run(): IO[Unit]
 
@@ -33,3 +35,14 @@ object RedisSubscriberJob:
                   case Some(request) => executor.add(request)
                   case None          => Logger[IO].error(s"Failed to parse message: $msg"),
           ) *> pubsub.runMessages
+
+trait CleanJob:
+  def run(): IO[Unit]
+
+object CleanJob:
+  def apply(executor: Executor)(using Logger[IO]): CleanJob =
+    new CleanJob:
+      def run(): IO[Unit] =
+        Logger[IO].info("Start cleaning job") *>
+          IO.sleep(5.seconds) *>
+          IO.realTimeInstant.flatMap(executor.clean)
