@@ -13,7 +13,7 @@ lazy val app = project
   .in(file("app"))
   .settings(
     scalacOptions -= "-Xfatal-warnings",
-    scalacOptions ++= Seq("-source:future", "-rewrite", "-indent", "-explain", "-Wunused:all"),
+    scalacOptions ++= Seq("-source:future", "-rewrite", "-indent", "-explain", "-Wunused:all", "-release:21"),
     resolvers ++= Seq(Dependencies.lilaMaven),
     libraryDependencies ++= Seq(
       catsCore,
@@ -41,7 +41,6 @@ lazy val app = project
       munitScalacheck,
       weaver,
       weaverScalaCheck,
-      http4sClient,
       circeLiteral,
     ),
   )

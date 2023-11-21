@@ -18,23 +18,22 @@ final class FishnetRoutes(executor: Executor) extends Http4sDsl[IO]:
 
     case req @ POST -> Root / "acquire" =>
       req
-        .decode[Fishnet.Acquire]: acquire =>
-          executor
-            .acquire(acquire.fishnet.apikey)
-            .map(_.map(_.toResponse))
-            .flatMap(_.fold(NoContent())(Ok(_)))
-            .recoverWith:
-              case x => InternalServerError(x.getMessage().nn)
+        .decode[Fishnet.Acquire]: input =>
+          acquire(input.fishnet.apikey)
 
     case req @ POST -> Root / "move" / WorkIdVar(id) =>
       req
         .decode[Fishnet.PostMove]: move =>
           executor.move(id, move.fishnet.apikey, move.move.bestmove)
-            >> executor.acquire(move.fishnet.apikey)
-              .map(_.map(_.toResponse))
-              .flatMap(_.fold(NoContent())(Ok(_)))
-              .recoverWith:
-                case x => InternalServerError(x.getMessage().nn)
+            >> acquire(move.fishnet.apikey)
+
+  def acquire(key: ClientKey): IO[Response[IO]] =
+    executor
+      .acquire(key)
+      .map(_.map(_.toResponse))
+      .flatMap(_.fold(NoContent())(Ok(_)))
+      .recoverWith:
+        case x => InternalServerError(x.getMessage().nn)
 
   val routes: HttpRoutes[IO] = Router(prefixPath -> httpRoutes)
 
