@@ -25,13 +25,10 @@ trait Executor:
 
 object Executor:
 
-  def apply(using client: LilaClient): IO[Executor] =
-    instance(client)
-
   val maxSize = 300
   type State = Map[WorkId, Work.Move]
 
-  def instance(client: LilaClient): IO[Executor] =
+  def instance(client: LilaClient, monitor: Monitor): IO[Executor] =
     Ref.of[IO, State](Map.empty).map: ref =>
       new Executor:
 
@@ -60,33 +57,31 @@ object Executor:
           ref.flatModify: coll =>
             coll get workId match
               case None =>
-                coll -> notFound(workId, apikey)
+                coll -> monitor.notFound(workId, apikey)
               case Some(work) if work.isAcquiredBy(apikey) =>
                 move.uci match
                   case Some(uci) =>
-                    coll - work.id -> (success(work) >> client.send(Lila.Move(
+                    coll - work.id -> (monitor.success(work) >> client.send(Lila.Move(
                       work.request.id,
                       work.request.moves,
                       uci,
                     )))
                   case _ =>
                     updateOrGiveUp(coll, work.invalid) ->
-                      failure(work, apikey, new Exception("Missing move"))
+                      monitor.failure(work, apikey, new Exception("Missing move"))
+
               case Some(move) =>
-                coll -> notAcquired(move, apikey)
+                coll -> monitor.notAcquired(move, apikey)
 
         def clean(since: Instant): IO[Unit] =
-          ref.update: coll =>
+          ref.updateAndGet: coll =>
             val timedOut = coll.values.filter(_.acquiredBefore(since))
             // if (timedOut.nonEmpty)
             // logger.debug(s"cleaning ${timedOut.size} of ${coll.size} moves")
-            timedOut.foldLeft(coll) { (coll, m) =>
+            timedOut.foldLeft(coll): (coll, m) =>
               // logger.info(s"Timeout move $m")
               updateOrGiveUp(coll, m.timeout)
-            }
-          // monitor.dbSize.update(coll.size.toDouble)
-          // monitor.dbQueued.update(coll.count(_._2.nonAcquired).toDouble)
-          // monitor.dbAcquired.update(coll.count(_._2.isAcquired).toDouble)
+          .flatMap(monitor.updateSize)
 
         def clearIfFull(coll: State): State =
           if coll.size > maxSize then
@@ -101,22 +96,6 @@ object Executor:
             newState
           else
             newState + (move.id -> move)
-
-        // report not found
-        def notFound(id: WorkId, key: ClientKey): IO[Unit] =
-          IO.println(s"not found $id, $key")
-
-        // report not acquired
-        def notAcquired(work: Work.Move, key: ClientKey): IO[Unit] =
-          IO.println(s"not acquired $work, $key")
-
-        // success
-        def success(move: Work.Move): IO[Unit] =
-          IO.println(s"success $move")
-
-        // failure
-        def failure(move: Work.Move, client: ClientKey, ex: Throwable): IO[Unit] =
-          IO.println(s"failure $move, $client, $ex")
 
   def fromRequest(req: Lila.Request): IO[Move] =
     (IO.delay(Work.makeId), IO.realTimeInstant).mapN: (id, now) =>

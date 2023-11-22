@@ -20,7 +20,8 @@ object App extends IOApp.Simple:
       _      <- Resource.eval(Logger[IO].info(s"Starting lila-fishnet with config: $config"))
       res    <- AppResources.instance(config.redis)
       lilaClient = LilaClient(res.redisPubsub)
-      executor <- Resource.eval(Executor.instance(lilaClient))
+      monitor    = Monitor.apply
+      executor <- Resource.eval(Executor.instance(lilaClient, monitor))
       workListenerJob = RedisSubscriberJob(executor, res.redisPubsub)
       cleanJob        = CleanJob(executor)
       httpApi         = HttpApi(executor, HealthCheck())
