@@ -49,7 +49,7 @@ object Dependencies {
   val log4Cats = "org.typelevel" %% "log4cats-slf4j"  % "2.6.0"
   val logback  = "ch.qos.logback" % "logback-classic" % "1.4.11"
 
-  val redis = "io.chrisdavenport" %% "rediculous" % "0.6-105e347-20231119T213618Z-SNAPSHOT"
+  val redis = "io.chrisdavenport" %% "rediculous" % "0.5.1"
 
   val chessTestKit     = "org.lichess"         %% "scalachess-test-kit"        % V.chess  % Test
   val monocleCore      = "dev.optics"          %% "monocle-core"               % "3.2.0"  % Test
