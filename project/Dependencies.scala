@@ -20,15 +20,12 @@ object Dependencies {
 
   val chess = "org.lichess" %% "scalachess" % V.chess
 
-  val catsCore        = "org.typelevel" %% "cats-core"             % "2.10.0"
-  val catsEffect      = "org.typelevel" %% "cats-effect"           % "3.5.0"
+  val catsCore   = "org.typelevel" %% "cats-core"   % "2.10.0"
+  val catsEffect = "org.typelevel" %% "cats-effect" % "3.5.0"
 
-  val fs2   = "co.fs2" %% "fs2-core" % V.fs2
-  val fs2IO = "co.fs2" %% "fs2-io"   % V.fs2
+  val fs2 = "co.fs2" %% "fs2-core" % V.fs2
 
   val circeCore    = circe("core")
-  val circeParser  = circe("parser")
-  val circeGeneric = circe("generic")
   val circeLiteral = circe("literal") % Test
 
   val cirisCore    = "is.cir" %% "ciris"         % V.ciris
@@ -50,7 +47,6 @@ object Dependencies {
   val redis = "io.chrisdavenport" %% "rediculous" % "0.5.1"
 
   val chessTestKit     = "org.lichess"         %% "scalachess-test-kit"        % V.chess  % Test
-  val monocleCore      = "dev.optics"          %% "monocle-core"               % "3.2.0"  % Test
   val log4CatsNoop     = "org.typelevel"       %% "log4cats-noop"              % "2.6.0"  % Test
   val testContainers   = "com.dimafeng"        %% "testcontainers-scala-redis" % "0.41.0" % Test
   val weaver           = "com.disneystreaming" %% "weaver-cats"                % "0.8.3"  % Test
