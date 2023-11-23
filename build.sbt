@@ -43,6 +43,7 @@ lazy val app = project
       circeLiteral,
     ),
   )
+  .enablePlugins(JavaAppPackaging)
 
 lazy val root = project
   .in(file("."))
