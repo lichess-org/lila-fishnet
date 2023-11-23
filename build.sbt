@@ -4,7 +4,7 @@ inThisBuild(
   Seq(
     scalaVersion  := "3.3.1",
     versionScheme := Some("early-semver"),
-    version       := "2.0",
+    version       := "3.0",
     run / fork    := true,
   )
 )
