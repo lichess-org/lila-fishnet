@@ -10,7 +10,7 @@ object Dependencies {
     val http4s      = "0.23.23"
     val ciris       = "3.4.0"
     val kamon       = "2.5.11"
-    val kamonHttp4s = "2.6.6"
+    val kamonHttp4s = "2.6.1"
     val chess       = "15.6.11"
     val munit       = "1.0.0-M8"
   }
@@ -39,7 +39,6 @@ object Dependencies {
   val kamonCore          = "io.kamon" %% "kamon-core"           % V.kamon
   val kamonInflux        = "io.kamon" %% "kamon-influxdb"       % V.kamon
   val kamonSystemMetrics = "io.kamon" %% "kamon-system-metrics" % V.kamon
-  val kamonHttp4s        = "io.kamon" %% "kamon-http4s"         % V.kamonHttp4s
 
   val http4sDsl    = http4s("dsl")
   val http4sServer = http4s("ember-server")

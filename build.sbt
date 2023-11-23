@@ -32,7 +32,6 @@ lazy val app = project
       kamonCore,
       kamonInflux,
       kamonSystemMetrics,
-      // kamonHttp4s,
       log4Cats,
       logback,
       redis,

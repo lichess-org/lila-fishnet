@@ -16,6 +16,7 @@ object App extends IOApp.Simple:
 
   def app: Resource[IO, Unit] =
     for
+      _      <- Resource.eval(KamonInitiator.apply.init)
       config <- Resource.eval(Config.load)
       _      <- Resource.eval(Logger[IO].info(s"Starting lila-fishnet with config: $config"))
       res    <- AppResources.instance(config.redis)
