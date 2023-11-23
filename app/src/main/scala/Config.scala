@@ -3,7 +3,7 @@ package lila.fishnet
 import cats.syntax.all.*
 import ciris.*
 import ciris.http4s.*
-import com.comcast.ip4s.{ Host, Port }
+import com.comcast.ip4s.*
 import cats.effect.IO
 
 object Config:
@@ -21,15 +21,15 @@ case class AppConfig(redis: RedisConfig, server: HttpServerConfig, kamon: KamonC
 case class HttpServerConfig(host: Host, port: Port)
 
 object HttpServerConfig:
-  def host   = env("HTTP_SERVER_HOST").or(prop("http.server.host")).as[Host]
-  def port   = env("HTTP_SERVER_PORT").or(prop("http.server.port")).as[Port]
+  def host   = env("HTTP_HOST").or(prop("http.host")).as[Host].default(ip"127.0.0.1")
+  def port   = env("HTTP_PORT").or(prop("http.port")).as[Port].default(port"9665")
   def config = (host, port).parMapN(HttpServerConfig.apply)
 
 case class RedisConfig(host: Host, port: Port)
 
 object RedisConfig:
-  private def host = env("REDIS_HOST").or(prop("redis.host")).as[Host]
-  private def port = env("REDIS_PORT").or(prop("redis.port")).as[Port]
+  private def host = env("REDIS_HOST").or(prop("redis.host")).as[Host].default(ip"127.0.0.1")
+  private def port = env("REDIS_PORT").or(prop("redis.port")).as[Port].default(port"6379")
   def config       = (host, port).parMapN(RedisConfig.apply)
 
 case class KamonConfig(enabled: Boolean)

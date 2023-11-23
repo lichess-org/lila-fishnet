@@ -5,13 +5,14 @@ inThisBuild(
     scalaVersion  := "3.3.1",
     versionScheme := Some("early-semver"),
     version       := "3.0",
-    run / fork    := true,
+    run / fork    := true
   )
 )
 
 lazy val app = project
   .in(file("app"))
   .settings(
+    name := "lila-fishnet",
     scalacOptions -= "-Xfatal-warnings",
     scalacOptions ++= Seq("-source:future", "-rewrite", "-indent", "-explain", "-Wunused:all", "-release:21"),
     resolvers ++= Seq(Dependencies.lilaMaven),
@@ -40,8 +41,8 @@ lazy val app = project
       munitScalacheck,
       weaver,
       weaverScalaCheck,
-      circeLiteral,
-    ),
+      circeLiteral
+    )
   )
   .enablePlugins(JavaAppPackaging)
 
