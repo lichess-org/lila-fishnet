@@ -13,7 +13,7 @@ object ExecutorTest extends SimpleIOSuite:
     variant = chess.variant.Standard,
     moves = "",
     level = 1,
-    clock = None,
+    clock = None
   )
 
   val key = ClientKey("key")
@@ -109,7 +109,7 @@ object ExecutorTest extends SimpleIOSuite:
       client = createLilaClient(ref)
       executor <- Executor.instance(client, noopMonitor)
       _        <- executor.add(request)
-      _        <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(2)
+      _ <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(2)
       acquired <- executor.acquire(key)
     yield assert(acquired.isDefined)
 
@@ -119,7 +119,7 @@ object ExecutorTest extends SimpleIOSuite:
       client = createLilaClient(ref)
       executor <- Executor.instance(client, noopMonitor)
       _        <- executor.add(request)
-      _        <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(3)
+      _ <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(3)
       acquired <- executor.acquire(key)
     yield assert(acquired.isEmpty)
 
@@ -127,7 +127,8 @@ object ExecutorTest extends SimpleIOSuite:
     createLilaClient.flatMap(Executor.instance(_, noopMonitor))
 
   def createLilaClient: IO[LilaClient] =
-    Ref.of[IO, List[Lila.Move]](Nil)
+    Ref
+      .of[IO, List[Lila.Move]](Nil)
       .map(createLilaClient)
 
   def createLilaClient(ref: Ref[IO, List[Lila.Move]]): LilaClient =

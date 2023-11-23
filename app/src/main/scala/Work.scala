@@ -11,7 +11,7 @@ object Work:
         game_id = request.id.value,
         position = request.initialFen,
         moves = request.moves,
-        variant = request.variant,
+        variant = request.variant
       )
 
   case class Acquired(clientKey: ClientKey, date: Instant):
@@ -22,7 +22,7 @@ object Work:
       request: Lila.Request,
       tries: Int,
       acquired: Option[Acquired],
-      createdAt: Instant,
+      createdAt: Instant
   ):
 
     def toRequestWithId =

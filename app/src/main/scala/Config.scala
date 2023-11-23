@@ -13,7 +13,7 @@ object Config:
   def appConfig = (
     RedisConfig.config,
     HttpServerConfig.config,
-    KamonConfig.config,
+    KamonConfig.config
   ).parMapN(AppConfig.apply)
 
 case class AppConfig(redis: RedisConfig, server: HttpServerConfig, kamon: KamonConfig)

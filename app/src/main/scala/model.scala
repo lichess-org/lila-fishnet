@@ -26,19 +26,17 @@ object BestMove:
 
 opaque type WorkId = String
 object WorkId:
-  def apply(value: String): WorkId = value
-  given Encoder[WorkId]            = encodeString
-  given Decoder[WorkId]            = decodeString
-  extension (bm: WorkId)
-    def value: String = bm
+  def apply(value: String): WorkId         = value
+  given Encoder[WorkId]                    = encodeString
+  given Decoder[WorkId]                    = decodeString
+  extension (bm: WorkId) def value: String = bm
 
 opaque type GameId = String
 object GameId:
-  def apply(value: String): GameId = value
-  given Encoder[GameId]            = encodeString
-  given Decoder[GameId]            = decodeString
-  extension (bm: GameId)
-    def value: String = bm
+  def apply(value: String): GameId         = value
+  given Encoder[GameId]                    = encodeString
+  given Decoder[GameId]                    = decodeString
+  extension (bm: GameId) def value: String = bm
 
 object Fishnet:
 
@@ -58,7 +56,7 @@ object Fishnet:
       game_id: String,
       position: Fen.Epd,
       moves: String,
-      variant: Variant,
+      variant: Variant
   ) derives Encoder.AsObject
 
 object Lila:
@@ -75,7 +73,7 @@ object Lila:
       variant: Variant,
       moves: String,
       level: Int,
-      clock: Option[Clock],
+      clock: Option[Clock]
   )
 
   def readMoveReq(msg: String): Option[Request] =
@@ -91,7 +89,7 @@ object Lila:
             variant = variant,
             moves = moves,
             level = level,
-            clock = clock,
+            clock = clock
           )
       case _ => None
 

@@ -55,8 +55,8 @@ object FishnetRoutesTest extends SimpleIOSuite:
       moves = "",
       variant = chess.variant.Standard,
       level = 1,
-      clock = Some(Lila.Clock(wtime = 600, btime = 600, inc = 0)),
-    ),
+      clock = Some(Lila.Clock(wtime = 600, btime = 600, inc = 0))
+    )
   )
 
   test("POST /fishnet/acquire should return work response"):
@@ -73,12 +73,16 @@ object FishnetRoutesTest extends SimpleIOSuite:
 
   def exepectHttpBodyAndStatus(routes: HttpRoutes[IO], req: Request[IO])(
       expectedBody: Json,
-      expectedStatus: Status,
+      expectedStatus: Status
   ) =
-    routes.run(req).value.flatMap:
-      case Some(resp) => resp.asJson.map:
-          expect.same(_, expectedBody) `and` expect.same(resp.status, expectedStatus)
-      case _ => IO.pure(failure("expected response but not found"))
+    routes
+      .run(req)
+      .value
+      .flatMap:
+        case Some(resp) =>
+          resp.asJson.map:
+            expect.same(_, expectedBody) `and` expect.same(resp.status, expectedStatus)
+        case _ => IO.pure(failure("expected response but not found"))
 
   def createRoutes(executor: Executor): HttpRoutes[IO] =
     FishnetRoutes(executor).routes

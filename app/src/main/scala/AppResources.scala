@@ -12,7 +12,8 @@ object AppResources:
   // Default 1000 is good for small servers. But can easily take 100,000.
   // workers: How many threads will process pipelined messages.
   def instance(conf: RedisConfig): Resource[IO, AppResources] =
-    RedisConnection.queued[IO]
+    RedisConnection
+      .queued[IO]
       .withHost(conf.host)
       .withPort(conf.port)
       .withMaxQueued(1000)

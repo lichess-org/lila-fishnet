@@ -29,5 +29,5 @@ object App extends IOApp.Simple:
       server <- MkHttpServer.apply.newEmber(config.server, httpApi.httpApp)
       _      <- workListenerJob.run().background
       _      <- cleanJob.run().background
-      _      <- Resource.eval(Logger[IO].info(s"Starting server on ${config.server.host}:${config.server.port}"))
+      _ <- Resource.eval(Logger[IO].info(s"Starting server on ${config.server.host}:${config.server.port}"))
     yield ()

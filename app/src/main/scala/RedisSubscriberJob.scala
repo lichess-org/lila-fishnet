@@ -31,9 +31,11 @@ object RedisSubscriberJob:
             "fishnet-out",
             msg =>
               Logger[IO].info(s"Received message: $msg") *>
-                Lila.readMoveReq(msg.message).match
-                  case Some(request) => executor.add(request)
-                  case None          => Logger[IO].error(s"Failed to parse message: $msg"),
+                Lila
+                  .readMoveReq(msg.message)
+                  .match
+                    case Some(request) => executor.add(request)
+                    case None          => Logger[IO].error(s"Failed to parse message: $msg"),
           ) *> pubsub.runMessages
 
 trait CleanJob:

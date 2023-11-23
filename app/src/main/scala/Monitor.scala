@@ -29,8 +29,7 @@ object Monitor:
         IO.realTimeInstant.map: now =>
           if work.request.level == 8 then
             work.acquiredAt.foreach(at => record(lvl8AcquiredTimeRequest, at, now))
-          if work.request.level == 1 then
-            record(lvl1FullTimeRequest, work.createdAt, now)
+          if work.request.level == 1 then record(lvl1FullTimeRequest, work.createdAt, now)
 
       def failure(work: Work.Move, clientKey: ClientKey, e: Exception) =
         Logger[IO].warn(e)(s"Received invalid move ${work.id} for ${work.request.id} by $clientKey")

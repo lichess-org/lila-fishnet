@@ -9,7 +9,5 @@ trait KamonInitiator:
 object KamonInitiator:
   def apply: KamonInitiator = new KamonInitiator:
     def init(config: KamonConfig): IO[Unit] =
-      if config.enabled then
-        IO(Kamon.init())
-      else
-        IO.unit
+      if config.enabled then IO(Kamon.init())
+      else IO.unit
