@@ -1,6 +1,7 @@
 package lila.fishnet
 
 import weaver.*
+import cats.syntax.all.*
 import cats.effect.IO
 import cats.effect.kernel.Ref
 import java.time.Instant
@@ -8,7 +9,7 @@ import java.time.Instant
 object ExecutorTest extends SimpleIOSuite:
 
   val request: Lila.Request = Lila.Request(
-    id = GameId("id"),
+    id = GameId("1"),
     initialFen = chess.variant.Standard.initialFen,
     variant = chess.variant.Standard,
     moves = "",
@@ -33,7 +34,16 @@ object ExecutorTest extends SimpleIOSuite:
       _              <- executor.add(request)
       acquiredOption <- executor.acquire(key)
       acquired = acquiredOption.get
-    yield assert(acquired.request == request)
+    yield expect.same(acquired.request, request)
+
+  test("acquire should return work in order"):
+    val requests = List(request, request.copy(id = GameId("2")), request.copy(id = GameId("3")))
+    for
+      executor  <- createExecutor()
+      _         <- requests.traverse(executor.add)
+      acquireds <- executor.acquire(key).replicateA(3)
+      ids = acquireds.map(_.get.request.id).mkString("")
+    yield expect.same(ids, "123")
 
   test("after acquire the only work, acquire again should return none"):
     for
@@ -52,7 +62,7 @@ object ExecutorTest extends SimpleIOSuite:
       acquired <- executor.acquire(key)
       _        <- executor.move(acquired.get.id, key, validMove)
       move     <- ref.get.map(_.head)
-    yield assert(move == Lila.Move(request.id, request.moves, chess.format.Uci.Move("e2e4").get))
+    yield expect.same(move, Lila.Move(request.id, request.moves, chess.format.Uci.Move("e2e4").get))
 
   test("post move after timeout should not send move"):
     for
@@ -77,7 +87,7 @@ object ExecutorTest extends SimpleIOSuite:
       acquired <- executor.acquire(key)
       _        <- executor.move(acquired.get.id, key, validMove)
       move     <- ref.get.map(_.head)
-    yield assert(move == Lila.Move(request.id, request.moves, chess.format.Uci.Move("e2e4").get))
+    yield expect.same(move, Lila.Move(request.id, request.moves, chess.format.Uci.Move("e2e4").get))
 
   test("post an invalid move should not send move"):
     for
@@ -101,7 +111,7 @@ object ExecutorTest extends SimpleIOSuite:
       _              <- executor.move(workId, key, invalidMove)
       acquiredOption <- executor.acquire(key)
       acquired = acquiredOption.get
-    yield assert(acquired == Work.RequestWithId(workId, request))
+    yield expect.same(acquired, Work.RequestWithId(workId, request))
 
   test("should not give up after 2 tries"):
     for
