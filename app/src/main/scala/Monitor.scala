@@ -48,5 +48,4 @@ object Monitor:
           IO.delay(dbAcquired.update(map.count(_._2.isAcquired).toDouble)).void
 
   private def record(timer: Timer, start: Instant, end: Instant): Unit =
-    timer.record(start.until(end, ChronoUnit.MILLIS), TimeUnit.MILLISECONDS)
-    ()
+    val _ = timer.record(start.until(end, ChronoUnit.MILLIS), TimeUnit.MILLISECONDS)
