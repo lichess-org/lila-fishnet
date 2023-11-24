@@ -48,10 +48,10 @@ object Dependencies {
 
   val chessTestKit     = "org.lichess"         %% "scalachess-test-kit"        % V.chess  % Test
   val log4CatsNoop     = "org.typelevel"       %% "log4cats-noop"              % "2.6.0"  % Test
-  val testContainers   = "com.dimafeng"        %% "testcontainers-scala-redis" % "0.41.0" % Test
-  val weaver           = "com.disneystreaming" %% "weaver-cats"                % "0.8.3"  % Test
-  val weaverScalaCheck = "com.disneystreaming" %% "weaver-scalacheck"          % "0.8.3"  % Test
   val munit            = "org.scalameta"       %% "munit"                      % V.munit  % Test
   val munitScalacheck  = "org.scalameta"       %% "munit-scalacheck"           % V.munit  % Test
+  val testContainers   = "com.dimafeng"        %% "testcontainers-scala-core" % "0.41.0" % Test
+  val weaver           = "com.disneystreaming" %% "weaver-cats"                % "0.8.3"  % Test
+  val weaverScalaCheck = "com.disneystreaming" %% "weaver-scalacheck"          % "0.8.3"  % Test
 
 }

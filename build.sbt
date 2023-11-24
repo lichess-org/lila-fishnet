@@ -33,12 +33,15 @@ lazy val app = project
       log4Cats,
       logback,
       redis,
+      circeLiteral,
       chessTestKit,
       munit,
       munitScalacheck,
       weaver,
       weaverScalaCheck,
-      circeLiteral
+      testContainers,
+      log4CatsNoop,
+      http4sClient
     )
   )
   .enablePlugins(JavaAppPackaging)
