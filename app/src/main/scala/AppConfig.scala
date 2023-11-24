@@ -6,7 +6,7 @@ import ciris.http4s.*
 import com.comcast.ip4s.*
 import cats.effect.IO
 
-object Config:
+object AppConfig:
 
   def load: IO[AppConfig] = appConfig.load[IO]
 

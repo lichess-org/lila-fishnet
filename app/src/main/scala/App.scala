@@ -16,7 +16,7 @@ object App extends IOApp.Simple:
 
   def app: Resource[IO, Unit] =
     for
-      config <- Resource.eval(Config.load)
+      config <- Resource.eval(AppConfig.load)
       _      <- Resource.eval(KamonInitiator.apply.init(config.kamon))
       _      <- FishnetApp(config).run()
     yield ()
