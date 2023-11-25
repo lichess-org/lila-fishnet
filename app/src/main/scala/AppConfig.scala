@@ -1,10 +1,10 @@
 package lila.fishnet
 
+import cats.effect.IO
 import cats.syntax.all.*
 import ciris.*
 import ciris.http4s.*
 import com.comcast.ip4s.*
-import cats.effect.IO
 
 object AppConfig:
 

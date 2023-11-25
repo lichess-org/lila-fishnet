@@ -17,8 +17,8 @@ object App extends IOApp.Simple:
   def app: Resource[IO, Unit] =
     for
       config <- Resource.eval(AppConfig.load)
-      _      <- Resource.eval(KamonInitiator.apply.init(config.kamon))
       _      <- Resource.eval(Logger[IO].info(s"Starting lila-fishnet with config: $config"))
+      _      <- Resource.eval(KamonInitiator.apply.init(config.kamon))
       res    <- AppResources.instance(config.redis)
       _      <- FishnetApp(res, config).run()
     yield ()
@@ -29,11 +29,11 @@ class FishnetApp(res: AppResources, config: AppConfig)(using Logger[IO]):
       lilaClient <- Resource.pure(LilaClient(res.redisPubsub))
       monitor = Monitor.apply
       executor <- Resource.eval(Executor.instance(lilaClient, monitor))
-      workListenerJob = RedisSubscriberJob(executor, res.redisPubsub)
-      cleanJob        = WorkCleaningJob(executor)
-      httpApi         = HttpApi(executor, HealthCheck())
+      subscriberJob = RedisSubscriberJob(executor, res.redisPubsub)
+      cleaningJob   = WorkCleaningJob(executor)
+      httpApi       = HttpApi(executor, HealthCheck())
       server <- MkHttpServer.apply.newEmber(config.server, httpApi.httpApp)
-      _      <- workListenerJob.run().background
-      _      <- cleanJob.run().background
+      _      <- subscriberJob.run().background
+      _      <- cleaningJob.run().background
       _ <- Resource.eval(Logger[IO].info(s"Starting server on ${config.server.host}:${config.server.port}"))
     yield ()
