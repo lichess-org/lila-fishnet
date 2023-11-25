@@ -40,7 +40,8 @@ lazy val app = project
       weaverScalaCheck,
       testContainers,
       log4CatsNoop,
-      http4sClient
+      http4sClient,
+      catsEffectTestKit,
     )
   )
   .enablePlugins(JavaAppPackaging)

@@ -6,6 +6,8 @@ import cats.effect.IO
 import cats.effect.kernel.Ref
 import java.time.Instant
 
+import Helper.*
+
 object ExecutorTest extends SimpleIOSuite:
 
   val request: Lila.Request = Lila.Request(
@@ -145,11 +147,3 @@ object ExecutorTest extends SimpleIOSuite:
     new LilaClient:
       def send(move: Lila.Move): IO[Unit] =
         ref.update(_ :+ move)
-
-  def noopMonitor: Monitor =
-    new Monitor:
-      def success(work: Work.Move): IO[Unit]                                     = IO.unit
-      def failure(work: Work.Move, clientKey: ClientKey, e: Exception): IO[Unit] = IO.unit
-      def notFound(id: WorkId, clientKey: ClientKey): IO[Unit]                   = IO.unit
-      def notAcquired(work: Work.Move, clientKey: ClientKey): IO[Unit]           = IO.unit
-      def updateSize(map: Map[WorkId, Work.Move]): IO[Unit]                      = IO.unit

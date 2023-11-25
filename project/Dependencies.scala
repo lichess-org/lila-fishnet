@@ -12,6 +12,7 @@ object Dependencies {
     val kamonHttp4s = "2.6.1"
     val chess       = "15.6.11"
     val munit       = "1.0.0-M8"
+    val catsEffect  = "3.5.2"
   }
 
   def http4s(artifact: String) = "org.http4s" %% s"http4s-$artifact" % V.http4s
@@ -20,7 +21,7 @@ object Dependencies {
   val chess = "org.lichess" %% "scalachess" % V.chess
 
   val catsCore   = "org.typelevel" %% "cats-core"   % "2.10.0"
-  val catsEffect = "org.typelevel" %% "cats-effect" % "3.5.0"
+  val catsEffect = "org.typelevel" %% "cats-effect" % V.catsEffect
 
   val circeCore    = circe("core")
   val circeLiteral = circe("literal") % Test
@@ -43,12 +44,12 @@ object Dependencies {
 
   val redis = "io.chrisdavenport" %% "rediculous" % "0.5.1"
 
-  val chessTestKit     = "org.lichess"         %% "scalachess-test-kit"        % V.chess  % Test
-  val log4CatsNoop     = "org.typelevel"       %% "log4cats-noop"              % "2.6.0"  % Test
-  val munit            = "org.scalameta"       %% "munit"                      % V.munit  % Test
-  val munitScalacheck  = "org.scalameta"       %% "munit-scalacheck"           % V.munit  % Test
-  val testContainers   = "com.dimafeng"        %% "testcontainers-scala-core" % "0.41.0" % Test
-  val weaver           = "com.disneystreaming" %% "weaver-cats"                % "0.8.3"  % Test
-  val weaverScalaCheck = "com.disneystreaming" %% "weaver-scalacheck"          % "0.8.3"  % Test
-
+  val chessTestKit      = "org.lichess"         %% "scalachess-test-kit"       % V.chess      % Test
+  val log4CatsNoop      = "org.typelevel"       %% "log4cats-noop"             % "2.6.0"      % Test
+  val munit             = "org.scalameta"       %% "munit"                     % V.munit      % Test
+  val munitScalacheck   = "org.scalameta"       %% "munit-scalacheck"          % V.munit      % Test
+  val testContainers    = "com.dimafeng"        %% "testcontainers-scala-core" % "0.41.0"     % Test
+  val weaver            = "com.disneystreaming" %% "weaver-cats"               % "0.8.3"      % Test
+  val weaverScalaCheck  = "com.disneystreaming" %% "weaver-scalacheck"         % "0.8.3"      % Test
+  val catsEffectTestKit = "org.typelevel"       %% "cats-effect-testkit"       % V.catsEffect % Test
 }
