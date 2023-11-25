@@ -63,7 +63,7 @@ object Lila:
 
   case class Move(gameId: GameId, moves: String, uci: Uci):
     def sign  = moves.takeRight(20).replace(" ", "")
-    def write = s"${gameId} $sign ${uci.uci}"
+    def write = s"$gameId $sign ${uci.uci}"
 
   case class Clock(wtime: Int, btime: Int, inc: Int) derives Codec.AsObject
 
