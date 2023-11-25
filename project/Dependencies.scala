@@ -5,7 +5,6 @@ object Dependencies {
   val lilaMaven = "lila-maven" at "https://raw.githubusercontent.com/lichess-org/lila-maven/master"
 
   object V {
-    val fs2         = "3.9.3"
     val circe       = "0.14.6"
     val http4s      = "0.23.23"
     val ciris       = "3.4.0"
@@ -22,8 +21,6 @@ object Dependencies {
 
   val catsCore   = "org.typelevel" %% "cats-core"   % "2.10.0"
   val catsEffect = "org.typelevel" %% "cats-effect" % "3.5.0"
-
-  val fs2 = "co.fs2" %% "fs2-core" % V.fs2
 
   val circeCore    = circe("core")
   val circeLiteral = circe("literal") % Test
