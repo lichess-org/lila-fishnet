@@ -30,7 +30,7 @@ class FishnetApp(res: AppResources, config: AppConfig)(using Logger[IO]):
       monitor = Monitor.apply
       executor <- Resource.eval(Executor.instance(lilaClient, monitor))
       workListenerJob = RedisSubscriberJob(executor, res.redisPubsub)
-      cleanJob        = CleanJob(executor)
+      cleanJob        = WorkCleaningJob(executor)
       httpApi         = HttpApi(executor, HealthCheck())
       server <- MkHttpServer.apply.newEmber(config.server, httpApi.httpApp)
       _      <- workListenerJob.run().background
