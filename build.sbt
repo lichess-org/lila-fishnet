@@ -42,9 +42,11 @@ lazy val app = project
       log4CatsNoop,
       http4sClient,
       catsEffectTestKit,
-    )
+    ),
+    javaAgents += kamonAgent,
   )
-  .enablePlugins(JavaAppPackaging)
+  .enablePlugins(JavaAppPackaging, JavaAgent)
+
 
 lazy val root = project
   .in(file("."))
