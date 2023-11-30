@@ -25,9 +25,14 @@ sbt -Dredis.host=redis
 
 For other `config` check [Config.scala](https://github.com/lichess-org/lila-fishnet/blob/master/app/src/main/scala/Config.scala)
 
-Test:
+Run all tests (required Docker for IntegrationTest):
 ```
 sbt app/test
+```
+
+Run a single test:
+```
+sbt app/testOnly lila.fishnet.ExecutorTest
 ```
 
 Format:
