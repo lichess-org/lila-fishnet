@@ -1,14 +1,18 @@
 package lila.fishnet
 
-import weaver.*
-import cats.syntax.all.*
 import cats.effect.IO
 import cats.effect.kernel.Ref
+import cats.syntax.all.*
 import java.time.Instant
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.noop.NoOpLogger
+import weaver.*
 
 import Helper.*
 
 object ExecutorTest extends SimpleIOSuite:
+
+  given Logger[IO] = NoOpLogger[IO]
 
   val request: Lila.Request = Lila.Request(
     id = GameId("1"),

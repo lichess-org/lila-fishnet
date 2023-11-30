@@ -69,8 +69,9 @@ object Executor:
                         )
                       ))
                     case _ =>
-                      updateOrGiveUp(coll, work.invalid) ->
-                        monitor.failure(work, apikey, new Exception("Missing move"))
+                      val (state, failedMove) = updateOrGiveUp(coll, work.invalid)
+                      state -> (Logger[IO].warn(s"Give up move: $failedMove") >>
+                        monitor.failure(work, apikey, new Exception("Missing move")))
 
                 case Some(move) =>
                   coll -> monitor.notAcquired(move, apikey)
@@ -84,9 +85,14 @@ object Executor:
                     Logger[IO].debug(s"cleaning ${timedOut.size} of ${coll.size} moves") >>
                       timedOut.traverse_(m => Logger[IO].info(s"Timeout move: $m"))
                   else IO.unit
-                val x = timedOut.foldLeft(coll): (coll, m) =>
-                  updateOrGiveUp(coll, m.timeout)
-                x -> logIfTimedOut.as(x)
+                val (state, gavedUpMoves) = timedOut.foldLeft[(State, List[Work.Move])](coll -> Nil):
+                  (x, m) =>
+                    val (newState, move) = updateOrGiveUp(x._1, m.timeout)
+                    (newState, move.fold(x._2)(_ :: x._2))
+
+                state -> (logIfTimedOut *> gavedUpMoves
+                  .traverse_(m => Logger[IO].warn(s"Give up move: $m"))
+                  .as(state))
               .flatMap(monitor.updateSize)
 
           def clearIfFull(coll: State): (State, IO[Unit]) =
@@ -94,10 +100,10 @@ object Executor:
               Map.empty -> Logger[IO].warn(s"MoveDB collection is full! maxSize=$maxSize. Dropping all now!")
             else coll   -> IO.unit
 
-          def updateOrGiveUp(state: State, move: Work.Move): State =
+          def updateOrGiveUp(state: State, move: Work.Move): (State, Option[Work.Move]) =
             val newState = state - move.id
-            if move.isOutOfTries then newState
-            else newState + (move.id -> move)
+            if move.isOutOfTries then (newState, move.some)
+            else (newState + (move.id -> move), none)
 
   def fromRequest(req: Lila.Request): IO[Move] =
     (IO.delay(Work.makeId), IO.realTimeInstant).mapN: (id, now) =>
