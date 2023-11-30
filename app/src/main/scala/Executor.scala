@@ -1,11 +1,12 @@
 package lila.fishnet
 
-import cats.syntax.all.*
 import cats.effect.IO
 import cats.effect.kernel.Ref
-import lila.fishnet.Work.Move
+import cats.syntax.all.*
 import java.time.Instant
 import lila.fishnet.Lila.Request
+import lila.fishnet.Work.Move
+import org.typelevel.log4cats.Logger
 
 /** Executor is responsible for: store work in memory
   *   - getting work from the queue
@@ -26,7 +27,7 @@ object Executor:
   val maxSize = 300
   type State = Map[WorkId, Work.Move]
 
-  def instance(client: LilaClient, monitor: Monitor): IO[Executor] =
+  def instance(client: LilaClient, monitor: Monitor)(using Logger[IO]): IO[Executor] =
     Ref
       .of[IO, State](Map.empty)
       .map: ref =>
@@ -34,10 +35,9 @@ object Executor:
 
           def add(work: Request): IO[Unit] =
             fromRequest(work).flatMap: move =>
-              ref.update: m =>
-                // if m.exists(_._2.similar(work)) then
-                // logger.info(s"Add coll exist: $move")
-                clearIfFull(m) + (move.id -> move)
+              ref.flatModify: m =>
+                val (x, o) = clearIfFull(m)
+                x + (move.id -> move) -> o
 
           def acquire(key: ClientKey): IO[Option[Work.RequestWithId]] =
             IO.realTimeInstant.flatMap: at =>
@@ -86,11 +86,10 @@ object Executor:
                   updateOrGiveUp(coll, m.timeout)
               .flatMap(monitor.updateSize)
 
-          def clearIfFull(coll: State): State =
+          def clearIfFull(coll: State): (State, IO[Unit]) =
             if coll.size > maxSize then
-              // logger.warn(s"MoveDB collection is full! maxSize=$maxSize. Dropping all now!")
-              Map.empty
-            else coll
+              Map.empty -> Logger[IO].warn(s"MoveDB collection is full! maxSize=$maxSize. Dropping all now!")
+            else coll   -> IO.unit
 
           def updateOrGiveUp(state: State, move: Work.Move): State =
             val newState = state - move.id
