@@ -77,13 +77,16 @@ object Executor:
 
           def clean(since: Instant): IO[Unit] =
             ref
-              .updateAndGet: coll =>
-                val timedOut = coll.values.filter(_.acquiredBefore(since))
-                // if (timedOut.nonEmpty)
-                // logger.debug(s"cleaning ${timedOut.size} of ${coll.size} moves")
-                timedOut.foldLeft(coll): (coll, m) =>
-                  // logger.info(s"Timeout move $m")
+              .flatModify: coll =>
+                val timedOut = coll.values.filter(_.acquiredBefore(since)).toList
+                val logIfTimedOut =
+                  if timedOut.nonEmpty then
+                    Logger[IO].debug(s"cleaning ${timedOut.size} of ${coll.size} moves") >>
+                      timedOut.traverse_(m => Logger[IO].info(s"Timeout move: $m"))
+                  else IO.unit
+                val x = timedOut.foldLeft(coll): (coll, m) =>
                   updateOrGiveUp(coll, m.timeout)
+                x -> logIfTimedOut.as(x)
               .flatMap(monitor.updateSize)
 
           def clearIfFull(coll: State): (State, IO[Unit]) =
