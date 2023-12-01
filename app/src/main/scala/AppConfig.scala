@@ -13,10 +13,16 @@ object AppConfig:
   def appConfig = (
     RedisConfig.config,
     HttpServerConfig.config,
-    KamonConfig.config
+    KamonConfig.config,
+    ExecutorConfg.config
   ).parMapN(AppConfig.apply)
 
-case class AppConfig(redis: RedisConfig, server: HttpServerConfig, kamon: KamonConfig)
+case class AppConfig(
+    redis: RedisConfig,
+    server: HttpServerConfig,
+    kamon: KamonConfig,
+    executor: Executor.Config
+)
 
 case class HttpServerConfig(host: Host, port: Port)
 
@@ -37,3 +43,7 @@ case class KamonConfig(enabled: Boolean)
 object KamonConfig:
   def config =
     env("KAMON_ENABLED").or(prop("kamon.enabled")).as[Boolean].default(false).map(KamonConfig.apply)
+
+object ExecutorConfg:
+  def maxSize = env("APP_MAX_MOVE_SIZE").or(prop("app.max.move.size")).as[Int].default(300)
+  def config  = maxSize.map(Executor.Config.apply)

@@ -28,7 +28,7 @@ class FishnetApp(res: AppResources, config: AppConfig)(using Logger[IO]):
     for
       lilaClient <- Resource.pure(LilaClient(res.redisPubsub))
       monitor = Monitor.apply
-      executor <- Resource.eval(Executor.instance(lilaClient, monitor))
+      executor <- Resource.eval(Executor.instance(lilaClient, monitor, config.executor))
       httpApi = HttpApi(executor, HealthCheck())
       server <- MkHttpServer.apply.newEmber(config.server, httpApi.httpApp)
       _      <- RedisSubscriberJob(executor, res.redisPubsub).run().background

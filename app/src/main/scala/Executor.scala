@@ -24,10 +24,12 @@ trait Executor:
 
 object Executor:
 
-  val maxSize = 300
+  // val maxSize = 300
   type State = Map[WorkId, Work.Move]
 
-  def instance(client: LilaClient, monitor: Monitor)(using Logger[IO]): IO[Executor] =
+  case class Config(maxSize: Int)
+
+  def instance(client: LilaClient, monitor: Monitor, confg: Config)(using Logger[IO]): IO[Executor] =
     Ref
       .of[IO, State](Map.empty)
       .map: ref =>
@@ -96,9 +98,11 @@ object Executor:
               .flatMap(monitor.updateSize)
 
           def clearIfFull(coll: State): (State, IO[Unit]) =
-            if coll.size > maxSize then
-              Map.empty -> Logger[IO].warn(s"MoveDB collection is full! maxSize=$maxSize. Dropping all now!")
-            else coll   -> IO.unit
+            if coll.size > confg.maxSize then
+              Map.empty -> Logger[IO].warn(
+                s"MoveDB collection is full! maxSize=${confg.maxSize}. Dropping all now!"
+              )
+            else coll -> IO.unit
 
           def updateOrGiveUp(state: State, move: Work.Move): (State, Option[Work.Move]) =
             val newState = state - move.id
