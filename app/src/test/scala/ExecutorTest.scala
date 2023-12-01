@@ -139,6 +139,17 @@ object ExecutorTest extends SimpleIOSuite:
       acquired <- executor.acquire(key)
     yield assert(acquired.isEmpty)
 
+  test("if moves reach max size it should clear all moves"):
+    for
+      executor <- createExecutor(Executor.Config(3))
+      _        <- executor.add(request)
+      _        <- executor.add(request.copy(id = GameId("2")))
+      _        <- executor.add(request.copy(id = GameId("3")))
+      _        <- executor.add(request.copy(id = GameId("4")))
+      acquired <- executor.acquire(key)
+      empty    <- executor.acquire(ClientKey("key2"))
+    yield assert(acquired.isDefined && empty.isEmpty)
+
   def createExecutor(config: Executor.Config = Executor.Config(300)): IO[Executor] =
     createLilaClient.flatMap(Executor.instance(_, noopMonitor, config))
 

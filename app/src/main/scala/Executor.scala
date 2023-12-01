@@ -24,7 +24,6 @@ trait Executor:
 
 object Executor:
 
-  // val maxSize = 300
   type State = Map[WorkId, Work.Move]
 
   case class Config(maxSize: Int)
@@ -98,7 +97,7 @@ object Executor:
               .flatMap(monitor.updateSize)
 
           def clearIfFull(coll: State): (State, IO[Unit]) =
-            if coll.size > confg.maxSize then
+            if coll.size >= confg.maxSize then
               Map.empty -> Logger[IO].warn(
                 s"MoveDB collection is full! maxSize=${confg.maxSize}. Dropping all now!"
               )
