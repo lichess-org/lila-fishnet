@@ -1,9 +1,10 @@
 package lila.fishnet
 
 import cats.effect.IO
+import cats.effect.kernel.Ref
 import cats.effect.kernel.Resource
 import cats.syntax.all.*
-import com.comcast.ip4s.{ Host, Port }
+import com.comcast.ip4s.*
 import com.dimafeng.testcontainers.GenericContainer
 import io.chrisdavenport.rediculous.RedisPubSub
 import io.circe.Json
@@ -12,15 +13,14 @@ import lila.fishnet.http.HealthCheck.AppStatus
 import org.http4s.*
 import org.http4s.circe.CirceEntityDecoder.*
 import org.http4s.circe.CirceEntityEncoder.*
+import org.http4s.client.Client
 import org.http4s.ember.client.EmberClientBuilder
 import org.http4s.implicits.*
 import org.testcontainers.containers.wait.strategy.Wait
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.noop.NoOpLogger
-import weaver.*
-import org.http4s.client.Client
 import scala.concurrent.duration.*
-import cats.effect.kernel.Ref
+import weaver.*
 
 object IntegrationTest extends IOSuite:
 
@@ -30,17 +30,23 @@ object IntegrationTest extends IOSuite:
   // start our server
   override def sharedResource: Resource[IO, Res] =
     for
-      redis         <- RedisContainer.startRedis
-      defaultConfig <- Resource.eval(AppConfig.load)
-      config = defaultConfig.copy(redis = redis)
+      redis <- RedisContainer.startRedis
+      config = testAppConfig(redis = redis)
       res <- AppResources.instance(config.redis)
       _   <- FishnetApp(res, config).run()
     yield res
 
+  def testAppConfig(redis: RedisConfig) = AppConfig(
+    server = HttpServerConfig(ip"0.0.0.0", port"9999", apiLogger = false),
+    redis = redis,
+    kamon = KamonConfig(enabled = false),
+    executor = ExecutorConfig(maxSize = 300)
+  )
+
   test("health check should return healthy"):
     client
       .use(
-        _.expect[AppStatus]("http://localhost:9665/health")
+        _.expect[AppStatus]("http://localhost:9999/health")
           .map(expect.same(_, AppStatus(true)))
       )
 
@@ -91,12 +97,12 @@ object IntegrationTest extends IOSuite:
 
   def acquireRequest(acquire: Acquire) = Request[IO](
     method = Method.POST,
-    uri = uri"http://localhost:9665/fishnet/acquire"
+    uri = uri"http://localhost:9999/fishnet/acquire"
   ).withEntity(acquire)
 
   def bestMoveRequest(workId: WorkId, move: PostMove) = Request[IO](
     method = Method.POST,
-    uri = uri"http://localhost:9665/fishnet/move" / workId.value
+    uri = uri"http://localhost:9999/fishnet/move" / workId.value
   ).withEntity(move)
 
   private def sendWorkRequest(res: AppResources, work: String): IO[Unit] =
