@@ -23,7 +23,7 @@ Start with custom config (`redis.host` for example):
 sbt -Dredis.host=redis
 ```
 
-For other `config` check [Config.scala](https://github.com/lichess-org/lila-fishnet/blob/master/app/src/main/scala/Config.scala)
+For other `config` check [AppConfig.scala](https://github.com/lichess-org/lila-fishnet/blob/master/app/src/main/scala/AppConfig.scala)
 
 Run all tests (required Docker for IntegrationTest):
 ```
