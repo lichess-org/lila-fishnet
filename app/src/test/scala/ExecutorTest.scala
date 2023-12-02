@@ -63,7 +63,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
-      executor <- Executor.instance(client, noopMonitor, Executor.Config(300))
+      executor <- Executor.instance(client, noopMonitor, ExecutorConfig(300))
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
       _        <- executor.move(acquired.get.id, key, validMove)
@@ -74,7 +74,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
-      executor <- Executor.instance(client, noopMonitor, Executor.Config(300))
+      executor <- Executor.instance(client, noopMonitor, ExecutorConfig(300))
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
       _        <- executor.clean(Instant.now.plusSeconds(37))
@@ -86,7 +86,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
-      executor <- Executor.instance(client, noopMonitor, Executor.Config(300))
+      executor <- Executor.instance(client, noopMonitor, ExecutorConfig(300))
       _        <- executor.add(request)
       _        <- executor.acquire(key)
       _        <- executor.clean(Instant.now.plusSeconds(37))
@@ -99,7 +99,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
-      executor <- Executor.instance(client, noopMonitor, Executor.Config(300))
+      executor <- Executor.instance(client, noopMonitor, ExecutorConfig(300))
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
       _        <- executor.move(acquired.get.id, key, invalidMove)
@@ -110,7 +110,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
-      executor <- Executor.instance(client, noopMonitor, Executor.Config(300))
+      executor <- Executor.instance(client, noopMonitor, ExecutorConfig(300))
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
       workId = acquired.get.id
@@ -123,7 +123,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
-      executor <- Executor.instance(client, noopMonitor, Executor.Config(300))
+      executor <- Executor.instance(client, noopMonitor, ExecutorConfig(300))
       _        <- executor.add(request)
       _ <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(2)
       acquired <- executor.acquire(key)
@@ -133,7 +133,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
-      executor <- Executor.instance(client, noopMonitor, Executor.Config(300))
+      executor <- Executor.instance(client, noopMonitor, ExecutorConfig(300))
       _        <- executor.add(request)
       _ <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(3)
       acquired <- executor.acquire(key)
@@ -141,7 +141,7 @@ object ExecutorTest extends SimpleIOSuite:
 
   test("if moves reach max size it should clear all moves"):
     for
-      executor <- createExecutor(Executor.Config(3))
+      executor <- createExecutor(ExecutorConfig(3))
       _        <- executor.add(request)
       _        <- executor.add(request.copy(id = GameId("2")))
       _        <- executor.add(request.copy(id = GameId("3")))
@@ -150,7 +150,7 @@ object ExecutorTest extends SimpleIOSuite:
       empty    <- executor.acquire(ClientKey("key2"))
     yield assert(acquired.isDefined && empty.isEmpty)
 
-  def createExecutor(config: Executor.Config = Executor.Config(300)): IO[Executor] =
+  def createExecutor(config: ExecutorConfig = ExecutorConfig(300)): IO[Executor] =
     createLilaClient.flatMap(Executor.instance(_, noopMonitor, config))
 
   def createLilaClient: IO[LilaClient] =

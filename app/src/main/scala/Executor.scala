@@ -26,9 +26,7 @@ object Executor:
 
   type State = Map[WorkId, Work.Move]
 
-  case class Config(maxSize: Int)
-
-  def instance(client: LilaClient, monitor: Monitor, confg: Config)(using Logger[IO]): IO[Executor] =
+  def instance(client: LilaClient, monitor: Monitor, confg: ExecutorConfig)(using Logger[IO]): IO[Executor] =
     Ref
       .of[IO, State](Map.empty)
       .map: ref =>
