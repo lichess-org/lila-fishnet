@@ -1,13 +1,25 @@
-name: Test
+name: Continuous Integration
 
-on: [push, pull_request]
+on:
+  pull_request:
+    branches: ['**']
+  push:
+    branches: ['**']
 
 jobs:
-  openjdk13:
+  openjdk21:
     runs-on: ubuntu-latest
+    container: sbtscala/scala-sbt:eclipse-temurin-jammy-21.0.1_12_1.9.7_3.3.1
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-java@v1
-      with:
-        java-version: 13
-    - run: sbt compile
+
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+
+      - name: Compile
+        run: sbt compile
+
+      - name: Test
+        run: sbt test
+
+      - name: Check Formatting
+        run: sbt scalafmtCheckAll

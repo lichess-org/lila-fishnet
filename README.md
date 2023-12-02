@@ -1,36 +1,41 @@
+# Lila Fishnet
+
 Proxy between lila and fishnet move clients
 
 ```
 lila <-> redis <-> lila-fishnet <- http <- fishnet-clients
 ```
 
+## Developement
+
 Start:
-```
+```sh
 sbt
 ```
 
-Start with custom port:
-```
-sbt -Dhttp.port=9665
-```
-
-Start with custom config file:
-```
-sbt -Dconfig.file=/path/to/my.conf
+Start with default config:
+```sh
+sbt app/run
 ```
 
-Custom config file example:
+Start with custom config (`redis.host` for example):
 ```
-include "application"
-redis.uri = "redis://127.0.0.1"
+sbt -Dredis.host=redis
 ```
 
-Code formatting
-###
+For other `config` check [Config.scala](https://github.com/lichess-org/lila-fishnet/blob/master/app/src/main/scala/Config.scala)
 
-This repository uses [scalafmt](https://scalameta.org/scalafmt/).
+Run all tests (required Docker for IntegrationTest):
+```
+sbt app/test
+```
 
-Please [install it for your code editor](https://scalameta.org/scalafmt/docs/installation.html)
-if you're going to contribute to this project.
+Run a single test:
+```
+sbt app/testOnly lila.fishnet.ExecutorTest
+```
 
-If you don't install it, please run `scalafmtAll` in the sbt console before committing.
+Format:
+```
+sbt scalafmtAll
+```
