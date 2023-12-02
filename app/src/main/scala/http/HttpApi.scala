@@ -9,7 +9,7 @@ import org.http4s.*
 import org.http4s.implicits.*
 import org.http4s.server.middleware.*
 
-final class HttpApi(executor: Executor, healthCheck: HealthCheck):
+final class HttpApi(executor: Executor, healthCheck: HealthCheck, config: HttpServerConfig):
 
   private val fishnetRoutes = FishnetRoutes(executor).routes
   private val healthRoutes  = HealthRoutes(healthCheck).routes
@@ -27,4 +27,7 @@ final class HttpApi(executor: Executor, healthCheck: HealthCheck):
     RequestLogger.httpApp[IO](false, true) andThen
       ResponseLogger.httpApp[IO, Request[IO]](false, true)
 
-  val httpApp: HttpApp[IO] = loggers(middleware(routes).orNotFound)
+  val httpApp: HttpApp[IO] =
+    val app = middleware(routes).orNotFound
+    if config.apiLogger then loggers(app)
+    else app
