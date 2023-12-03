@@ -6,8 +6,8 @@ object Dependencies {
 
   object V {
     val circe      = "0.14.6"
-    val http4s     = "0.23.23"
-    val ciris      = "3.4.0"
+    val http4s     = "0.23.24"
+    val ciris      = "3.5.0"
     val kamon      = "2.5.11"
     val kamonAgent = "1.0.18"
     val chess      = "15.6.11"
