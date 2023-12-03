@@ -18,9 +18,9 @@ Start with default config:
 sbt app/run
 ```
 
-Use environment variables to start with custom config (`redis.host` for example):
+Use environment variables to start with custom config (`redis.host` and `kamon` for example):
 ```sh
-REDIS_HOST=redis sbt app/run
+REDIS_HOST=redis KAMON_ENABLED=true CONFIG_FORCE_kamon_influxdb_port=8888 sbt app/run
 ```
 
 For other `config` check [AppConfig.scala](https://github.com/lichess-org/lila-fishnet/blob/master/app/src/main/scala/AppConfig.scala)
