@@ -11,7 +11,7 @@ object Dependencies {
     val kamon      = "2.5.11"
     val kamonAgent = "1.0.16"
     val chess      = "15.6.11"
-    val munit      = "1.0.0-M8"
+    val munit      = "1.0.0-M10"
     val catsEffect = "3.5.2"
   }
 
