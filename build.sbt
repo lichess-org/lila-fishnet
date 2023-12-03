@@ -5,7 +5,8 @@ inThisBuild(
     scalaVersion  := "3.3.1",
     versionScheme := Some("early-semver"),
     version       := "3.0",
-    run / fork    := true
+    run / fork    := true,
+    run / javaOptions += "-Dconfig.override_with_env_vars=true"
   )
 )
 
@@ -41,12 +42,11 @@ lazy val app = project
       testContainers,
       log4CatsNoop,
       http4sClient,
-      catsEffectTestKit,
+      catsEffectTestKit
     ),
-    javaAgents += kamonAgent,
+    javaAgents += kamonAgent
   )
   .enablePlugins(JavaAppPackaging, JavaAgent)
-
 
 lazy val root = project
   .in(file("."))
