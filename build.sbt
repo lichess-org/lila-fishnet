@@ -6,7 +6,10 @@ inThisBuild(
     versionScheme := Some("early-semver"),
     version       := "3.0",
     run / fork    := true,
-    run / javaOptions += "-Dconfig.override_with_env_vars=true"
+    run / javaOptions += "-Dconfig.override_with_env_vars=true",
+    ThisBuild / libraryDependencySchemes ++= Seq(
+      "org.typelevel" %% "cats-parse" % VersionScheme.Always
+    )
   )
 )
 
