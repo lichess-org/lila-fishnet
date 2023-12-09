@@ -4,10 +4,10 @@ on:
   pull_request:
     branches: ['**']
   push:
-    branches: ['**']
+    branches: master
 
 jobs:
-  openjdk21:
+  test:
     runs-on: ubuntu-latest
     container: sbtscala/scala-sbt:eclipse-temurin-jammy-21.0.1_12_1.9.7_3.3.1
     steps:
@@ -15,11 +15,16 @@ jobs:
       - name: Checkout current branch
         uses: actions/checkout@v4
 
-      - name: Compile
-        run: sbt compile
-
       - name: Test
         run: sbt test
+
+  format:
+    runs-on: ubuntu-latest
+    container: sbtscala/scala-sbt:eclipse-temurin-jammy-21.0.1_12_1.9.7_3.3.1
+    steps:
+
+      - name: Checkout current branch
+        uses: actions/checkout@v4
 
       - name: Check Formatting
         run: sbt scalafmtCheckAll
