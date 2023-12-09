@@ -38,8 +38,6 @@ lazy val app = project
       redis,
       circeLiteral,
       chessTestKit,
-      munit,
-      munitScalacheck,
       weaver,
       weaverScalaCheck,
       testContainers,
