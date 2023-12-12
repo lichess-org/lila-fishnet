@@ -5,7 +5,6 @@ import cats.effect.{ IO, Resource }
 import fs2.io.net.Network
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.Server
-import org.http4s.server.defaults.Banner
 import org.typelevel.log4cats.Logger
 
 trait MkHttpServer:
@@ -23,7 +22,7 @@ object MkHttpServer:
       .withPort(cfg.port)
       .withHttpApp(httpApp)
       .build
-      .evalTap(showEmberBanner)
+      .evalTap(showBanner)
 
-    private def showEmberBanner(s: Server): IO[Unit] =
-      Logger[IO].info(s"\n${Banner.mkString("\n")}\nHTTP Server started at ${s.address}")
+    private def showBanner(s: Server): IO[Unit] =
+      Logger[IO].info(s"\nLila Fishnet started at ${s.address}")
