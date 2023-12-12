@@ -8,8 +8,13 @@ import cats.effect.IO
 import org.http4s.*
 import org.http4s.implicits.*
 import org.http4s.server.middleware.*
+import org.typelevel.log4cats.Logger
 
-final class HttpApi(executor: Executor, healthCheck: HealthCheck, config: HttpServerConfig):
+final class HttpApi(
+    executor: Executor,
+    healthCheck: HealthCheck,
+    config: HttpServerConfig
+)(using Logger[IO]):
 
   private val fishnetRoutes = FishnetRoutes(executor).routes
   private val healthRoutes  = HealthRoutes(healthCheck).routes
@@ -23,11 +28,13 @@ final class HttpApi(executor: Executor, healthCheck: HealthCheck, config: HttpSe
 
   private val middleware = autoSlash andThen timeout
 
-  private val loggers: HttpApp[IO] => HttpApp[IO] =
-    RequestLogger.httpApp[IO](false, true) andThen
-      ResponseLogger.httpApp[IO, Request[IO]](false, true)
+  private def verboseLogger =
+    RequestLogger.httpApp[IO](true, true) andThen
+      ResponseLogger.httpApp[IO, Request[IO]](true, true)
+
+  private val loggers =
+    if config.apiLogger then verboseLogger
+    else ApiErrorLogger.instance
 
   val httpApp: HttpApp[IO] =
-    val app = middleware(routes).orNotFound
-    if config.apiLogger then loggers(app)
-    else app
+    loggers(middleware(routes).orNotFound)
