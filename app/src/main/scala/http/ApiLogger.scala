@@ -10,13 +10,15 @@ import org.typelevel.log4cats.Logger
 
 object ApiErrorLogger:
 
-  def logOnError: Response[IO] => Boolean = res => !res.status.isSuccess && res.status.code != 404
+  val logOnError: Response[IO] => Boolean = res => !res.status.isSuccess && res.status.code != 404
+
   def instance(using Logger[IO]): HttpApp[IO] => HttpApp[IO] = http =>
     Kleisli: req =>
       http(req).flatTap: res =>
         logOnError(res)
           .pure[IO]
           .ifM(
-            Http4sLogger.logMessage[IO](res)(logHeaders = true, logBody = true)(Logger[IO].warn),
+            Http4sLogger.logMessage(req)(true, true)(Logger[IO].warn) >>
+              Http4sLogger.logMessage(res)(true, true)(Logger[IO].warn),
             IO.unit
           )
