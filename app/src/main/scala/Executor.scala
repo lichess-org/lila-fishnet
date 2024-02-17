@@ -43,8 +43,7 @@ object Executor:
               ref.modify: coll =>
                 coll.values
                   .filter(_.nonAcquired)
-                  .reduceLeftOption: (a, m) =>
-                    if m.canAcquire(key) && m.createdAt.isBefore(a.createdAt) then m else a
+                  .minByOption(_.createdAt)
                   .map: m =>
                     val move = m.assignTo(key, at)
                     (coll + (move.id -> move)) -> move.toRequestWithId.some
