@@ -43,10 +43,8 @@ object Executor:
               ref.modify: coll =>
                 coll.values
                   .filter(_.nonAcquired)
-                  .foldLeft[Option[Work.Move]](none):
-                    case (found, m) =>
-                      Some(found.fold(m): a =>
-                        if m.canAcquire(key) && m.createdAt.isBefore(a.createdAt) then m else a)
+                  .reduceLeftOption: (a, m) =>
+                    if m.canAcquire(key) && m.createdAt.isBefore(a.createdAt) then m else a
                   .map: m =>
                     val move = m.assignTo(key, at)
                     (coll + (move.id -> move)) -> move.toRequestWithId.some
