@@ -42,11 +42,11 @@ object Executor:
             IO.realTimeInstant.flatMap: at =>
               ref.modify: coll =>
                 coll.values
+                  .filter(_.nonAcquired)
                   .foldLeft[Option[Work.Move]](none):
-                    case (found, m) if m.nonAcquired =>
+                    case (found, m) =>
                       Some(found.fold(m): a =>
                         if m.canAcquire(key) && m.createdAt.isBefore(a.createdAt) then m else a)
-                    case (found, _) => found
                   .map: m =>
                     val move = m.assignTo(key, at)
                     (coll + (move.id -> move)) -> move.toRequestWithId.some
