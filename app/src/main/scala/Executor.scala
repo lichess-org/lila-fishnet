@@ -26,7 +26,7 @@ object Executor:
 
   type State = Map[WorkId, Work.Move]
 
-  def instance(client: LilaClient, monitor: Monitor, confg: ExecutorConfig)(using Logger[IO]): IO[Executor] =
+  def instance(client: LilaClient, monitor: Monitor, config: ExecutorConfig)(using Logger[IO]): IO[Executor] =
     Ref
       .of[IO, State](Map.empty)
       .map: ref =>
@@ -92,9 +92,9 @@ object Executor:
               .flatMap(monitor.updateSize)
 
           def clearIfFull(coll: State): (State, IO[Unit]) =
-            if coll.size >= confg.maxSize then
+            if coll.size >= config.maxSize then
               Map.empty -> Logger[IO].warn(
-                s"MoveDB collection is full! maxSize=${confg.maxSize}. Dropping all now!"
+                s"MoveDB collection is full! maxSize=${config.maxSize}. Dropping all now!"
               )
             else coll -> IO.unit
 
