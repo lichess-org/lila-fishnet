@@ -33,7 +33,6 @@ object Work:
     def isAcquiredBy(clientKey: ClientKey) = acquiredByKey contains clientKey
     def isAcquired                         = acquired.isDefined
     def nonAcquired                        = !isAcquired
-    def canAcquire(clientKey: ClientKey)   = acquired.fold(true)(_.clientKey != clientKey)
     def acquiredBefore(date: Instant)      = acquiredAt.fold(false)(_.isBefore(date))
 
     def assignTo(clientKey: ClientKey, at: Instant) =
