@@ -46,7 +46,7 @@ object Dependencies {
 
   val chessTestKit      = "org.lichess"         %% "scalachess-test-kit"       % V.chess      % Test
   val log4CatsNoop      = "org.typelevel"       %% "log4cats-noop"             % "2.6.0"      % Test
-  val testContainers    = "com.dimafeng"        %% "testcontainers-scala-core" % "0.41.2"     % Test
+  val testContainers    = "com.dimafeng"        %% "testcontainers-scala-core" % "0.41.3"     % Test
   val weaver            = "com.disneystreaming" %% "weaver-cats"               % "0.8.4"      % Test
   val weaverScalaCheck  = "com.disneystreaming" %% "weaver-scalacheck"         % "0.8.4"      % Test
   val catsEffectTestKit = "org.typelevel"       %% "cats-effect-testkit"       % V.catsEffect % Test
