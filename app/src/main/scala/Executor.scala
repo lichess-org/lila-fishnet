@@ -34,30 +34,30 @@ object Executor:
 
           def add(work: Request): IO[Unit] =
             fromRequest(work).flatMap: move =>
-              ref.flatModify: m =>
-                val (x, o) = clearIfFull(m)
+              ref.flatModify: state =>
+                val (x, o) = clearIfFull(state)
                 x + (move.id -> move) -> o
 
           def acquire(key: ClientKey): IO[Option[Work.RequestWithId]] =
             IO.realTimeInstant.flatMap: at =>
-              ref.modify: coll =>
-                coll.values
+              ref.modify: state =>
+                state.values
                   .filter(_.nonAcquired)
                   .minByOption(_.createdAt)
                   .map: m =>
                     val move = m.assignTo(key, at)
-                    (coll + (move.id -> move)) -> move.toRequestWithId.some
-                  .getOrElse(coll -> none)
+                    (state + (move.id -> move)) -> move.toRequestWithId.some
+                  .getOrElse(state -> none)
 
           def move(workId: WorkId, apikey: ClientKey, move: BestMove): IO[Unit] =
-            ref.flatModify: coll =>
-              coll get workId match
+            ref.flatModify: map =>
+              map get workId match
                 case None =>
-                  coll -> monitor.notFound(workId, apikey)
+                  map -> monitor.notFound(workId, apikey)
                 case Some(work) if work.isAcquiredBy(apikey) =>
                   move.uci match
                     case Some(uci) =>
-                      coll - work.id -> (monitor.success(work) >> client.send(
+                      map - work.id -> (monitor.success(work) >> client.send(
                         Lila.Move(
                           work.request.id,
                           work.request.moves,
@@ -65,38 +65,37 @@ object Executor:
                         )
                       ))
                     case _ =>
-                      val (state, failedMove) = updateOrGiveUp(coll, work.invalid)
+                      val (state, failedMove) = updateOrGiveUp(map, work.invalid)
                       state -> (Logger[IO].warn(s"Give up move: $failedMove") >>
                         monitor.failure(work, apikey, new Exception("Missing move")))
 
                 case Some(move) =>
-                  coll -> monitor.notAcquired(move, apikey)
+                  map -> monitor.notAcquired(move, apikey)
 
           def clean(since: Instant): IO[Unit] =
             ref
-              .flatModify: coll =>
-                val timedOut = coll.values.filter(_.acquiredBefore(since)).toList
+              .flatModify: map =>
+                val timedOut = map.values.filter(_.acquiredBefore(since)).toList
                 val logIfTimedOut =
                   if timedOut.nonEmpty then
-                    Logger[IO].debug(s"cleaning ${timedOut.size} of ${coll.size} moves") >>
+                    Logger[IO].debug(s"cleaning ${timedOut.size} of ${map.size} moves") >>
                       timedOut.traverse_(m => Logger[IO].info(s"Timeout move: $m"))
                   else IO.unit
-                val (state, gavedUpMoves) = timedOut.foldLeft[(State, List[Work.Move])](coll -> Nil):
-                  (x, m) =>
-                    val (newState, move) = updateOrGiveUp(x._1, m.timeout)
-                    (newState, move.fold(x._2)(_ :: x._2))
+                val (state, gavedUpMoves) = timedOut.foldLeft[(State, List[Work.Move])](map -> Nil): (x, m) =>
+                  val (newState, move) = updateOrGiveUp(x._1, m.timeout)
+                  (newState, move.fold(x._2)(_ :: x._2))
 
                 state -> (logIfTimedOut *> gavedUpMoves
                   .traverse_(m => Logger[IO].warn(s"Give up move: $m"))
                   .as(state))
               .flatMap(monitor.updateSize)
 
-          def clearIfFull(coll: State): (State, IO[Unit]) =
-            if coll.size >= config.maxSize then
+          def clearIfFull(state: State): (State, IO[Unit]) =
+            if state.size >= config.maxSize then
               Map.empty -> Logger[IO].warn(
                 s"MoveDB collection is full! maxSize=${config.maxSize}. Dropping all now!"
               )
-            else coll -> IO.unit
+            else state -> IO.unit
 
           def updateOrGiveUp(state: State, move: Work.Move): (State, Option[Work.Move]) =
             val newState = state - move.id
