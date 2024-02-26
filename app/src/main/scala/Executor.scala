@@ -50,7 +50,7 @@ object Executor:
           def move(workId: WorkId, apikey: ClientKey, move: BestMove): IO[Unit] =
             ref.flatModify: state =>
               state.get(workId) match
-                case None => state -> monitor.notFound(workId, apikey)
+                case None => state -> Logger[IO].info(s"Received unknown work $workId by $apikey")
                 case Some(work) if work.isAcquiredBy(apikey) =>
                   move.uci match
                     case Some(uci) =>
@@ -59,9 +59,11 @@ object Executor:
                     case _ =>
                       val newState = work.clearAssginedKey.fold(state)(state.updated(work.id, _))
                       newState -> (Logger[IO].warn(s"Give up move: $work") >>
-                        monitor.failure(work, apikey, new Exception("Missing move")))
+                        Logger[IO].warn(s"Received invalid move $workId for ${work.request.id} by $apikey"))
                 case Some(move) =>
-                  state -> monitor.notAcquired(move, apikey)
+                  state -> Logger[IO].info(
+                    s"Received unacquired move ${workId} for ${move.request.id} by $apikey. Work current tries: ${move.tries} acquired: ${move.acquired}"
+                  )
 
           def clean(since: Instant): IO[Unit] =
             ref.flatModify: state =>
