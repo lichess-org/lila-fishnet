@@ -22,31 +22,31 @@ trait Executor:
   def add(work: Lila.Request): IO[Unit]
   def clean(before: Instant): IO[Unit]
 
-type State = Map[WorkId, Work.Move]
+type AppState = Map[WorkId, Work.Move]
 
-object State:
-  val empty: State = Map.empty
-  extension (state: State)
+object AppState:
+  val empty: AppState = Map.empty
+  extension (state: AppState)
 
-    def tryAcquireMove(key: ClientKey, at: Instant): (State, Option[Work.RequestWithId]) =
+    def tryAcquireMove(key: ClientKey, at: Instant): (AppState, Option[Work.RequestWithId]) =
       state.earliestNonAcquiredMove
         .map: m =>
           val move = m.assignTo(key, at)
           state.updated(move.id, move) -> move.toRequestWithId.some
         .getOrElse(state -> none)
 
-    def clearIfFull(maxSize: Int)(using Logger[IO]): (State, IO[Unit]) =
+    def clearIfFull(maxSize: Int)(using Logger[IO]): (AppState, IO[Unit]) =
       if state.size >= maxSize then
         Map.empty -> Logger[IO].warn(s"MoveDB collection is full! maxSize=${maxSize}. Dropping all now!")
       else state  -> IO.unit
 
-    def addWork(move: Move, maxSize: Int)(using Logger[IO]): (State, IO[Unit]) =
+    def addWork(move: Move, maxSize: Int)(using Logger[IO]): (AppState, IO[Unit]) =
       val (newState, effect) = state.clearIfFull(maxSize)
       newState + (move.id -> move) -> effect
 
     def applyMove(monitor: Monitor, client: LilaClient)(workId: WorkId, apikey: ClientKey, move: BestMove)(
         using Logger[IO]
-    ): (State, IO[Unit]) =
+    ): (AppState, IO[Unit]) =
       state.get(workId) match
         case None =>
           state -> monitor.notFound(workId, apikey)
@@ -67,14 +67,14 @@ object State:
         case Some(move) =>
           state -> monitor.notAcquired(move, apikey)
 
-    def clean(monitor: Monitor)(since: Instant)(using Logger[IO]): (State, IO[Unit]) =
+    def clean(monitor: Monitor)(since: Instant)(using Logger[IO]): (AppState, IO[Unit]) =
       val timedOut: List[Work.Move] = state.values.filter(_.acquiredBefore(since)).toList
       val logIfTimedOut =
         if timedOut.nonEmpty then
           Logger[IO].debug(s"cleaning ${timedOut.size} of ${state.size} moves") >>
             timedOut.traverse_(m => Logger[IO].info(s"Timeout move: $m"))
         else IO.unit
-      val (newState, gavedUpMoves) = timedOut.foldLeft[(State, List[Work.Move])](state -> Nil): (x, m) =>
+      val (newState, gavedUpMoves) = timedOut.foldLeft[(AppState, List[Work.Move])](state -> Nil): (x, m) =>
         val (newState, move) = x._1.updateOrGiveUp(m.timeout)
         (newState, move.fold(x._2)(_ :: x._2))
       newState -> logIfTimedOut
@@ -84,18 +84,18 @@ object State:
     def earliestNonAcquiredMove: Option[Work.Move] =
       state.values.filter(_.nonAcquired).minByOption(_.createdAt)
 
-    def updateOrGiveUp(move: Work.Move): (State, Option[Work.Move]) =
+    def updateOrGiveUp(move: Work.Move): (AppState, Option[Work.Move]) =
       val newState = state - move.id
       if move.isOutOfTries then (newState, move.some)
       else (newState + (move.id -> move), none)
 
 object Executor:
 
-  import State.*
+  import AppState.*
 
   def instance(client: LilaClient, monitor: Monitor, config: ExecutorConfig)(using Logger[IO]): IO[Executor] =
     Ref
-      .of[IO, State](Map.empty)
+      .of[IO, AppState](Map.empty)
       .map: ref =>
         new Executor:
 
