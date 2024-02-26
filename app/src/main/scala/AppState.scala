@@ -48,24 +48,18 @@ object AppState:
         case Some(move) =>
           state -> monitor.notAcquired(move, apikey)
 
-    def clean(monitor: Monitor)(since: Instant)(using Logger[IO]): (AppState, IO[Unit]) =
-      val timedOut: List[Work.Move] = state.values.filter(_.acquiredBefore(since)).toList
-      val logIfTimedOut =
-        if timedOut.nonEmpty then
-          Logger[IO].debug(s"cleaning ${timedOut.size} of ${state.size} moves") >>
-            timedOut.traverse_(m => Logger[IO].info(s"Timeout move: $m"))
-        else IO.unit
-      val (newState, gavedUpMoves) = timedOut.foldLeft[(AppState, List[Work.Move])](state -> Nil): (x, m) =>
-        val (newState, move) = x._1.updateOrGiveUp(m.timeout)
-        (newState, move.fold(x._2)(_ :: x._2))
-      newState -> logIfTimedOut
-        *> gavedUpMoves.traverse_(m => Logger[IO].warn(s"Give up move: $m"))
-        *> monitor.updateSize(newState)
+    def acquiredBefore(since: Instant): List[Work.Move] =
+      state.values.filter(_.acquiredBefore(since)).toList
 
     def earliestNonAcquiredMove: Option[Work.Move] =
       state.values.filter(_.nonAcquired).minByOption(_.createdAt)
 
+    def updateOrGiveUp(candidates: List[Work.Move]): (AppState, List[Work.Move]) =
+      candidates.foldLeft[(AppState, List[Work.Move])](state -> Nil): (x, m) =>
+        val (newState, move) = x._1.updateOrGiveUp(m.timeout)
+        newState -> move.fold(x._2)(_ :: x._2)
+
     def updateOrGiveUp(move: Work.Move): (AppState, Option[Work.Move]) =
       val newState = state - move.id
       if move.isOutOfTries then (newState, move.some)
-      else (newState + (move.id -> move), none)
+      else newState.updated(move.id, move) -> none
