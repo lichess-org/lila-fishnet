@@ -23,17 +23,23 @@ trait Executor:
   def clean(before: Instant): IO[Unit]
 
 object State:
-  val empty: Executor.State = Map.empty
-  extension (state: Executor.State)
+  import Executor.State
+  val empty: State = Map.empty
+  extension (state: State)
     def earliestNonAcquiredMove: Option[Work.Move] =
       state.values.filter(_.nonAcquired).minByOption(_.createdAt)
 
-    def tryAcquireMove(key: ClientKey, at: Instant): (Executor.State, Option[Work.RequestWithId]) =
+    def tryAcquireMove(key: ClientKey, at: Instant): (State, Option[Work.RequestWithId]) =
       state.earliestNonAcquiredMove
         .map: m =>
           val move = m.assignTo(key, at)
           state.updated(move.id, move) -> move.toRequestWithId.some
         .getOrElse(state -> none)
+
+    def clearIfFull(maxSize: Int)(using Logger[IO]): (State, IO[Unit]) =
+      if state.size >= maxSize then
+        Map.empty -> Logger[IO].warn(s"MoveDB collection is full! maxSize=${maxSize}. Dropping all now!")
+      else state  -> IO.unit
 
 object Executor:
 
@@ -49,7 +55,7 @@ object Executor:
           def add(work: Request): IO[Unit] =
             fromRequest(work).flatMap: move =>
               ref.flatModify: state =>
-                val (newState, effect) = clearIfFull(state)
+                val (newState, effect) = state.clearIfFull(config.maxSize)
                 newState + (move.id -> move) -> effect
 
           def acquire(key: ClientKey): IO[Option[Work.RequestWithId]] =
@@ -97,13 +103,6 @@ object Executor:
                   .traverse_(m => Logger[IO].warn(s"Give up move: $m"))
                   .as(state))
               .flatMap(monitor.updateSize)
-
-          def clearIfFull(state: State): (State, IO[Unit]) =
-            if state.size >= config.maxSize then
-              Map.empty -> Logger[IO].warn(
-                s"MoveDB collection is full! maxSize=${config.maxSize}. Dropping all now!"
-              )
-            else state -> IO.unit
 
           def updateOrGiveUp(state: State, move: Work.Move): (State, Option[Work.Move]) =
             val newState = state - move.id
