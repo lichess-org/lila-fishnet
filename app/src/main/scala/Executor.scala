@@ -22,9 +22,23 @@ trait Executor:
   def add(work: Lila.Request): IO[Unit]
   def clean(before: Instant): IO[Unit]
 
+object State:
+  val empty: Executor.State = Map.empty
+  extension (state: Executor.State)
+    def earliestNonAcquiredMove: Option[Work.Move] =
+      state.values.filter(_.nonAcquired).minByOption(_.createdAt)
+
+    def tryAcquireMove(key: ClientKey, at: Instant): (Executor.State, Option[Work.RequestWithId]) =
+      state.earliestNonAcquiredMove
+        .map: m =>
+          val move = m.assignTo(key, at)
+          state.updated(move.id, move) -> move.toRequestWithId.some
+        .getOrElse(state -> none)
+
 object Executor:
 
   type State = Map[WorkId, Work.Move]
+  import State.*
 
   def instance(client: LilaClient, monitor: Monitor, config: ExecutorConfig)(using Logger[IO]): IO[Executor] =
     Ref
@@ -35,29 +49,23 @@ object Executor:
           def add(work: Request): IO[Unit] =
             fromRequest(work).flatMap: move =>
               ref.flatModify: state =>
-                val (x, o) = clearIfFull(state)
-                x + (move.id -> move) -> o
+                val (newState, effect) = clearIfFull(state)
+                newState + (move.id -> move) -> effect
 
           def acquire(key: ClientKey): IO[Option[Work.RequestWithId]] =
             IO.realTimeInstant.flatMap: at =>
               ref.modify: state =>
-                state.values
-                  .filter(_.nonAcquired)
-                  .minByOption(_.createdAt)
-                  .map: m =>
-                    val move = m.assignTo(key, at)
-                    (state + (move.id -> move)) -> move.toRequestWithId.some
-                  .getOrElse(state -> none)
+                state.tryAcquireMove(key, at)
 
           def move(workId: WorkId, apikey: ClientKey, move: BestMove): IO[Unit] =
-            ref.flatModify: map =>
-              map get workId match
+            ref.flatModify: state =>
+              state.get(workId) match
                 case None =>
-                  map -> monitor.notFound(workId, apikey)
+                  state -> monitor.notFound(workId, apikey)
                 case Some(work) if work.isAcquiredBy(apikey) =>
                   move.uci match
                     case Some(uci) =>
-                      map - work.id -> (monitor.success(work) >> client.send(
+                      state - work.id -> (monitor.success(work) >> client.send(
                         Lila.Move(
                           work.request.id,
                           work.request.moves,
@@ -65,12 +73,12 @@ object Executor:
                         )
                       ))
                     case _ =>
-                      val (state, failedMove) = updateOrGiveUp(map, work.invalid)
-                      state -> (Logger[IO].warn(s"Give up move: $failedMove") >>
+                      val (newState, failedMove) = updateOrGiveUp(state, work.invalid)
+                      newState -> (Logger[IO].warn(s"Give up move: $failedMove") >>
                         monitor.failure(work, apikey, new Exception("Missing move")))
 
                 case Some(move) =>
-                  map -> monitor.notAcquired(move, apikey)
+                  state -> monitor.notAcquired(move, apikey)
 
           def clean(since: Instant): IO[Unit] =
             ref
@@ -103,7 +111,7 @@ object Executor:
             else (newState + (move.id -> move), none)
 
   def fromRequest(req: Lila.Request): IO[Move] =
-    (IO.delay(Work.makeId), IO.realTimeInstant).mapN: (id, now) =>
+    (IO(Work.makeId), IO.realTimeInstant).mapN: (id, now) =>
       Move(
         id = id,
         request = req,
