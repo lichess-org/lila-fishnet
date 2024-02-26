@@ -42,6 +42,10 @@ object State:
         Map.empty -> Logger[IO].warn(s"MoveDB collection is full! maxSize=${maxSize}. Dropping all now!")
       else state  -> IO.unit
 
+    def addWork(move: Move, maxSize: Int)(using Logger[IO]): (State, IO[Unit]) =
+      val (newState, effect) = state.clearIfFull(maxSize)
+      newState + (move.id -> move) -> effect
+
 object Executor:
 
   import State.*
@@ -54,14 +58,11 @@ object Executor:
 
           def add(work: Request): IO[Unit] =
             fromRequest(work).flatMap: move =>
-              ref.flatModify: state =>
-                val (newState, effect) = state.clearIfFull(config.maxSize)
-                newState + (move.id -> move) -> effect
+              ref.flatModify(_.addWork(move, config.maxSize))
 
           def acquire(key: ClientKey): IO[Option[Work.RequestWithId]] =
             IO.realTimeInstant.flatMap: at =>
-              ref.modify: state =>
-                state.tryAcquireMove(key, at)
+              ref.modify(_.tryAcquireMove(key, at))
 
           def move(workId: WorkId, apikey: ClientKey, move: BestMove): IO[Unit] =
             ref.flatModify: state =>
