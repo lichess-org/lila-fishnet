@@ -22,8 +22,9 @@ trait Executor:
   def add(work: Lila.Request): IO[Unit]
   def clean(before: Instant): IO[Unit]
 
+type State = Map[WorkId, Work.Move]
+
 object State:
-  import Executor.State
   val empty: State = Map.empty
   extension (state: State)
     def earliestNonAcquiredMove: Option[Work.Move] =
@@ -43,7 +44,6 @@ object State:
 
 object Executor:
 
-  type State = Map[WorkId, Work.Move]
   import State.*
 
   def instance(client: LilaClient, monitor: Monitor, config: ExecutorConfig)(using Logger[IO]): IO[Executor] =
