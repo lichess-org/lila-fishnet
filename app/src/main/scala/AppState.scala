@@ -1,10 +1,8 @@
 package lila.fishnet
 
 import cats.syntax.all.*
-import cats.effect.IO
 import java.time.Instant
 import lila.fishnet.Work.Move
-import org.typelevel.log4cats.Logger
 
 type AppState = Map[WorkId, Work.Move]
 
@@ -24,29 +22,6 @@ object AppState:
 
     def addWork(move: Move): AppState =
       state + (move.id -> move)
-
-    def applyMove(monitor: Monitor, client: LilaClient)(workId: WorkId, apikey: ClientKey, move: BestMove)(
-        using Logger[IO]
-    ): (AppState, IO[Unit]) =
-      state.get(workId) match
-        case None =>
-          state -> monitor.notFound(workId, apikey)
-        case Some(work) if work.isAcquiredBy(apikey) =>
-          move.uci match
-            case Some(uci) =>
-              state - work.id -> (monitor.success(work) >> client.send(
-                Lila.Move(
-                  work.request.id,
-                  work.request.moves,
-                  uci
-                )
-              ))
-            case _ =>
-              val newState = work.clearAssginedKey.fold(state)(state.updated(work.id, _))
-              newState -> (Logger[IO].warn(s"Give up move: $work") >>
-                monitor.failure(work, apikey, new Exception("Missing move")))
-        case Some(move) =>
-          state -> monitor.notAcquired(move, apikey)
 
     def acquiredBefore(since: Instant): List[Work.Move] =
       state.values.filter(_.acquiredBefore(since)).toList

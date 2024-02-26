@@ -48,7 +48,20 @@ object Executor:
               ref.modify(_.tryAcquireMove(key, at))
 
           def move(workId: WorkId, apikey: ClientKey, move: BestMove): IO[Unit] =
-            ref.flatModify(_.applyMove(monitor, client)(workId, apikey, move))
+            ref.flatModify: state =>
+              state.get(workId) match
+                case None => state -> monitor.notFound(workId, apikey)
+                case Some(work) if work.isAcquiredBy(apikey) =>
+                  move.uci match
+                    case Some(uci) =>
+                      state - work.id -> (monitor.success(work) >>
+                        client.send(Lila.Move(work.request.id, work.request.moves, uci)))
+                    case _ =>
+                      val newState = work.clearAssginedKey.fold(state)(state.updated(work.id, _))
+                      newState -> (Logger[IO].warn(s"Give up move: $work") >>
+                        monitor.failure(work, apikey, new Exception("Missing move")))
+                case Some(move) =>
+                  state -> monitor.notAcquired(move, apikey)
 
           def clean(since: Instant): IO[Unit] =
             ref.flatModify: state =>
