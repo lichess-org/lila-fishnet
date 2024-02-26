@@ -47,11 +47,11 @@ object Executor:
             IO.realTimeInstant.flatMap: at =>
               ref.modify(_.tryAcquireMove(key, at))
 
-          def move(workId: WorkId, apikey: ClientKey, move: BestMove): IO[Unit] =
+          def move(workId: WorkId, key: ClientKey, move: BestMove): IO[Unit] =
             ref.flatModify: state =>
               state.get(workId) match
-                case None => state -> Logger[IO].info(s"Received unknown work $workId by $apikey")
-                case Some(work) if work.isAcquiredBy(apikey) =>
+                case None => state -> Logger[IO].info(s"Received unknown work $workId by $key")
+                case Some(work) if work.isAcquiredBy(key) =>
                   move.uci match
                     case Some(uci) =>
                       state - work.id -> (monitor.success(work) >>
@@ -59,10 +59,10 @@ object Executor:
                     case _ =>
                       val newState = work.clearAssginedKey.fold(state)(state.updated(work.id, _))
                       newState -> (Logger[IO].warn(s"Give up move: $work") >>
-                        Logger[IO].warn(s"Received invalid move $workId for ${work.request.id} by $apikey"))
+                        Logger[IO].warn(s"Received invalid move $workId for ${work.request.id} by $key"))
                 case Some(move) =>
                   state -> Logger[IO].info(
-                    s"Received unacquired move ${workId} for ${move.request.id} by $apikey. Work current tries: ${move.tries} acquired: ${move.acquired}"
+                    s"Received unacquired move ${workId} for ${move.request.id} by $key. Work current tries: ${move.tries} acquired: ${move.acquired}"
                   )
 
           def clean(since: Instant): IO[Unit] =
