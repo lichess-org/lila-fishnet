@@ -67,6 +67,20 @@ object State:
         case Some(move) =>
           state -> monitor.notAcquired(move, apikey)
 
+    def clean(monitor: Monitor)(since: Instant)(using Logger[IO]): (State, IO[Unit]) =
+      val timedOut: List[Work.Move] = state.values.filter(_.acquiredBefore(since)).toList
+      val logIfTimedOut =
+        if timedOut.nonEmpty then
+          Logger[IO].debug(s"cleaning ${timedOut.size} of ${state.size} moves") >>
+            timedOut.traverse_(m => Logger[IO].info(s"Timeout move: $m"))
+        else IO.unit
+      val (newState, gavedUpMoves) = timedOut.foldLeft[(State, List[Work.Move])](state -> Nil): (x, m) =>
+        val (newState, move) = x._1.updateOrGiveUp(m.timeout)
+        (newState, move.fold(x._2)(_ :: x._2))
+      newState -> logIfTimedOut
+        *> gavedUpMoves.traverse_(m => Logger[IO].warn(s"Give up move: $m"))
+        *> monitor.updateSize(newState)
+
     def earliestNonAcquiredMove: Option[Work.Move] =
       state.values.filter(_.nonAcquired).minByOption(_.createdAt)
 
@@ -97,22 +111,7 @@ object Executor:
             ref.flatModify(_.applyMove(monitor, client)(workId, apikey, move))
 
           def clean(since: Instant): IO[Unit] =
-            ref
-              .flatModify: map =>
-                val timedOut = map.values.filter(_.acquiredBefore(since)).toList
-                val logIfTimedOut =
-                  if timedOut.nonEmpty then
-                    Logger[IO].debug(s"cleaning ${timedOut.size} of ${map.size} moves") >>
-                      timedOut.traverse_(m => Logger[IO].info(s"Timeout move: $m"))
-                  else IO.unit
-                val (state, gavedUpMoves) = timedOut.foldLeft[(State, List[Work.Move])](map -> Nil): (x, m) =>
-                  val (newState, move) = x._1.updateOrGiveUp(m.timeout)
-                  (newState, move.fold(x._2)(_ :: x._2))
-
-                state -> (logIfTimedOut *> gavedUpMoves
-                  .traverse_(m => Logger[IO].warn(s"Give up move: $m"))
-                  .as(state))
-              .flatMap(monitor.updateSize)
+            ref.flatModify(_.clean(monitor)(since))
 
   def fromRequest(req: Lila.Request): IO[Move] =
     (IO(Work.makeId), IO.realTimeInstant).mapN: (id, now) =>
