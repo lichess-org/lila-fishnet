@@ -30,10 +30,10 @@ object Work:
 
     def acquiredAt                         = acquired.map(_.date)
     def acquiredByKey: Option[ClientKey]   = acquired.map(_.clientKey)
-    def isAcquiredBy(clientKey: ClientKey) = acquiredByKey contains clientKey
+    def isAcquiredBy(clientKey: ClientKey) = acquiredByKey.contains(clientKey)
     def isAcquired                         = acquired.isDefined
     def nonAcquired                        = !isAcquired
-    def acquiredBefore(date: Instant)      = acquiredAt.fold(false)(_.isBefore(date))
+    def acquiredBefore(date: Instant)      = acquiredAt.exists(_.isBefore(date))
 
     def assignTo(clientKey: ClientKey, at: Instant) =
       copy(acquired = Some(Acquired(clientKey = clientKey, date = at)), tries = tries + 1)
