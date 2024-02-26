@@ -38,12 +38,13 @@ object Work:
     def assignTo(clientKey: ClientKey, at: Instant) =
       copy(acquired = Some(Acquired(clientKey = clientKey, date = at)), tries = tries + 1)
 
-    def timeout = copy(acquired = None)
-    def invalid = copy(acquired = None)
-
     def isOutOfTries = tries >= 3
 
     def similar(to: Move) = request.id == to.request.id && request.moves == to.request.moves
+
+    // returns the move without the acquired key if it's not out of tries
+    def clearAssginedKey: Option[Work.Move] =
+      Option.when(!isOutOfTries)(copy(acquired = None))
 
     override def toString =
       s"id:$id game:${request.id} variant:${request.variant.key} level:${request.level} tries:$tries created:$createdAt acquired:$acquired move: ${request.moves}"

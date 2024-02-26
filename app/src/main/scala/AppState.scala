@@ -42,8 +42,8 @@ object AppState:
                 )
               ))
             case _ =>
-              val (newState, failedMove) = state.updateOrGiveUp(work.invalid)
-              newState -> (Logger[IO].warn(s"Give up move: $failedMove") >>
+              val newState = work.clearAssginedKey.fold(state)(state.updated(work.id, _))
+              newState -> (Logger[IO].warn(s"Give up move: $work") >>
                 monitor.failure(work, apikey, new Exception("Missing move")))
         case Some(move) =>
           state -> monitor.notAcquired(move, apikey)
@@ -55,11 +55,8 @@ object AppState:
       state.values.filter(_.nonAcquired).minByOption(_.createdAt)
 
     def updateOrGiveUp(candidates: List[Work.Move]): (AppState, List[Work.Move]) =
-      candidates.foldLeft[(AppState, List[Work.Move])](state -> Nil): (x, m) =>
-        val (newState, move) = x._1.updateOrGiveUp(m.timeout)
-        newState -> move.fold(x._2)(_ :: x._2)
-
-    def updateOrGiveUp(move: Work.Move): (AppState, Option[Work.Move]) =
-      val newState = state - move.id
-      if move.isOutOfTries then (newState, move.some)
-      else newState.updated(move.id, move) -> none
+      candidates.foldLeft[(AppState, List[Work.Move])](state -> Nil) { case ((state, xs), m) =>
+        m.clearAssginedKey match
+          case None       => (state - m.id, m :: xs)
+          case Some(move) => (state.updated(m.id, move), xs)
+      }
