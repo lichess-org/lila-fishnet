@@ -28,13 +28,19 @@ object Executor:
 
   def instance(client: LilaClient, monitor: Monitor, config: ExecutorConfig)(using Logger[IO]): IO[Executor] =
     Ref
-      .of[IO, AppState](Map.empty)
+      .of[IO, AppState](AppState.empty)
       .map: ref =>
         new Executor:
 
           def add(work: Request): IO[Unit] =
             fromRequest(work).flatMap: move =>
-              ref.flatModify(_.addWork(move, config.maxSize))
+              ref.flatModify: state =>
+                val (newState, effect) =
+                  if state.isFull(config.maxSize) then
+                    AppState.empty ->
+                      Logger[IO].warn(s"StateSize=${state.size} maxSize=${config.maxSize}. Dropping all!")
+                  else state -> IO.unit
+                newState.addWork(move) -> effect
 
           def acquire(key: ClientKey): IO[Option[Work.RequestWithId]] =
             IO.realTimeInstant.flatMap: at =>

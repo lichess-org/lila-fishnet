@@ -19,14 +19,11 @@ object AppState:
           state.updated(move.id, move) -> move.toRequestWithId.some
         .getOrElse(state -> none)
 
-    def clearIfFull(maxSize: Int)(using Logger[IO]): (AppState, IO[Unit]) =
-      if state.size >= maxSize then
-        Map.empty -> Logger[IO].warn(s"MoveDB collection is full! maxSize=${maxSize}. Dropping all now!")
-      else state  -> IO.unit
+    def isFull(maxSize: Int): Boolean =
+      state.size >= maxSize
 
-    def addWork(move: Move, maxSize: Int)(using Logger[IO]): (AppState, IO[Unit]) =
-      val (newState, effect) = state.clearIfFull(maxSize)
-      newState + (move.id -> move) -> effect
+    def addWork(move: Move): AppState =
+      state + (move.id -> move)
 
     def applyMove(monitor: Monitor, client: LilaClient)(workId: WorkId, apikey: ClientKey, move: BestMove)(
         using Logger[IO]
