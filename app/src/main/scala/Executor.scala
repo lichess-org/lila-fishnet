@@ -27,8 +27,6 @@ type State = Map[WorkId, Work.Move]
 object State:
   val empty: State = Map.empty
   extension (state: State)
-    def earliestNonAcquiredMove: Option[Work.Move] =
-      state.values.filter(_.nonAcquired).minByOption(_.createdAt)
 
     def tryAcquireMove(key: ClientKey, at: Instant): (State, Option[Work.RequestWithId]) =
       state.earliestNonAcquiredMove
@@ -45,6 +43,37 @@ object State:
     def addWork(move: Move, maxSize: Int)(using Logger[IO]): (State, IO[Unit]) =
       val (newState, effect) = state.clearIfFull(maxSize)
       newState + (move.id -> move) -> effect
+
+    def applyMove(monitor: Monitor, client: LilaClient)(workId: WorkId, apikey: ClientKey, move: BestMove)(
+        using Logger[IO]
+    ): (State, IO[Unit]) =
+      state.get(workId) match
+        case None =>
+          state -> monitor.notFound(workId, apikey)
+        case Some(work) if work.isAcquiredBy(apikey) =>
+          move.uci match
+            case Some(uci) =>
+              state - work.id -> (monitor.success(work) >> client.send(
+                Lila.Move(
+                  work.request.id,
+                  work.request.moves,
+                  uci
+                )
+              ))
+            case _ =>
+              val (newState, failedMove) = state.updateOrGiveUp(work.invalid)
+              newState -> (Logger[IO].warn(s"Give up move: $failedMove") >>
+                monitor.failure(work, apikey, new Exception("Missing move")))
+        case Some(move) =>
+          state -> monitor.notAcquired(move, apikey)
+
+    def earliestNonAcquiredMove: Option[Work.Move] =
+      state.values.filter(_.nonAcquired).minByOption(_.createdAt)
+
+    def updateOrGiveUp(move: Work.Move): (State, Option[Work.Move]) =
+      val newState = state - move.id
+      if move.isOutOfTries then (newState, move.some)
+      else (newState + (move.id -> move), none)
 
 object Executor:
 
@@ -65,27 +94,7 @@ object Executor:
               ref.modify(_.tryAcquireMove(key, at))
 
           def move(workId: WorkId, apikey: ClientKey, move: BestMove): IO[Unit] =
-            ref.flatModify: state =>
-              state.get(workId) match
-                case None =>
-                  state -> monitor.notFound(workId, apikey)
-                case Some(work) if work.isAcquiredBy(apikey) =>
-                  move.uci match
-                    case Some(uci) =>
-                      state - work.id -> (monitor.success(work) >> client.send(
-                        Lila.Move(
-                          work.request.id,
-                          work.request.moves,
-                          uci
-                        )
-                      ))
-                    case _ =>
-                      val (newState, failedMove) = updateOrGiveUp(state, work.invalid)
-                      newState -> (Logger[IO].warn(s"Give up move: $failedMove") >>
-                        monitor.failure(work, apikey, new Exception("Missing move")))
-
-                case Some(move) =>
-                  state -> monitor.notAcquired(move, apikey)
+            ref.flatModify(_.applyMove(monitor, client)(workId, apikey, move))
 
           def clean(since: Instant): IO[Unit] =
             ref
@@ -97,18 +106,13 @@ object Executor:
                       timedOut.traverse_(m => Logger[IO].info(s"Timeout move: $m"))
                   else IO.unit
                 val (state, gavedUpMoves) = timedOut.foldLeft[(State, List[Work.Move])](map -> Nil): (x, m) =>
-                  val (newState, move) = updateOrGiveUp(x._1, m.timeout)
+                  val (newState, move) = x._1.updateOrGiveUp(m.timeout)
                   (newState, move.fold(x._2)(_ :: x._2))
 
                 state -> (logIfTimedOut *> gavedUpMoves
                   .traverse_(m => Logger[IO].warn(s"Give up move: $m"))
                   .as(state))
               .flatMap(monitor.updateSize)
-
-          def updateOrGiveUp(state: State, move: Work.Move): (State, Option[Work.Move]) =
-            val newState = state - move.id
-            if move.isOutOfTries then (newState, move.some)
-            else (newState + (move.id -> move), none)
 
   def fromRequest(req: Lila.Request): IO[Move] =
     (IO(Work.makeId), IO.realTimeInstant).mapN: (id, now) =>
