@@ -23,7 +23,7 @@ object AppState:
         .getOrElse(state -> none)
 
     def isFull(maxSize: Int): Boolean =
-      state.size >= maxSize
+      state.sizeIs >= maxSize
 
     def addWork(move: Move): AppState =
       state + (move.id -> move)

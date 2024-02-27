@@ -58,7 +58,7 @@ object Executor:
                       state - work.id -> (monitor.success(work) >>
                         client.send(Lila.Move(work.request.id, work.request.moves, uci)))
                     case _ =>
-                      val (newState, io) = work.clearAssginedKey match
+                      val (newState, io) = work.clearAssignedKey match
                         case None =>
                           state - workId -> Logger[IO].warn(
                             s"Give up move due to invalid move $response of key $key for $work"
