@@ -57,9 +57,11 @@ object Executor:
                       state - work.id -> (monitor.success(work) >>
                         client.send(Lila.Move(work.request.id, work.request.moves, uci)))
                     case _ =>
-                      val newState = work.clearAssginedKey.fold(state)(state.updated(work.id, _))
-                      newState -> (Logger[IO].warn(s"Give up move: $work") >>
-                        Logger[IO].warn(s"Received invalid move $workId for ${work.request.id} by $key"))
+                      val (newState, io) = work.clearAssginedKey match
+                        case None => state -> Logger[IO].warn(s"Give up move: $work")
+                        case Some(clearWork) => state.updated(work.id, clearWork) -> IO.unit
+                      newState ->
+                        io *> Logger[IO].warn(s"Received invalid move $workId for ${work.request.id} by $key")
                 case Some(move) =>
                   state -> Logger[IO].info(
                     s"Received unacquired move ${workId} for ${move.request.id} by $key. Work current tries: ${move.tries} acquired: ${move.acquired}"
