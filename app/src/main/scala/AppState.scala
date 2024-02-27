@@ -42,7 +42,7 @@ object AppState:
 
     def updateOrGiveUp(candidates: List[Work.Move]): (AppState, List[Work.Move]) =
       candidates.foldLeft[(AppState, List[Work.Move])](state -> Nil) { case ((state, xs), m) =>
-        m.clearAssginedKey match
+        m.clearAssignedKey match
           case None       => (state - m.id, m :: xs)
           case Some(move) => (state.updated(m.id, move), xs)
       }

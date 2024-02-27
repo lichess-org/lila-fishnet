@@ -43,7 +43,7 @@ object Work:
     def similar(to: Move) = request.id == to.request.id && request.moves == to.request.moves
 
     // returns the move without the acquired key if it's not out of tries
-    def clearAssginedKey: Option[Work.Move] =
+    def clearAssignedKey: Option[Work.Move] =
       Option.when(!isOutOfTries)(copy(acquired = None))
 
     override def toString =
