@@ -47,25 +47,24 @@ object Executor:
             IO.realTimeInstant.flatMap: at =>
               ref.modify(_.tryAcquireMove(key, at))
 
-          def move(workId: WorkId, key: ClientKey, move: BestMove): IO[Unit] =
+          def move(workId: WorkId, key: ClientKey, response: BestMove): IO[Unit] =
             ref.flatModify: state =>
-              state.get(workId) match
-                case None => state -> Logger[IO].info(s"Received unknown work $workId by $key")
-                case Some(work) if work.isAcquiredBy(key) =>
-                  move.uci match
+              state.getWork(workId, key) match
+                case GetWorkResult.NotFound              => state -> logNotFound(workId, key)
+                case GetWorkResult.AcquiredByOther(move) => state -> logNotAcquired(move, key)
+                case GetWorkResult.Found(work) =>
+                  response.uci match
                     case Some(uci) =>
                       state - work.id -> (monitor.success(work) >>
                         client.send(Lila.Move(work.request.id, work.request.moves, uci)))
                     case _ =>
                       val (newState, io) = work.clearAssginedKey match
-                        case None => state -> Logger[IO].warn(s"Give up move: $work")
-                        case Some(clearWork) => state.updated(work.id, clearWork) -> IO.unit
-                      newState ->
-                        io *> Logger[IO].warn(s"Received invalid move $workId for ${work.request.id} by $key")
-                case Some(move) =>
-                  state -> Logger[IO].info(
-                    s"Received unacquired move ${workId} for ${move.request.id} by $key. Work current tries: ${move.tries} acquired: ${move.acquired}"
-                  )
+                        case None =>
+                          state - workId -> Logger[IO].warn(
+                            s"Give up move due to invalid move $response of key $key for $work"
+                          )
+                        case Some(updated) => state.updated(work.id, updated) -> IO.unit
+                      newState -> io *> failure(work, key)
 
           def clean(since: Instant): IO[Unit] =
             ref.flatModify: state =>
@@ -73,13 +72,24 @@ object Executor:
               val logs                     = logIfTimedOut(state, timedOut)
               val (newState, gavedUpMoves) = state.updateOrGiveUp(timedOut)
               newState -> logs
-                *> gavedUpMoves.traverse_(m => Logger[IO].warn(s"Give up move: $m"))
+                *> gavedUpMoves.traverse_(m => Logger[IO].warn(s"Give up move due to clean up: $m"))
                 *> monitor.updateSize(newState)
 
           private def logIfTimedOut(state: AppState, timeOut: List[Work.Move]): IO[Unit] =
             IO.whenA(timeOut.nonEmpty):
               Logger[IO].debug(s"cleaning ${timeOut.size} of ${state.size} moves")
                 *> timeOut.traverse_(m => Logger[IO].info(s"Timeout move: $m"))
+
+          private def failure(work: Work.Move, clientKey: ClientKey) =
+            Logger[IO].warn(s"Received invalid move ${work.id} for ${work.request.id} by $clientKey")
+
+          private def logNotFound(id: WorkId, clientKey: ClientKey) =
+            Logger[IO].info(s"Received unknown work $id by $clientKey")
+
+          private def logNotAcquired(work: Work.Move, clientKey: ClientKey) =
+            Logger[IO].info(
+              s"Received unacquired move ${work.id} for ${work.request.id} by $clientKey. Work current tries: ${work.tries} acquired: ${work.acquired}"
+            )
 
   def fromRequest(req: Lila.Request): IO[Move] =
     (IO(Work.makeId), IO.realTimeInstant).mapN: (id, now) =>

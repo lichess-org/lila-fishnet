@@ -6,6 +6,11 @@ import lila.fishnet.Work.Move
 
 type AppState = Map[WorkId, Work.Move]
 
+enum GetWorkResult:
+  case NotFound
+  case Found(move: Work.Move)
+  case AcquiredByOther(move: Work.Move)
+
 object AppState:
   val empty: AppState = Map.empty
   extension (state: AppState)
@@ -28,6 +33,12 @@ object AppState:
 
     def earliestNonAcquiredMove: Option[Work.Move] =
       state.values.filter(_.nonAcquired).minByOption(_.createdAt)
+
+    def getWork(workId: WorkId, key: ClientKey): GetWorkResult =
+      state.get(workId) match
+        case None                                 => GetWorkResult.NotFound
+        case Some(move) if move.isAcquiredBy(key) => GetWorkResult.Found(move)
+        case Some(move)                           => GetWorkResult.AcquiredByOther(move)
 
     def updateOrGiveUp(candidates: List[Work.Move]): (AppState, List[Work.Move]) =
       candidates.foldLeft[(AppState, List[Work.Move])](state -> Nil) { case ((state, xs), m) =>
