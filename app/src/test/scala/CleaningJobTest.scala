@@ -1,7 +1,6 @@
 package lila.fishnet
 
-import cats.effect.IO
-import cats.effect.kernel.{ Ref, Resource }
+import cats.effect.{ IO, Ref }
 import cats.effect.testkit.TestControl
 import java.time.Instant
 import org.typelevel.log4cats.Logger
@@ -17,11 +16,11 @@ object CleaningJobTest extends SimpleIOSuite:
   val times = (60 - 5) / 3 + 1
   test(s"cleaning run $times times in 1 minute"):
     val res = for
-      ref <- Resource.eval(Ref.of[IO, Int](0))
+      ref <- Ref.of[IO, Int](0).toResource
       executor = createExcutor(ref)
       _     <- WorkCleaningJob(executor).run().background
-      _     <- Resource.eval(IO.sleep(1.minute))
-      count <- Resource.eval(ref.get)
+      _     <- IO.sleep(1.minute).toResource
+      count <- ref.get.toResource
     yield count
     TestControl.executeEmbed(res.use(count => IO(expect.same(count, times))))
 

@@ -1,7 +1,6 @@
 package lila.fishnet
 
-import cats.effect.IO
-import cats.effect.kernel.Ref
+import cats.effect.{ IO, Ref }
 import cats.syntax.all.*
 import java.time.Instant
 import org.typelevel.log4cats.Logger

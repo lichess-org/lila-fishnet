@@ -1,8 +1,6 @@
 package lila.fishnet
 
-import cats.effect.IO
-import cats.effect.kernel.Ref
-import cats.effect.kernel.Resource
+import cats.effect.{ IO, Ref, Resource }
 import cats.syntax.all.*
 import com.comcast.ip4s.*
 import com.dimafeng.testcontainers.GenericContainer
@@ -88,10 +86,10 @@ object IntegrationTest extends IOSuite:
 
     val x = for
       client <- client
-      ref    <- Resource.eval(Ref.of[IO, List[String]](Nil))
+      ref    <- Ref.of[IO, List[String]](Nil).toResource
       _      <- RedisFishnetInListener(res.redisPubsub, ref).background
-      _      <- Resource.eval(scenario(client))
-      x      <- Resource.eval(ref.get)
+      _      <- scenario(client).toResource
+      x      <- ref.get.toResource
     yield x
     x.use(x => IO.pure(expect.same(x, expectedMoves)))
 

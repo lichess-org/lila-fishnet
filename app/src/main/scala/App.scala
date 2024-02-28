@@ -14,9 +14,9 @@ object App extends IOApp.Simple:
 
   def app: Resource[IO, Unit] =
     for
-      config <- Resource.eval(AppConfig.load)
-      _      <- Resource.eval(Logger[IO].info(s"Starting lila-fishnet with config: $config"))
-      _      <- Resource.eval(KamonInitiator.apply.init(config.kamon))
+      config <- AppConfig.load.toResource
+      _      <- Logger[IO].info(s"Starting lila-fishnet with config: $config").toResource
+      _      <- KamonInitiator.apply.init(config.kamon).toResource
       res    <- AppResources.instance(config.redis)
       _      <- FishnetApp(res, config).run()
     yield ()
@@ -26,10 +26,10 @@ class FishnetApp(res: AppResources, config: AppConfig)(using Logger[IO]):
     for
       lilaClient <- Resource.pure(LilaClient(res.redisPubsub))
       monitor = Monitor.apply
-      executor <- Resource.eval(Executor.instance(lilaClient, monitor, config.executor))
+      executor <- Executor.instance(lilaClient, monitor, config.executor).toResource
       httpApi = HttpApi(executor, HealthCheck(), config.server)
       server <- MkHttpServer.apply.newEmber(config.server, httpApi.httpApp)
       _      <- RedisSubscriberJob(executor, res.redisPubsub).run().background
       _      <- WorkCleaningJob(executor).run().background
-      _ <- Resource.eval(Logger[IO].info(s"Starting server on ${config.server.host}:${config.server.port}"))
+      _      <- Logger[IO].info(s"Starting server on ${config.server.host}:${config.server.port}").toResource
     yield ()
