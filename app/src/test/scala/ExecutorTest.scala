@@ -117,7 +117,7 @@ object ExecutorTest extends SimpleIOSuite:
       _              <- executor.move(workId, key, invalidMove)
       acquiredOption <- executor.acquire(key)
       acquired = acquiredOption.get
-    yield expect.same(acquired, Work.RequestWithId(workId, request))
+    yield expect.same(acquired.request, request)
 
   test("should not give up after 2 tries"):
     for

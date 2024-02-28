@@ -47,7 +47,7 @@ object FishnetRoutesTest extends SimpleIOSuite:
     "variant": "Standard"
   }"""
 
-  val requestWithId = Work.RequestWithId(
+  val task = Work.Task(
     id = WorkId("workid"),
     request = Lila.Request(
       id = GameId("gameid"),
@@ -56,7 +56,10 @@ object FishnetRoutesTest extends SimpleIOSuite:
       variant = chess.variant.Standard,
       level = 1,
       clock = Some(Lila.Clock(wtime = 600, btime = 600, inc = 0))
-    )
+    ),
+    tries = 1,
+    acquired = none,
+    createdAt = Instant.now
   )
 
   test("POST /fishnet/acquire should return work response"):
@@ -89,9 +92,9 @@ object FishnetRoutesTest extends SimpleIOSuite:
 
   def createExecutor(): Executor =
     new Executor:
-      def acquire(key: ClientKey) = IO.pure(requestWithId.some)
+      def acquire(key: ClientKey) = IO.pure(task.some)
       def move(id: WorkId, key: ClientKey, move: BestMove): IO[Unit] =
-        if id == requestWithId.id then IO.unit
+        if id == task.id then IO.unit
         else IO.raiseError(new Exception("invalid work id"))
       def add(request: Lila.Request): IO[Unit] = IO.unit
       def clean(before: Instant)               = IO.unit

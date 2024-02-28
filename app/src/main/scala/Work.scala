@@ -4,20 +4,10 @@ import java.time.Instant
 
 object Work:
 
-  case class RequestWithId(id: WorkId, request: Lila.Request):
-    def toResponse =
-      Fishnet.WorkResponse(
-        work = Fishnet.Work(id = id, level = request.level, clock = request.clock),
-        game_id = request.id.value,
-        position = request.initialFen,
-        moves = request.moves,
-        variant = request.variant
-      )
-
   case class Acquired(clientKey: ClientKey, date: Instant):
     override def toString = s"by $clientKey at $date"
 
-  case class Move(
+  case class Task(
       id: WorkId,
       request: Lila.Request,
       tries: Int,
@@ -25,27 +15,29 @@ object Work:
       createdAt: Instant
   ):
 
-    def toRequestWithId =
-      RequestWithId(id, request)
-
-    def acquiredAt                         = acquired.map(_.date)
-    def acquiredByKey: Option[ClientKey]   = acquired.map(_.clientKey)
-    def isAcquiredBy(clientKey: ClientKey) = acquiredByKey.contains(clientKey)
-    def isAcquired                         = acquired.isDefined
-    def nonAcquired                        = !isAcquired
-    def acquiredBefore(date: Instant)      = acquiredAt.exists(_.isBefore(date))
+    def acquiredAt: Option[Instant]                 = acquired.map(_.date)
+    def isAcquired: Boolean                         = acquired.isDefined
+    def nonAcquired: Boolean                        = !isAcquired
+    def isAcquiredBy(clientKey: ClientKey): Boolean = acquired.exists(_.clientKey == clientKey)
+    def acquiredBefore(date: Instant): Boolean      = acquiredAt.exists(_.isBefore(date))
 
     def assignTo(clientKey: ClientKey, at: Instant) =
       copy(acquired = Some(Acquired(clientKey = clientKey, date = at)), tries = tries + 1)
 
     def isOutOfTries = tries >= 3
 
-    def similar(to: Move) = request.id == to.request.id && request.moves == to.request.moves
-
     // returns the move without the acquired key if it's not out of tries
-    def clearAssignedKey: Option[Work.Move] =
+    def clearAssignedKey: Option[Work.Task] =
       Option.when(!isOutOfTries)(copy(acquired = None))
 
+    def toResponse =
+      Fishnet.WorkResponse(
+        work = Fishnet.Work(id = id, level = request.level, clock = request.clock),
+        game_id = request.id,
+        position = request.initialFen,
+        moves = request.moves,
+        variant = request.variant
+      )
     override def toString =
       s"id:$id game:${request.id} variant:${request.variant.key} level:${request.level} tries:$tries created:$createdAt acquired:$acquired move: ${request.moves}"
 

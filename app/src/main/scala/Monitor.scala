@@ -8,8 +8,8 @@ import kamon.metric.Timer
 import java.time.Instant
 
 trait Monitor:
-  def success(work: Work.Move): IO[Unit]
-  def updateSize(map: Map[WorkId, Work.Move]): IO[Unit]
+  def success(work: Work.Task): IO[Unit]
+  def updateSize(map: Map[WorkId, Work.Task]): IO[Unit]
 
 object Monitor:
 
@@ -21,13 +21,13 @@ object Monitor:
 
   def apply: Monitor =
     new Monitor:
-      def success(work: Work.Move): IO[Unit] =
+      def success(work: Work.Task): IO[Unit] =
         IO.realTimeInstant.map: now =>
           if work.request.level == 8 then
             work.acquiredAt.foreach(at => record(lvl8AcquiredTimeRequest, at, now))
           if work.request.level == 1 then record(lvl1FullTimeRequest, work.createdAt, now)
 
-      def updateSize(map: Map[WorkId, Work.Move]): IO[Unit] =
+      def updateSize(map: Map[WorkId, Work.Task]): IO[Unit] =
         IO.delay(dbSize.update(map.size.toDouble)) *>
           IO.delay(dbQueued.update(map.count(_._2.nonAcquired).toDouble)) *>
           IO.delay(dbAcquired.update(map.count(_._2.isAcquired).toDouble)).void

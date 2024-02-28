@@ -53,7 +53,7 @@ object Fishnet:
 
   case class WorkResponse(
       work: Work,
-      game_id: String,
+      game_id: GameId,
       position: Fen.Epd,
       moves: String,
       variant: Variant
@@ -65,8 +65,6 @@ object Lila:
     def sign  = moves.takeRight(20).replace(" ", "")
     def write = s"$gameId $sign ${uci.uci}"
 
-  case class Clock(wtime: Int, btime: Int, inc: Int) derives Codec.AsObject
-
   case class Request(
       id: GameId,
       initialFen: Fen.Epd,
@@ -75,6 +73,8 @@ object Lila:
       level: Int,
       clock: Option[Clock]
   )
+
+  case class Clock(wtime: Int, btime: Int, inc: Int) derives Codec.AsObject
 
   def readMoveReq(msg: String): Option[Request] =
     msg.split(";", 6) match

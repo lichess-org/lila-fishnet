@@ -4,8 +4,6 @@ import cats.effect.IO
 import cats.effect.kernel.Ref
 import cats.syntax.all.*
 import java.time.Instant
-import lila.fishnet.Lila.Request
-import lila.fishnet.Work.Move
 import org.typelevel.log4cats.Logger
 
 /** Executor is responsible for: store work in memory
@@ -14,13 +12,15 @@ import org.typelevel.log4cats.Logger
   *   - adding work to the queue
   */
 trait Executor:
-  // get a move from the queue return Work
-  def acquire(accquire: ClientKey): IO[Option[Work.RequestWithId]]
-  // get Work from Map => send to lila
+  // fishnet client tries to get an unassigned task
+  def acquire(accquire: ClientKey): IO[Option[Work.Task]]
+  // fishnet client sends the best move for it's assigned task
   def move(workId: WorkId, fishnetKey: ClientKey, move: BestMove): IO[Unit]
-  // add work to queue
+  // Lila sends a position
   def add(work: Lila.Request): IO[Unit]
-  // clean up all works that are acquired before the given time
+  // clean up all works that are acquired before a given time
+  // this is to prevent tasks from being stuck in the queue
+  // this will be called periodically
   def clean(before: Instant): IO[Unit]
 
 object Executor:
@@ -33,38 +33,38 @@ object Executor:
       .map: ref =>
         new Executor:
 
-          def add(work: Request): IO[Unit] =
-            fromRequest(work).flatMap: move =>
+          def add(work: Lila.Request): IO[Unit] =
+            fromRequest(work).flatMap: task =>
               ref.flatModify: state =>
                 val (newState, effect) =
                   if state.isFull(config.maxSize) then
                     AppState.empty ->
                       Logger[IO].warn(s"StateSize=${state.size} maxSize=${config.maxSize}. Dropping all!")
                   else state -> IO.unit
-                newState.addWork(move) -> effect
+                newState.addTask(task) -> effect
 
-          def acquire(key: ClientKey): IO[Option[Work.RequestWithId]] =
+          def acquire(key: ClientKey): IO[Option[Work.Task]] =
             IO.realTimeInstant.flatMap: at =>
-              ref.modify(_.tryAcquireMove(key, at))
+              ref.modify(_.tryAcquireTask(key, at))
 
           def move(workId: WorkId, key: ClientKey, response: BestMove): IO[Unit] =
             ref.flatModify: state =>
-              state.getWork(workId, key) match
-                case GetWorkResult.NotFound              => state -> logNotFound(workId, key)
-                case GetWorkResult.AcquiredByOther(move) => state -> logNotAcquired(move, key)
-                case GetWorkResult.Found(work) =>
+              state(workId, key) match
+                case GetTaskResult.NotFound              => state -> logNotFound(workId, key)
+                case GetTaskResult.AcquiredByOther(task) => state -> logNotAcquired(task, key)
+                case GetTaskResult.Found(task) =>
                   response.uci match
                     case Some(uci) =>
-                      state - work.id -> (monitor.success(work) >>
-                        client.send(Lila.Move(work.request.id, work.request.moves, uci)))
+                      state - task.id -> (monitor.success(task) >>
+                        client.send(Lila.Move(task.request.id, task.request.moves, uci)))
                     case _ =>
-                      val (newState, io) = work.clearAssignedKey match
+                      val (newState, io) = task.clearAssignedKey match
                         case None =>
                           state - workId -> Logger[IO].warn(
-                            s"Give up move due to invalid move $response of key $key for $work"
+                            s"Give up move due to invalid move $response of key $key for $task"
                           )
-                        case Some(updated) => state.updated(work.id, updated) -> IO.unit
-                      newState -> io *> failure(work, key)
+                        case Some(updated) => state.updated(task.id, updated) -> IO.unit
+                      newState -> io *> failure(task, key)
 
           def clean(since: Instant): IO[Unit] =
             ref.flatModify: state =>
@@ -75,25 +75,25 @@ object Executor:
                 *> gavedUpMoves.traverse_(m => Logger[IO].warn(s"Give up move due to clean up: $m"))
                 *> monitor.updateSize(newState)
 
-          private def logIfTimedOut(state: AppState, timeOut: List[Work.Move]): IO[Unit] =
+          private def logIfTimedOut(state: AppState, timeOut: List[Work.Task]): IO[Unit] =
             IO.whenA(timeOut.nonEmpty):
               Logger[IO].debug(s"cleaning ${timeOut.size} of ${state.size} moves")
                 *> timeOut.traverse_(m => Logger[IO].info(s"Timeout move: $m"))
 
-          private def failure(work: Work.Move, clientKey: ClientKey) =
+          private def failure(work: Work.Task, clientKey: ClientKey) =
             Logger[IO].warn(s"Received invalid move ${work.id} for ${work.request.id} by $clientKey")
 
           private def logNotFound(id: WorkId, clientKey: ClientKey) =
             Logger[IO].info(s"Received unknown work $id by $clientKey")
 
-          private def logNotAcquired(work: Work.Move, clientKey: ClientKey) =
+          private def logNotAcquired(work: Work.Task, clientKey: ClientKey) =
             Logger[IO].info(
               s"Received unacquired move ${work.id} for ${work.request.id} by $clientKey. Work current tries: ${work.tries} acquired: ${work.acquired}"
             )
 
-  def fromRequest(req: Lila.Request): IO[Move] =
+  def fromRequest(req: Lila.Request): IO[Work.Task] =
     (IO(Work.makeId), IO.realTimeInstant).mapN: (id, now) =>
-      Move(
+      Work.Task(
         id = id,
         request = req,
         tries = 0,
