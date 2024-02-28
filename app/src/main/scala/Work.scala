@@ -40,5 +40,3 @@ object Work:
       )
     override def toString =
       s"id:$id game:${request.id} variant:${request.variant.key} level:${request.level} tries:$tries created:$createdAt acquired:$acquired move: ${request.moves}"
-
-  def makeId = WorkId(scala.util.Random.alphanumeric.take(8).mkString)

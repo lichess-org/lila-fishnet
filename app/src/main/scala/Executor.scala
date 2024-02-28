@@ -61,7 +61,7 @@ object Executor:
                       val (newState, io) = task.clearAssignedKey match
                         case None =>
                           state - workId -> Logger[IO].warn(
-                            s"Give up move due to invalid move $response of key $key for $task"
+                            s"Give up move due to invalid move $response of $key for $task"
                           )
                         case Some(updated) => state.updated(task.id, updated) -> IO.unit
                       newState -> io *> failure(task, key)
@@ -92,7 +92,7 @@ object Executor:
             )
 
   def fromRequest(req: Lila.Request): IO[Work.Task] =
-    (IO(Work.makeId), IO.realTimeInstant).mapN: (id, now) =>
+    (makeId, IO.realTimeInstant).mapN: (id, now) =>
       Work.Task(
         id = id,
         request = req,
@@ -100,3 +100,5 @@ object Executor:
         acquired = None,
         createdAt = now
       )
+
+  def makeId: IO[WorkId] = IO(WorkId(scala.util.Random.alphanumeric.take(8).mkString))
