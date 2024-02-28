@@ -94,14 +94,10 @@ object Lila:
       case _ => None
 
   def readFen(str: String): Option[Fen.Epd] =
-    if str.nonEmpty then Some(Fen.Epd(str)) else none
+    Option.when(str.nonEmpty)(Fen.Epd(str))
 
   def readClock(s: String): Option[Clock] =
-    s split ' ' match
+    s.split(' ') match
       case Array(ws, bs, incs) =>
-        for
-          wtime <- ws.toIntOption
-          btime <- bs.toIntOption
-          inc   <- incs.toIntOption
-        yield Clock(wtime, btime, inc)
+        (ws.toIntOption, bs.toIntOption, incs.toIntOption).mapN(Clock.apply)
       case _ => None
