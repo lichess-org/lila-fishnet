@@ -1,8 +1,6 @@
 package lila.fishnet
 
-import cats.effect.*
-import cats.effect.kernel.Resource
-import cats.effect.{ IO, IOApp }
+import cats.effect.{ IO, IOApp, Resource }
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 

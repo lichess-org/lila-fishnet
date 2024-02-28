@@ -61,7 +61,7 @@ object Executor:
                       val (newState, io) = task.clearAssignedKey match
                         case None =>
                           state.remove(workId) -> Logger[IO].warn(
-                            s"Give up move due to invalid move $response of $key for $task"
+                            s"Give up move due to invalid move $response by $key for $task"
                           )
                         case Some(updated) => state.add(updated) -> IO.unit
                       newState -> io *> failure(task, key)

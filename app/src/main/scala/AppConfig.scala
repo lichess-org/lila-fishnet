@@ -1,7 +1,7 @@
 package lila.fishnet
 
-import cats.effect.IO
 import cats.syntax.all.*
+import cats.effect.IO
 import ciris.*
 import ciris.http4s.*
 import com.comcast.ip4s.*

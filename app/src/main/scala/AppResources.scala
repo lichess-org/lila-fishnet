@@ -1,6 +1,5 @@
 package lila.fishnet
 
-import cats.*
 import cats.effect.*
 import io.chrisdavenport.rediculous.{ RedisConnection, RedisPubSub }
 
