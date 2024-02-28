@@ -68,15 +68,15 @@ object Executor:
           def clean(since: Instant): IO[Unit] =
             ref.flatModify: state =>
               val timedOut                 = state.acquiredBefore(since)
-              val logs                     = logIfTimedOut(state, timedOut)
+              val timedOutLogs             = logTimedOut(state, timedOut)
               val (newState, gavedUpMoves) = state.updateOrGiveUp(timedOut)
-              newState -> logs
+              newState -> timedOutLogs
                 *> gavedUpMoves.traverse_(m => Logger[IO].warn(s"Give up move due to clean up: $m"))
                 *> monitor.updateSize(newState)
 
-          private def logIfTimedOut(state: AppState, timeOut: List[Work.Task]): IO[Unit] =
+          private def logTimedOut(state: AppState, timeOut: List[Work.Task]): IO[Unit] =
             IO.whenA(timeOut.nonEmpty):
-              Logger[IO].debug(s"cleaning ${timeOut.size} of ${state.size} moves")
+              Logger[IO].info(s"cleaning ${timeOut.size} of ${state.size} moves")
                 *> timeOut.traverse_(m => Logger[IO].info(s"Timeout move: $m"))
 
           private def failure(work: Work.Task, clientKey: ClientKey) =
