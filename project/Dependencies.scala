@@ -27,7 +27,6 @@ object Dependencies {
 
   val cirisCore    = "is.cir" %% "ciris"         % V.ciris
   val cirisHtt4s   = "is.cir" %% "ciris-http4s"  % V.ciris
-  val cirisRefined = "is.cir" %% "ciris-refined" % V.ciris
 
   val kamonCore          = "io.kamon" %% "kamon-core"           % V.kamon
   val kamonInflux        = "io.kamon" %% "kamon-influxdb"       % V.kamon
