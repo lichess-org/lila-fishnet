@@ -23,7 +23,8 @@ object ExecutorTest extends SimpleIOSuite:
     clock = None
   )
 
-  val key = ClientKey("key")
+  val key  = ClientKey("key")
+  val key2 = ClientKey("key2")
 
   val validMove   = BestMove("e2e4")
   val invalidMove = BestMove("2e4")
@@ -34,7 +35,7 @@ object ExecutorTest extends SimpleIOSuite:
       acquired <- executor.acquire(key)
     yield assert(acquired.isEmpty)
 
-  test("acquire when there is work should return work.some"):
+  test("acquire when there is work should return some work"):
     for
       executor       <- createExecutor()
       _              <- executor.add(request)
@@ -56,7 +57,7 @@ object ExecutorTest extends SimpleIOSuite:
       executor <- createExecutor()
       _        <- executor.add(request)
       _        <- executor.acquire(key)
-      acquired <- executor.acquire(key)
+      acquired <- executor.acquire(key2)
     yield assert(acquired.isEmpty)
 
   test("post move after acquire should send move"):
@@ -147,7 +148,7 @@ object ExecutorTest extends SimpleIOSuite:
       _        <- executor.add(request.copy(id = GameId("3")))
       _        <- executor.add(request.copy(id = GameId("4")))
       acquired <- executor.acquire(key)
-      empty    <- executor.acquire(ClientKey("key2"))
+      empty    <- executor.acquire(key2)
     yield assert(acquired.isDefined && empty.isEmpty)
 
   def createExecutor(config: ExecutorConfig = ExecutorConfig(300)): IO[Executor] =

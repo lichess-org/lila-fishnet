@@ -4,7 +4,7 @@ import cats.syntax.all.*
 import java.time.Instant
 import lila.fishnet.Work.Task
 
-type AppState = Map[WorkId, Work.Task]
+opaque type AppState = Map[WorkId, Work.Task]
 
 enum GetTaskResult:
   case NotFound
@@ -15,24 +15,25 @@ object AppState:
   val empty: AppState = Map.empty
   extension (state: AppState)
 
+    inline def isFull(maxSize: Int): Boolean =
+      state.sizeIs >= maxSize
+
+    inline def add(task: Task): AppState =
+      state + (task.id -> task)
+
+    inline def remove(id: WorkId): AppState =
+      state - id
+
+    inline def size: Int = state.size
+
+    inline def count(p: Task => Boolean): Int = state.count(x => p(x._2))
+
     def tryAcquireTask(key: ClientKey, at: Instant): (AppState, Option[Task]) =
       state.earliestNonAcquiredTask
         .map: newTask =>
           val assignedTask = newTask.assignTo(key, at)
           state.updated(assignedTask.id, assignedTask) -> assignedTask.some
         .getOrElse(state -> none)
-
-    def isFull(maxSize: Int): Boolean =
-      state.sizeIs >= maxSize
-
-    def addTask(move: Task): AppState =
-      state + (move.id -> move)
-
-    def acquiredBefore(since: Instant): List[Work.Task] =
-      state.values.filter(_.acquiredBefore(since)).toList
-
-    def earliestNonAcquiredTask: Option[Work.Task] =
-      state.values.filter(_.nonAcquired).minByOption(_.createdAt)
 
     def apply(workId: WorkId, key: ClientKey): GetTaskResult =
       state.get(workId) match
@@ -46,3 +47,9 @@ object AppState:
           case None                 => (state - task.id, task :: xs)
           case Some(unAssignedTask) => (state.updated(task.id, unAssignedTask), xs)
       }
+
+    def acquiredBefore(since: Instant): List[Work.Task] =
+      state.values.filter(_.acquiredBefore(since)).toList
+
+    def earliestNonAcquiredTask: Option[Work.Task] =
+      state.values.filter(_.nonAcquired).minByOption(_.createdAt)

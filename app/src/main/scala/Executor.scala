@@ -41,7 +41,7 @@ object Executor:
                     AppState.empty ->
                       Logger[IO].warn(s"StateSize=${state.size} maxSize=${config.maxSize}. Dropping all!")
                   else state -> IO.unit
-                newState.addTask(task) -> effect
+                newState.add(task) -> effect
 
           def acquire(key: ClientKey): IO[Option[Work.Task]] =
             IO.realTimeInstant.flatMap: at =>
@@ -55,15 +55,15 @@ object Executor:
                 case GetTaskResult.Found(task) =>
                   response.uci match
                     case Some(uci) =>
-                      state - task.id -> (monitor.success(task) >>
+                      state.remove(task.id) -> (monitor.success(task) >>
                         client.send(Lila.Move(task.request.id, task.request.moves, uci)))
                     case _ =>
                       val (newState, io) = task.clearAssignedKey match
                         case None =>
-                          state - workId -> Logger[IO].warn(
+                          state.remove(workId) -> Logger[IO].warn(
                             s"Give up move due to invalid move $response of $key for $task"
                           )
-                        case Some(updated) => state.updated(task.id, updated) -> IO.unit
+                        case Some(updated) => state.add(updated) -> IO.unit
                       newState -> io *> failure(task, key)
 
           def clean(since: Instant): IO[Unit] =
