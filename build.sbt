@@ -41,7 +41,10 @@ lazy val app = project
       testContainers,
       log4CatsNoop,
       http4sClient,
-      catsEffectTestKit
+      catsEffectTestKit,
+      munit,
+      munitScalaCheck,
+      scalacheck
     ),
     javaAgents += kamonAgent
   )
