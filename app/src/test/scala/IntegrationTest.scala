@@ -74,7 +74,7 @@ object IntegrationTest extends IOSuite:
         .expect[Json](acquireRequest(fishnetAcquireRequest))
         .map(toWorkId)
         .flatMap: workId =>
-          postMoves.foldM[IO, WorkId](workId): (workId, move) =>
+          postMoves.foldM(workId): (workId, move) =>
             client.expect[Json](bestMoveRequest(workId, move)).map(toWorkId)
 
     def toWorkId(json: Json) =
