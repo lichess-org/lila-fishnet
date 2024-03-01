@@ -3,7 +3,7 @@ package lila.fishnet
 import chess.CoreArbitraries.given
 import chess.format.Fen.Epd
 import org.scalacheck.Arbitrary.*
-import org.scalacheck.{ Arbitrary, Gen }
+import org.scalacheck.{ Arbitrary, Cogen, Gen }
 
 import java.time.Instant
 
@@ -42,10 +42,12 @@ object Arbitraries:
     for
       workId    <- arbitrary[WorkId]
       request   <- arbitrary[Lila.Request]
-      tries     <- Gen.choose(0, 2)
+      tries     <- Gen.choose(0, 3)
       acquired  <- arbitrary[Option[Work.Acquired]]
       createdAt <- arbitrary[Instant]
     yield Work.Task(workId, request, tries, acquired, createdAt)
+
+  given Cogen[Work.Task] = Cogen(_.id.hashCode.toLong)
 
   given Arbitrary[AppState] = Arbitrary:
     arbitrary[List[Work.Task]].map(_.foldLeft(AppState.empty)(_.add(_)))
