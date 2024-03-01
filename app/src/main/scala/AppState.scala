@@ -42,7 +42,7 @@ object AppState:
         case Some(task)                           => GetTaskResult.AcquiredByOther(task)
 
     def updateOrGiveUp(candidates: List[Work.Task]): (AppState, List[Work.Task]) =
-      candidates.foldLeft[(AppState, List[Work.Task])](state -> Nil) { case ((state, xs), task) =>
+      candidates.foldLeft(state -> Nil) { case ((state, xs), task) =>
         task.clearAssignedKey match
           case None                 => (state - task.id, task :: xs)
           case Some(unAssignedTask) => (state.updated(task.id, unAssignedTask), xs)
