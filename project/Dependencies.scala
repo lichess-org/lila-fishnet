@@ -40,7 +40,7 @@ object Dependencies {
   val http4sCirce  = http4s("circe")
 
   val log4Cats = "org.typelevel" %% "log4cats-slf4j"  % "2.6.0"
-  val logback  = "ch.qos.logback" % "logback-classic" % "1.5.0"
+  val logback  = "ch.qos.logback" % "logback-classic" % "1.5.1"
 
   val redis = "io.chrisdavenport" %% "rediculous" % "0.5.1"
 
