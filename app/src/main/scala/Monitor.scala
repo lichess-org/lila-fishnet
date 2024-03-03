@@ -3,6 +3,7 @@ package lila.fishnet
 import cats.effect.IO
 import kamon.Kamon
 import kamon.metric.Timer
+
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit

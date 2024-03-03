@@ -5,11 +5,12 @@ import cats.effect.IO
 import cats.syntax.all.*
 import io.circe.*
 import io.circe.literal.*
-import java.time.Instant
 import org.http4s.*
-import org.http4s.implicits.*
 import org.http4s.circe.*
+import org.http4s.implicits.*
 import weaver.*
+
+import java.time.Instant
 
 object FishnetRoutesTest extends SimpleIOSuite:
 

@@ -1,12 +1,12 @@
 package lila.fishnet
 
-import cats.effect.{ IO, Ref }
 import cats.effect.testkit.TestControl
-import java.time.Instant
+import cats.effect.{ IO, Ref }
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.noop.NoOpLogger
 import weaver.*
 
+import java.time.Instant
 import scala.concurrent.duration.*
 
 object CleaningJobTest extends SimpleIOSuite:

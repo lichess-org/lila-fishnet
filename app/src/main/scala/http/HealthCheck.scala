@@ -1,8 +1,9 @@
 package lila.fishnet
 package http
 
-import io.circe.{ Codec, Decoder, Encoder }
 import cats.effect.IO
+import io.circe.{ Codec, Decoder, Encoder }
+
 import HealthCheck.*
 
 trait HealthCheck:

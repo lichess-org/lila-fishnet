@@ -1,8 +1,9 @@
 package lila.fishnet
 
 import cats.syntax.all.*
-import java.time.Instant
 import lila.fishnet.Work.Task
+
+import java.time.Instant
 
 opaque type AppState = Map[WorkId, Work.Task]
 

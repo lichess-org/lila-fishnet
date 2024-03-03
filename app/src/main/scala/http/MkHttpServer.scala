@@ -1,8 +1,8 @@
 package lila.fishnet
 
-import org.http4s.*
 import cats.effect.{ IO, Resource }
 import fs2.io.net.Network
+import org.http4s.*
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.Server
 import org.typelevel.log4cats.Logger

@@ -1,8 +1,10 @@
 package lila.fishnet
 
-import org.scalacheck.{ Arbitrary, Gen }
 import org.scalacheck.Arbitrary.*
+import org.scalacheck.{ Arbitrary, Gen }
+
 import java.time.Instant
+
 import Work.Acquired
 
 object Arbitraries:

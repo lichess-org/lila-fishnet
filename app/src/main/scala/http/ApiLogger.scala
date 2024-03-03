@@ -2,8 +2,8 @@ package lila.fishnet
 package http
 
 import cats.data.Kleisli
-import cats.syntax.all.*
 import cats.effect.IO
+import cats.syntax.all.*
 import org.http4s.internal.Logger as Http4sLogger
 import org.http4s.{ HttpApp, Request, Response }
 import org.typelevel.log4cats.Logger
