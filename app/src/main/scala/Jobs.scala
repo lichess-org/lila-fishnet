@@ -3,9 +3,10 @@ package lila.fishnet
 import cats.effect.IO
 import io.chrisdavenport.rediculous.RedisPubSub
 import org.typelevel.log4cats.Logger
-import Lila.Request
 
 import scala.concurrent.duration.*
+
+import Lila.Request
 
 trait RedisSubscriberJob:
   def run(): IO[Unit]

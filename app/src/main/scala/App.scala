@@ -1,10 +1,9 @@
 package lila.fishnet
 
 import cats.effect.{ IO, IOApp, Resource }
+import lila.fishnet.http.*
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-
-import lila.fishnet.http.*
 
 object App extends IOApp.Simple:
 

@@ -35,7 +35,7 @@ Run a single test:
 sbt app/testOnly lila.fishnet.ExecutorTest
 ```
 
-Format:
+Run code format and auto code refactor with scalafmt & scalafix:
 ```sh
-sbt scalafmtAll
+sbt prepare
 ```

@@ -17,8 +17,9 @@ import org.http4s.implicits.*
 import org.testcontainers.containers.wait.strategy.Wait
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.noop.NoOpLogger
-import scala.concurrent.duration.*
 import weaver.*
+
+import scala.concurrent.duration.*
 
 object IntegrationTest extends IOSuite:
 

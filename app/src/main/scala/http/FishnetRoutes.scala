@@ -2,13 +2,13 @@ package lila.fishnet
 package http
 
 import cats.*
-import cats.syntax.all.*
 import cats.effect.IO
+import cats.syntax.all.*
 import org.http4s.*
-import org.http4s.dsl.Http4sDsl
-import org.http4s.server.Router
 import org.http4s.circe.CirceEntityDecoder.*
 import org.http4s.circe.CirceEntityEncoder.*
+import org.http4s.dsl.Http4sDsl
+import org.http4s.server.Router
 
 final class FishnetRoutes(executor: Executor) extends Http4sDsl[IO]:
 

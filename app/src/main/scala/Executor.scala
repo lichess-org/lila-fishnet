@@ -2,8 +2,9 @@ package lila.fishnet
 
 import cats.effect.{ IO, Ref }
 import cats.syntax.all.*
-import java.time.Instant
 import org.typelevel.log4cats.Logger
+
+import java.time.Instant
 
 /** Executor is responsible for: store work in memory
   *   - getting work from the queue

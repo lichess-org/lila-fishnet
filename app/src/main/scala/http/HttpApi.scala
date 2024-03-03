@@ -1,14 +1,14 @@
 package lila.fishnet
 package http
 
-import scala.concurrent.duration.*
-
-import cats.syntax.all.*
 import cats.effect.IO
+import cats.syntax.all.*
 import org.http4s.*
 import org.http4s.implicits.*
 import org.http4s.server.middleware.*
 import org.typelevel.log4cats.Logger
+
+import scala.concurrent.duration.*
 
 final class HttpApi(
     executor: Executor,

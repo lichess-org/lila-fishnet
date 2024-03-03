@@ -6,7 +6,8 @@ inThisBuild(
     versionScheme := Some("early-semver"),
     version       := "3.0",
     run / fork    := true,
-    run / javaOptions += "-Dconfig.override_with_env_vars=true"
+    run / javaOptions += "-Dconfig.override_with_env_vars=true",
+    semanticdbEnabled := true, // for scalafix
   )
 )
 
@@ -49,3 +50,9 @@ lazy val app = project
 lazy val root = project
   .in(file("."))
   .aggregate(app)
+
+addCommandAlias("prepare", "scalafixAll; scalafmtAll")
+addCommandAlias(
+  "check",
+  "; scalafixAll --check ; scalafmtCheckAll",
+)

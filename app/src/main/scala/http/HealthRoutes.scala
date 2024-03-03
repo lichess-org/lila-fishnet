@@ -4,9 +4,9 @@ package http
 import cats.*
 import cats.effect.IO
 import org.http4s.*
+import org.http4s.circe.CirceEntityEncoder.*
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.Router
-import org.http4s.circe.CirceEntityEncoder.*
 
 final class HealthRoutes(
     healthCheck: HealthCheck
