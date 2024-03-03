@@ -50,3 +50,9 @@ lazy val app = project
 lazy val root = project
   .in(file("."))
   .aggregate(app)
+
+addCommandAlias("prepare", "scalafixAll; scalafmtAll")
+addCommandAlias(
+  "check",
+  "; scalafixAll --check ; scalafmtCheckAll",
+)
