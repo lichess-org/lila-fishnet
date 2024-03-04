@@ -58,7 +58,8 @@ class AppStateTest extends ScalaCheckSuite:
       state.acquiredBefore(since).forall(_.acquiredBefore(since))
 
   test("updateOrGiveUp is a subset of given tasks"):
-    forAll: (state: AppState, candidates: List[Work.Task]) =>
+    forAll: (state: AppState, before: Instant) =>
+      val candidates   = state.acquiredBefore(before)
       val (_, givenUp) = state.updateOrGiveUp(candidates)
       givenUp.toSet.subsetOf(candidates.toSet)
 
@@ -80,3 +81,9 @@ class AppStateTest extends ScalaCheckSuite:
       val (_, givenUp) = state.updateOrGiveUp(candidates)
       val rest         = candidates.filterNot(givenUp.contains)
       rest.forall(!_.isOutOfTries)
+
+  test("after cleanup, acquiredBefore is empty"):
+    forAll: (state: AppState, before: Instant) =>
+      val candidates    = state.acquiredBefore(before)
+      val (newState, _) = state.updateOrGiveUp(candidates)
+      newState.acquiredBefore(before).isEmpty
