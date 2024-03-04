@@ -19,7 +19,7 @@ object Work:
     def isAcquired: Boolean                         = acquired.isDefined
     def nonAcquired: Boolean                        = !isAcquired
     def isAcquiredBy(clientKey: ClientKey): Boolean = acquired.exists(_.clientKey == clientKey)
-    def acquiredBefore(date: Instant): Boolean      = acquiredAt.exists(_.isBefore(date))
+    def acquiredBefore(date: Instant): Boolean      = acquired.exists(_.date.isBefore(date))
 
     def assignTo(clientKey: ClientKey, at: Instant) =
       copy(acquired = Some(Acquired(clientKey = clientKey, date = at)), tries = tries + 1)

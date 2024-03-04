@@ -39,13 +39,13 @@ object Executor:
                 val (newState, effect) =
                   if state.isFull(config.maxSize) then
                     AppState.empty ->
-                      Logger[IO].warn(s"StateSize=${state.size} maxSize=${config.maxSize}. Dropping all!")
+                      Logger[IO].warn(s"stateSize=${state.size} maxSize=${config.maxSize}. Dropping all!")
                   else state -> IO.unit
-                newState.add(task) -> effect
+                newState.add(task) -> effect *> monitor.updateSize(newState)
 
           def acquire(key: ClientKey): IO[Option[Work.Task]] =
             IO.realTimeInstant.flatMap: at =>
-              ref.modify(_.tryAcquireTask(key, at))
+              ref.modify(_.tryAcquire(key, at))
 
           def move(workId: WorkId, key: ClientKey, response: BestMove): IO[Unit] =
             ref.flatModify: state =>

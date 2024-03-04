@@ -10,7 +10,7 @@ object Dependencies {
     val ciris      = "3.5.0"
     val kamon      = "2.5.11"
     val kamonAgent = "1.0.18"
-    val chess      = "15.7.1"
+    val chess      = "15.7.11"
     val catsEffect = "3.5.3"
   }
 
@@ -27,7 +27,6 @@ object Dependencies {
 
   val cirisCore    = "is.cir" %% "ciris"         % V.ciris
   val cirisHtt4s   = "is.cir" %% "ciris-http4s"  % V.ciris
-  val cirisRefined = "is.cir" %% "ciris-refined" % V.ciris
 
   val kamonCore          = "io.kamon" %% "kamon-core"           % V.kamon
   val kamonInflux        = "io.kamon" %% "kamon-influxdb"       % V.kamon
@@ -50,4 +49,7 @@ object Dependencies {
   val weaver            = "com.disneystreaming" %% "weaver-cats"               % "0.8.4"      % Test
   val weaverScalaCheck  = "com.disneystreaming" %% "weaver-scalacheck"         % "0.8.4"      % Test
   val catsEffectTestKit = "org.typelevel"       %% "cats-effect-testkit"       % V.catsEffect % Test
+  val munit             = "org.scalameta"       %% "munit"                     % "1.0.0-M11"   % Test
+  val munitScalaCheck   = "org.scalameta"       %% "munit-scalacheck"          % "1.0.0-M11"   % Test
+  val scalacheck        = "org.scalacheck"      %% "scalacheck"                % "1.17.0"     % Test
 }

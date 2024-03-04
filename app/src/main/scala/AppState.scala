@@ -29,8 +29,8 @@ object AppState:
 
     inline def count(p: Task => Boolean): Int = state.count(x => p(x._2))
 
-    def tryAcquireTask(key: ClientKey, at: Instant): (AppState, Option[Task]) =
-      state.earliestNonAcquiredTask
+    def tryAcquire(key: ClientKey, at: Instant): (AppState, Option[Task]) =
+      state.earliestNonAcquired
         .map: newTask =>
           val assignedTask = newTask.assignTo(key, at)
           state.updated(assignedTask.id, assignedTask) -> assignedTask.some
@@ -52,5 +52,5 @@ object AppState:
     def acquiredBefore(since: Instant): List[Work.Task] =
       state.values.filter(_.acquiredBefore(since)).toList
 
-    def earliestNonAcquiredTask: Option[Work.Task] =
+    def earliestNonAcquired: Option[Work.Task] =
       state.values.filter(_.nonAcquired).minByOption(_.createdAt)
