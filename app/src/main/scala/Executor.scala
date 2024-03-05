@@ -22,12 +22,18 @@ trait Executor:
   // this is to prevent tasks from being stuck in the queue
   // this will be called periodically
   def clean(before: Instant): IO[Unit]
+  // try to resume state of the executor
+  def onStart: IO[Unit]
+  // try to save state of the executor
+  def onStop: IO[Unit]
 
 object Executor:
 
   import AppState.*
 
-  def instance(client: LilaClient, monitor: Monitor, config: ExecutorConfig)(using Logger[IO]): IO[Executor] =
+  def instance(client: LilaClient, monitor: Monitor, config: ExecutorConfig)(using
+      Logger[IO]
+  ): IO[Executor] =
     Ref
       .of[IO, AppState](AppState.empty)
       .map: ref =>
@@ -74,6 +80,14 @@ object Executor:
               newState -> timedOutLogs
                 *> gavedUpMoves.traverse_(m => Logger[IO].warn(s"Give up move due to clean up: $m"))
                 *> monitor.updateSize(newState)
+
+          def onStart: IO[Unit] =
+            Logger[IO].info("Resuming executor")
+            // *> repository.get.flatMap: state => ref.set(state) *> monitor.updateSize(state)
+
+          def onStop: IO[Unit] =
+            Logger[IO].info("Stopping executor")
+          // *> ref.get.flatMap(repository.save)
 
           private def logTimedOut(state: AppState, timeOut: List[Work.Task]): IO[Unit] =
             IO.whenA(timeOut.nonEmpty):

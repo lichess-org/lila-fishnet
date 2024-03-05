@@ -38,10 +38,17 @@ object GameId:
   given Decoder[GameId]                    = decodeString
   extension (bm: GameId) def value: String = bm
 
+object ChessCirceCodecs:
+  given Encoder[Fen.Epd] = encodeString.contramap(_.value)
+  given Decoder[Fen.Epd] = decodeString.map(Fen.Epd.apply)
+  given Encoder[Variant] = encodeString.contramap(_.name)
+  given Decoder[Variant] =
+    decodeString.emap: s =>
+      Variant.byName(s).toRight(s"Invalid variant: $s")
+
 object Fishnet:
 
-  given Encoder[Fen.Epd] = Encoder.encodeString.contramap(_.value)
-  given Encoder[Variant] = Encoder.encodeString.contramap(_.name)
+  import ChessCirceCodecs.given
 
   case class Acquire(fishnet: Fishnet) derives Codec.AsObject
   case class Fishnet(version: String, apikey: ClientKey) derives Codec.AsObject

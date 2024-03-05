@@ -30,3 +30,5 @@ object CleaningJobTest extends SimpleIOSuite:
       def move(workId: WorkId, fishnetKey: ClientKey, move: BestMove) = IO.unit
       def add(work: Lila.Request)                                     = IO.unit
       def clean(before: Instant)                                      = ref.update(_ + 1)
+      def onStart                                                     = IO.unit
+      def onStop                                                      = IO.unit
