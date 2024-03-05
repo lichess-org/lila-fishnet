@@ -25,8 +25,8 @@ object Dependencies {
   val circeCore    = circe("core")
   val circeLiteral = circe("literal") % Test
 
-  val cirisCore    = "is.cir" %% "ciris"         % V.ciris
-  val cirisHtt4s   = "is.cir" %% "ciris-http4s"  % V.ciris
+  val cirisCore  = "is.cir" %% "ciris"        % V.ciris
+  val cirisHtt4s = "is.cir" %% "ciris-http4s" % V.ciris
 
   val kamonCore          = "io.kamon" %% "kamon-core"           % V.kamon
   val kamonInflux        = "io.kamon" %% "kamon-influxdb"       % V.kamon
@@ -39,7 +39,7 @@ object Dependencies {
   val http4sCirce  = http4s("circe")
 
   val log4Cats = "org.typelevel" %% "log4cats-slf4j"  % "2.6.0"
-  val logback  = "ch.qos.logback" % "logback-classic" % "1.5.2"
+  val logback  = "ch.qos.logback" % "logback-classic" % "1.5.3"
 
   val redis = "io.chrisdavenport" %% "rediculous" % "0.5.1"
 
@@ -49,7 +49,7 @@ object Dependencies {
   val weaver            = "com.disneystreaming" %% "weaver-cats"               % "0.8.4"      % Test
   val weaverScalaCheck  = "com.disneystreaming" %% "weaver-scalacheck"         % "0.8.4"      % Test
   val catsEffectTestKit = "org.typelevel"       %% "cats-effect-testkit"       % V.catsEffect % Test
-  val munit             = "org.scalameta"       %% "munit"                     % "1.0.0-M11"   % Test
-  val munitScalaCheck   = "org.scalameta"       %% "munit-scalacheck"          % "1.0.0-M11"   % Test
+  val munit             = "org.scalameta"       %% "munit"                     % "1.0.0-M11"  % Test
+  val munitScalaCheck   = "org.scalameta"       %% "munit-scalacheck"          % "1.0.0-M11"  % Test
   val scalacheck        = "org.scalacheck"      %% "scalacheck"                % "1.17.0"     % Test
 }
