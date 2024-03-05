@@ -140,6 +140,34 @@ object ExecutorTest extends SimpleIOSuite:
       acquired <- executor.acquire(key)
     yield assert(acquired.isEmpty)
 
+  test("give up due to invalid move should reduce task's size"):
+    for
+      ref <- Ref.of[IO, List[Lila.Move]](Nil)
+      client = createLilaClient(ref)
+      executor <- Executor.instance(client, noopMonitor, ExecutorConfig(2))
+      _        <- executor.add(request)
+      _        <- executor.add(request.copy(id = GameId("2")))
+      _  <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(3)
+      _  <- executor.add(request.copy(id = GameId("3")))
+      a1 <- executor.acquire(key)
+      a2 <- executor.acquire(key2)
+    yield assert(a1.isDefined && a2.isDefined)
+
+  test("give up due to cleaning should reduce task's size"):
+    for
+      ref <- Ref.of[IO, List[Lila.Move]](Nil)
+      client = createLilaClient(ref)
+      executor <- Executor.instance(client, noopMonitor, ExecutorConfig(2))
+      _        <- executor.add(request)
+      _        <- executor.add(request.copy(id = GameId("2")))
+      _  <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(2)
+      _  <- executor.acquire(key)
+      _  <- executor.clean(Instant.now.plusSeconds(37))
+      _  <- executor.add(request.copy(id = GameId("3")))
+      a1 <- executor.acquire(key)
+      a2 <- executor.acquire(key2)
+    yield assert(a1.isDefined && a2.isDefined)
+
   test("if moves reach max size it should clear all moves"):
     for
       executor <- createExecutor(ExecutorConfig(3))
