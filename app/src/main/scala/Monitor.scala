@@ -28,10 +28,10 @@ object Monitor:
             work.acquiredAt.foreach(at => record(lvl8AcquiredTimeRequest, at, now))
           if work.request.level == 1 then record(lvl1FullTimeRequest, work.createdAt, now)
 
-      def updateSize(map: AppState): IO[Unit] =
-        IO(dbSize.update(map.size.toDouble)) *>
-          IO(dbQueued.update(map.count(_.nonAcquired).toDouble)) *>
-          IO(dbAcquired.update(map.count(_.isAcquired).toDouble)).void
+      def updateSize(state: AppState): IO[Unit] =
+        IO(dbSize.update(state.size.toDouble)) *>
+          IO(dbQueued.update(state.count(_.nonAcquired).toDouble)) *>
+          IO(dbAcquired.update(state.count(_.isAcquired).toDouble)).void
 
   private def record(timer: Timer, start: Instant, end: Instant): Unit =
     val _ = timer.record(start.until(end, ChronoUnit.MILLIS), TimeUnit.MILLISECONDS)
