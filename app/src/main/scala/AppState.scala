@@ -14,7 +14,12 @@ enum GetTaskResult:
 
 object AppState:
   val empty: AppState = Map.empty
+
+  def fromTasks(tasks: List[Work.Task]): AppState = tasks.map(t => t.id -> t).toMap
+
   extension (state: AppState)
+
+    def tasks: List[Work.Task] = state.values.toList
 
     inline def isFull(maxSize: Int): Boolean =
       state.sizeIs >= maxSize
