@@ -8,6 +8,7 @@ trait StateStorage:
   def save(state: AppState): IO[Unit]
 
 object StateStorage:
+
   def inMemory: IO[StateStorage] =
     for ref <- cats.effect.Ref.of[IO, AppState](AppState.empty)
     yield new StateStorage:
@@ -17,24 +18,29 @@ object StateStorage:
   def instance(path: fs2.io.file.Path)(using Logger[IO]): StateStorage =
     new StateStorage:
       def get: IO[AppState] =
-        fs2.io.file
-          .Files[IO]
-          .readAll(path)
-          .through(TasksSerializer.deserialize)
-          .compile
-          .toList
-          .map(AppState.fromTasks) // TODO use fold and AppState.add
-          .handleErrorWith: e =>
-            Logger[IO].error(e)(s"Failed to read state from $path") *> IO.pure(AppState.empty)
+        Logger[IO].info(s"Reading state from $path") *>
+          fs2.io.file
+            .Files[IO]
+            .readAll(path)
+            .through(TasksSerializer.deserialize)
+            .compile
+            .toList
+            .map(AppState.fromTasks)
+            .handleErrorWith: e =>
+              Logger[IO].error(e)(s"Failed to read state from $path") *> IO.pure(AppState.empty)
 
       def save(state: AppState): IO[Unit] =
-        fs2.Stream
-          .emits(state.tasks)
-          .through(TasksSerializer.serialize)
-          .through(fs2.text.utf8.encode)
-          .through(fs2.io.file.Files[IO].writeAll(path))
-          .compile
-          .drain
+        Logger[IO].info(s"Saving state to $path") *>
+          Logger[IO].info(state.toString) *>
+          fs2.Stream
+            .emits(state.tasks)
+            .through(TasksSerializer.serialize)
+            .through(fs2.text.utf8.encode)
+            .through(fs2.io.file.Files[IO].writeAll(path))
+            .compile
+            .drain
+            .handleErrorWith: e =>
+              Logger[IO].error(e)(s"Failed to write state to $path")
 
 object TasksSerializer:
 

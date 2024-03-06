@@ -64,7 +64,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
-      executor <- Executor.instance(client, noopStateStorage, noopMonitor, ExecutorConfig(300))
+      executor <- ioExecutor(client)(noopMonitor, ExecutorConfig(2))
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
       _        <- executor.move(acquired.get.id, key, validMove)
@@ -75,7 +75,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
-      executor <- Executor.instance(client, noopStateStorage, noopMonitor, ExecutorConfig(300))
+      executor <- ioExecutor(client)(noopMonitor, ExecutorConfig(2))
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
       _        <- executor.clean(Instant.now.plusSeconds(37))
@@ -87,7 +87,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
-      executor <- Executor.instance(client, noopStateStorage, noopMonitor, ExecutorConfig(300))
+      executor <- ioExecutor(client)(noopMonitor, ExecutorConfig(2))
       _        <- executor.add(request)
       _        <- executor.acquire(key)
       _        <- executor.clean(Instant.now.plusSeconds(37))
@@ -100,7 +100,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
-      executor <- Executor.instance(client, noopStateStorage, noopMonitor, ExecutorConfig(300))
+      executor <- ioExecutor(client)(noopMonitor, ExecutorConfig(2))
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
       _        <- executor.move(acquired.get.id, key, invalidMove)
@@ -111,7 +111,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
-      executor <- Executor.instance(client, noopStateStorage, noopMonitor, ExecutorConfig(300))
+      executor <- ioExecutor(client)(noopMonitor, ExecutorConfig(2))
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
       workId = acquired.get.id
@@ -124,7 +124,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
-      executor <- Executor.instance(client, noopStateStorage, noopMonitor, ExecutorConfig(300))
+      executor <- ioExecutor(client)(noopMonitor, ExecutorConfig(2))
       _        <- executor.add(request)
       _ <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(2)
       acquired <- executor.acquire(key)
@@ -134,7 +134,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
-      executor <- Executor.instance(client, noopStateStorage, noopMonitor, ExecutorConfig(300))
+      executor <- ioExecutor(client)(noopMonitor, ExecutorConfig(2))
       _        <- executor.add(request)
       _ <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(3)
       acquired <- executor.acquire(key)
@@ -144,7 +144,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
-      executor <- Executor.instance(client, noopStateStorage, noopMonitor, ExecutorConfig(2))
+      executor <- ioExecutor(client)(noopMonitor, ExecutorConfig(2))
       _        <- executor.add(request)
       _        <- executor.add(request.copy(id = GameId("2")))
       _  <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(3)
@@ -157,7 +157,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       ref <- Ref.of[IO, List[Lila.Move]](Nil)
       client = createLilaClient(ref)
-      executor <- Executor.instance(client, noopStateStorage, noopMonitor, ExecutorConfig(2))
+      executor <- ioExecutor(client)(noopMonitor, ExecutorConfig(2))
       _        <- executor.add(request)
       _        <- executor.add(request.copy(id = GameId("2")))
       _  <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(2)
@@ -180,7 +180,12 @@ object ExecutorTest extends SimpleIOSuite:
     yield assert(acquired.isDefined && empty.isEmpty)
 
   def createExecutor(config: ExecutorConfig = ExecutorConfig(300)): IO[Executor] =
-    createLilaClient.flatMap(Executor.instance(_, noopStateStorage, noopMonitor, config))
+    createLilaClient.flatMap(ioExecutor(_)(noopMonitor, config))
+
+  def ioExecutor(client: LilaClient)(monitor: Monitor, config: ExecutorConfig): IO[Executor] =
+    Ref
+      .of[IO, AppState](AppState.empty)
+      .map(Executor.instance(_, client, monitor, config))
 
   def createLilaClient: IO[LilaClient] =
     Ref
