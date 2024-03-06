@@ -31,7 +31,7 @@ object Executor:
 
   import AppState.*
 
-  def instance(client: LilaClient, monitor: Monitor, config: ExecutorConfig)(using
+  def instance(client: LilaClient, storage: StateStorage, monitor: Monitor, config: ExecutorConfig)(using
       Logger[IO]
   ): IO[Executor] =
     Ref
@@ -83,11 +83,11 @@ object Executor:
 
           def onStart: IO[Unit] =
             Logger[IO].info("Resuming executor")
-            // *> repository.get.flatMap: state => ref.set(state) *> monitor.updateSize(state)
+              *> storage.get.flatMap(ref.set) // log resume with state.size
 
           def onStop: IO[Unit] =
             Logger[IO].info("Stopping executor")
-          // *> ref.get.flatMap(repository.save)
+              *> ref.get.flatMap(storage.save) // log save with state.size
 
           private def logTimedOut(state: AppState, timeOut: List[Work.Task]): IO[Unit] =
             IO.whenA(timeOut.nonEmpty):

@@ -12,3 +12,8 @@ object Helper:
   val noopLilaClient: LilaClient =
     new LilaClient:
       def send(move: Lila.Move): IO[Unit] = IO.unit
+
+  val noopStateStorage: StateStorage =
+    new StateStorage:
+      def get: IO[AppState]               = IO.pure(AppState.empty)
+      def save(state: AppState): IO[Unit] = IO.unit

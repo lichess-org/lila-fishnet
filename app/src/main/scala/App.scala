@@ -25,11 +25,12 @@ class FishnetApp(res: AppResources, config: AppConfig)(using Logger[IO]):
     for
       lilaClient <- Resource.pure(LilaClient(res.redisPubsub))
       monitor = Monitor.apply
-      executor <- Executor.instance(lilaClient, monitor, config.executor).toResource
+      storage = StateStorage.instance(fs2.io.file.Path("data.json"))
+      executor <- Executor.instance(lilaClient, storage, monitor, config.executor).toResource
       httpApi = HttpApi(executor, HealthCheck(), config.server)
-      server <- MkHttpServer.apply.newEmber(config.server, httpApi.httpApp)
+      server <- MkHttpServer.apply.newEmber(config.server, httpApi.httpApp).onFinalize(executor.onStop)
       _      <- executor.onStart.toResource
       _      <- RedisSubscriberJob(executor, res.redisPubsub).run().background
-      _      <- WorkCleaningJob(executor).run().guarantee(executor.onStop).background
+      _      <- WorkCleaningJob(executor).run().background
       _      <- Logger[IO].info(s"Starting server on ${config.server.host}:${config.server.port}").toResource
     yield ()
