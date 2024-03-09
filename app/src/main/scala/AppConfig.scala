@@ -14,14 +14,16 @@ object AppConfig:
     RedisConfig.config,
     HttpServerConfig.config,
     KamonConfig.config,
-    ExecutorConfg.config
+    ExecutorConfg.config,
+    StorageConfg.config
   ).parMapN(AppConfig.apply)
 
 case class AppConfig(
     redis: RedisConfig,
     server: HttpServerConfig,
     kamon: KamonConfig,
-    executor: ExecutorConfig
+    executor: ExecutorConfig,
+    storage: StorageConfig
 )
 
 case class HttpServerConfig(host: Host, port: Port, apiLogger: Boolean)
@@ -49,3 +51,8 @@ case class ExecutorConfig(maxSize: Int)
 object ExecutorConfg:
   def maxSize = env("APP_MAX_MOVE_SIZE").or(prop("app.max.move.size")).as[Int].default(300)
   def config  = maxSize.map(ExecutorConfig.apply)
+
+case class StorageConfig(path: Option[String])
+object StorageConfg:
+  def path   = env("APP_BACKUP_FILE").or(prop("app.backup.file")).as[String].option
+  def config = path.map(StorageConfig.apply)

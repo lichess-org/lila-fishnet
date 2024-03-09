@@ -25,7 +25,7 @@ class FishnetApp(res: AppResources, config: AppConfig)(using Logger[IO]):
     for
       lilaClient <- Resource.pure(LilaClient(res.redisPubsub))
       monitor = Monitor.apply
-      storage = StateStorage.instance(fs2.io.file.Path("data.json"))
+      storage = StateStorage.instance(config.storage.path)
       executor <- Executor.instance(lilaClient, storage, monitor, config.executor)
       httpApi = HttpApi(executor, HealthCheck(), config.server)
       server <- MkHttpServer.apply.newEmber(config.server, httpApi.httpApp)
