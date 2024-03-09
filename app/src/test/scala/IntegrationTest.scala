@@ -40,7 +40,7 @@ object IntegrationTest extends IOSuite:
     redis = redis,
     kamon = KamonConfig(enabled = false),
     executor = ExecutorConfig(maxSize = 300),
-    storage = StorageConfig(path = None)
+    repository = RepositoryConfig(path = None)
   )
 
   test("health check should return healthy"):

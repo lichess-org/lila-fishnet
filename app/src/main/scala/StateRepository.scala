@@ -4,30 +4,24 @@ import cats.effect.IO
 import cats.syntax.all.*
 import org.typelevel.log4cats.Logger
 
-trait StateStorage:
+trait StateRepository:
   def get: IO[AppState]
   def save(state: AppState): IO[Unit]
 
-object StateStorage:
+object StateRepository:
 
-  def inMemory: IO[StateStorage] =
-    for ref <- cats.effect.Ref.of[IO, AppState](AppState.empty)
-    yield new StateStorage:
-      def get: IO[AppState]               = ref.get
-      def save(state: AppState): IO[Unit] = ref.set(state)
-
-  def instance(path: Option[String])(using Logger[IO]): StateStorage =
+  def instance(path: Option[String])(using Logger[IO]): StateRepository =
     path.fold(noop)(file(_))
 
-  def noop(using Logger[IO]): StateStorage =
-    new StateStorage:
+  def noop(using Logger[IO]): StateRepository =
+    new StateRepository:
       def get: IO[AppState] =
         Logger[IO].info("There is no configed path, return empty AppState") *> IO(AppState.empty)
       def save(state: AppState): IO[Unit] = Logger[IO].info("There is no configed path, do nothing")
 
-  def file(_path: String)(using Logger[IO]): StateStorage =
+  def file(_path: String)(using Logger[IO]): StateRepository =
     val path = fs2.io.file.Path(_path)
-    new StateStorage:
+    new StateRepository:
       def get: IO[AppState] =
         Logger[IO].info(s"Reading state from $path") *>
           fs2.io.file

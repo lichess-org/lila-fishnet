@@ -13,7 +13,7 @@ object Helper:
     new LilaClient:
       def send(move: Lila.Move): IO[Unit] = IO.unit
 
-  val noopStateStorage: StateStorage =
-    new StateStorage:
+  val noopStateRepository: StateRepository =
+    new StateRepository:
       def get: IO[AppState]               = IO.pure(AppState.empty)
       def save(state: AppState): IO[Unit] = IO.unit

@@ -15,7 +15,7 @@ object AppConfig:
     HttpServerConfig.config,
     KamonConfig.config,
     ExecutorConfg.config,
-    StorageConfg.config
+    RepositoryConfig.config
   ).parMapN(AppConfig.apply)
 
 case class AppConfig(
@@ -23,7 +23,7 @@ case class AppConfig(
     server: HttpServerConfig,
     kamon: KamonConfig,
     executor: ExecutorConfig,
-    storage: StorageConfig
+    repository: RepositoryConfig
 )
 
 case class HttpServerConfig(host: Host, port: Port, apiLogger: Boolean)
@@ -52,7 +52,7 @@ object ExecutorConfg:
   def maxSize = env("APP_MAX_MOVE_SIZE").or(prop("app.max.move.size")).as[Int].default(300)
   def config  = maxSize.map(ExecutorConfig.apply)
 
-case class StorageConfig(path: Option[String])
-object StorageConfg:
+case class RepositoryConfig(path: Option[String])
+object RepositoryConfig:
   def path   = env("APP_BACKUP_FILE").or(prop("app.backup.file")).as[String].option
-  def config = path.map(StorageConfig.apply)
+  def config = path.map(RepositoryConfig.apply)
