@@ -27,7 +27,7 @@ object StateRepository:
           fs2.io.file
             .Files[IO]
             .readAll(path)
-            .through(TasksSerializer.deserialize)
+            .through(TasksSerDe.deserialize)
             .compile
             .toList
             .map(AppState.fromTasks)
@@ -38,7 +38,7 @@ object StateRepository:
         Logger[IO].info(s"Saving ${state.size} tasks to $path") *>
           fs2.Stream
             .emits(state.tasks)
-            .through(TasksSerializer.serialize)
+            .through(TasksSerDe.serialize)
             .through(fs2.text.utf8.encode)
             .through(fs2.io.file.Files[IO].writeAll(path))
             .compile
@@ -46,7 +46,7 @@ object StateRepository:
             .handleErrorWith: e =>
               Logger[IO].error(e)(s"Failed to write state to $path")
 
-object TasksSerializer:
+object TasksSerDe:
 
   import fs2.data.json.*
   import fs2.data.json.circe.*
