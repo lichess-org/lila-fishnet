@@ -41,8 +41,7 @@ object StateStorage:
               Logger[IO].error(e)(s"Failed to read state from $path") *> IO.pure(AppState.empty)
 
       def save(state: AppState): IO[Unit] =
-        Logger[IO].info(s"Saving state to $path") *>
-          Logger[IO].info(state.toString) *>
+        Logger[IO].info(s"Saving ${state.size} tasks to $path") *>
           fs2.Stream
             .emits(state.tasks)
             .through(TasksSerializer.serialize)
