@@ -4,11 +4,9 @@ import io.circe.{ Codec, Decoder, Encoder }
 
 import java.time.Instant
 
-import ChessCirceCodecs.given
-
 object Work:
 
-  case class Acquired(clientKey: ClientKey, date: Instant):
+  case class Acquired(clientKey: ClientKey, date: Instant) derives Codec.AsObject:
     override def toString = s"by $clientKey at $date"
 
   case class Task(
