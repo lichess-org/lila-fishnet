@@ -7,7 +7,7 @@ inThisBuild(
     version       := "3.0",
     run / fork    := true,
     run / javaOptions += "-Dconfig.override_with_env_vars=true",
-    semanticdbEnabled := true, // for scalafix
+    semanticdbEnabled := true // for scalafix
   )
 )
 
@@ -25,6 +25,10 @@ lazy val app = project
       circeCore,
       cirisCore,
       cirisHtt4s,
+      fs2,
+      fs2IO,
+      fs2Json,
+      fs2JsonCirce,
       http4sCirce,
       http4sDsl,
       http4sServer,
@@ -57,5 +61,5 @@ lazy val root = project
 addCommandAlias("prepare", "scalafixAll; scalafmtAll")
 addCommandAlias(
   "check",
-  "; scalafixAll --check ; scalafmtCheckAll",
+  "; scalafixAll --check ; scalafmtCheckAll"
 )

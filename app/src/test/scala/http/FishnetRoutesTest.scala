@@ -99,3 +99,5 @@ object FishnetRoutesTest extends SimpleIOSuite:
         else IO.raiseError(new Exception("invalid work id"))
       def add(request: Lila.Request): IO[Unit] = IO.unit
       def clean(before: Instant)               = IO.unit
+      def onStart                              = IO.unit
+      def onStop                               = IO.unit

@@ -1,10 +1,12 @@
 package lila.fishnet
 
+import io.circe.{ Codec, Decoder, Encoder }
+
 import java.time.Instant
 
 object Work:
 
-  case class Acquired(clientKey: ClientKey, date: Instant):
+  case class Acquired(clientKey: ClientKey, date: Instant) derives Codec.AsObject:
     override def toString = s"by $clientKey at $date"
 
   case class Task(
@@ -13,7 +15,7 @@ object Work:
       tries: Int,
       acquired: Option[Acquired],
       createdAt: Instant
-  ):
+  ) derives Codec.AsObject:
 
     def acquiredAt: Option[Instant]                 = acquired.map(_.date)
     def isAcquired: Boolean                         = acquired.isDefined
@@ -38,5 +40,6 @@ object Work:
         moves = request.moves,
         variant = request.variant
       )
+
     override def toString =
       s"id:$id game:${request.id} variant:${request.variant.key} level:${request.level} tries:$tries created:$createdAt acquired:$acquired move: ${request.moves}"
