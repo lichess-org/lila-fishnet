@@ -62,7 +62,7 @@ object ExecutorTest extends SimpleIOSuite:
 
   test("post move after acquire should send move"):
     for
-      ref      <- Ref.of[IO, List[Lila.Move]](Nil)
+      ref      <- emptyMovesRef
       executor <- createExecutor(ref)(ExecutorConfig(2))
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
@@ -72,7 +72,7 @@ object ExecutorTest extends SimpleIOSuite:
 
   test("post move after timeout should not send move"):
     for
-      ref      <- Ref.of[IO, List[Lila.Move]](Nil)
+      ref      <- emptyMovesRef
       executor <- createExecutor(ref)(ExecutorConfig(2))
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
@@ -83,7 +83,7 @@ object ExecutorTest extends SimpleIOSuite:
 
   test("after timeout move should be able to acquired again"):
     for
-      ref      <- Ref.of[IO, List[Lila.Move]](Nil)
+      ref      <- emptyMovesRef
       executor <- createExecutor(ref)(ExecutorConfig(2))
       _        <- executor.add(request)
       _        <- executor.acquire(key)
@@ -95,7 +95,7 @@ object ExecutorTest extends SimpleIOSuite:
 
   test("post an invalid move should not send move"):
     for
-      ref      <- Ref.of[IO, List[Lila.Move]](Nil)
+      ref      <- emptyMovesRef
       executor <- createExecutor(ref)(ExecutorConfig(2))
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
@@ -177,11 +177,12 @@ object ExecutorTest extends SimpleIOSuite:
       .map(Executor.instance(_, client, monitor, config))
 
   def createLilaClient: IO[LilaClient] =
-    Ref
-      .of[IO, List[Lila.Move]](Nil)
-      .map(createLilaClient)
+    emptyMovesRef.map(createLilaClient)
 
   def createLilaClient(ref: Ref[IO, List[Lila.Move]]): LilaClient =
     new LilaClient:
       def send(move: Lila.Move): IO[Unit] =
         ref.update(_ :+ move)
+
+  def emptyMovesRef: IO[Ref[IO, List[Lila.Move]]] =
+    Ref.of[IO, List[Lila.Move]](Nil)
