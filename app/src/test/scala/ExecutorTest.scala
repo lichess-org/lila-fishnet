@@ -166,7 +166,7 @@ object ExecutorTest extends SimpleIOSuite:
     yield assert(acquired.isDefined && empty.isEmpty)
 
   def createExecutor(config: ExecutorConfig = ExecutorConfig(300)): IO[Executor] =
-    createLilaClient.flatMap(createExecutor(_)(config))
+    createLilaClient.flatMap(ioExecutor(_)(noopMonitor, config))
 
   def createExecutor(ref: Ref[IO, List[Lila.Move]])(config: ExecutorConfig): IO[Executor] =
     ioExecutor(createLilaClient(ref))(noopMonitor, config)
