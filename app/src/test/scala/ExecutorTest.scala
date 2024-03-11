@@ -109,9 +109,7 @@ object ExecutorTest extends SimpleIOSuite:
 
   test("after post an invalid move, acquire again should return work.some"):
     for
-      ref <- Ref.of[IO, List[Lila.Move]](Nil)
-      client = createLilaClient(ref)
-      executor <- ioExecutor(client)(noopMonitor, ExecutorConfig(2))
+      executor <- createExecutor(ExecutorConfig(2))
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
       workId = acquired.get.id
@@ -122,9 +120,7 @@ object ExecutorTest extends SimpleIOSuite:
 
   test("should not give up after 2 tries"):
     for
-      ref <- Ref.of[IO, List[Lila.Move]](Nil)
-      client = createLilaClient(ref)
-      executor <- ioExecutor(client)(noopMonitor, ExecutorConfig(2))
+      executor <- createExecutor(ExecutorConfig(2))
       _        <- executor.add(request)
       _ <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(2)
       acquired <- executor.acquire(key)
@@ -132,9 +128,7 @@ object ExecutorTest extends SimpleIOSuite:
 
   test("should give up after 3 tries"):
     for
-      ref <- Ref.of[IO, List[Lila.Move]](Nil)
-      client = createLilaClient(ref)
-      executor <- ioExecutor(client)(noopMonitor, ExecutorConfig(2))
+      executor <- createExecutor(ExecutorConfig(2))
       _        <- executor.add(request)
       _ <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(3)
       acquired <- executor.acquire(key)
@@ -142,9 +136,7 @@ object ExecutorTest extends SimpleIOSuite:
 
   test("give up due to invalid move should reduce task's size"):
     for
-      ref <- Ref.of[IO, List[Lila.Move]](Nil)
-      client = createLilaClient(ref)
-      executor <- ioExecutor(client)(noopMonitor, ExecutorConfig(2))
+      executor <- createExecutor(ExecutorConfig(2))
       _        <- executor.add(request)
       _        <- executor.add(request.copy(id = GameId("2")))
       _  <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(3)
@@ -155,9 +147,7 @@ object ExecutorTest extends SimpleIOSuite:
 
   test("give up due to cleaning should reduce task's size"):
     for
-      ref <- Ref.of[IO, List[Lila.Move]](Nil)
-      client = createLilaClient(ref)
-      executor <- ioExecutor(client)(noopMonitor, ExecutorConfig(2))
+      executor <- createExecutor(ExecutorConfig(2))
       _        <- executor.add(request)
       _        <- executor.add(request.copy(id = GameId("2")))
       _  <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(2)
