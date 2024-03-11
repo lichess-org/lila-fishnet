@@ -62,9 +62,8 @@ object ExecutorTest extends SimpleIOSuite:
 
   test("post move after acquire should send move"):
     for
-      ref <- Ref.of[IO, List[Lila.Move]](Nil)
-      client = createLilaClient(ref)
-      executor <- ioExecutor(client)(noopMonitor, ExecutorConfig(2))
+      ref      <- Ref.of[IO, List[Lila.Move]](Nil)
+      executor <- createExecutor(ref)(ExecutorConfig(2))
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
       _        <- executor.move(acquired.get.id, key, validMove)
@@ -73,9 +72,8 @@ object ExecutorTest extends SimpleIOSuite:
 
   test("post move after timeout should not send move"):
     for
-      ref <- Ref.of[IO, List[Lila.Move]](Nil)
-      client = createLilaClient(ref)
-      executor <- ioExecutor(client)(noopMonitor, ExecutorConfig(2))
+      ref      <- Ref.of[IO, List[Lila.Move]](Nil)
+      executor <- createExecutor(ref)(ExecutorConfig(2))
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
       _        <- executor.clean(Instant.now.plusSeconds(37))
@@ -85,9 +83,8 @@ object ExecutorTest extends SimpleIOSuite:
 
   test("after timeout move should be able to acquired again"):
     for
-      ref <- Ref.of[IO, List[Lila.Move]](Nil)
-      client = createLilaClient(ref)
-      executor <- ioExecutor(client)(noopMonitor, ExecutorConfig(2))
+      ref      <- Ref.of[IO, List[Lila.Move]](Nil)
+      executor <- createExecutor(ref)(ExecutorConfig(2))
       _        <- executor.add(request)
       _        <- executor.acquire(key)
       _        <- executor.clean(Instant.now.plusSeconds(37))
@@ -98,9 +95,8 @@ object ExecutorTest extends SimpleIOSuite:
 
   test("post an invalid move should not send move"):
     for
-      ref <- Ref.of[IO, List[Lila.Move]](Nil)
-      client = createLilaClient(ref)
-      executor <- ioExecutor(client)(noopMonitor, ExecutorConfig(2))
+      ref      <- Ref.of[IO, List[Lila.Move]](Nil)
+      executor <- createExecutor(ref)(ExecutorConfig(2))
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
       _        <- executor.move(acquired.get.id, key, invalidMove)
@@ -170,7 +166,10 @@ object ExecutorTest extends SimpleIOSuite:
     yield assert(acquired.isDefined && empty.isEmpty)
 
   def createExecutor(config: ExecutorConfig = ExecutorConfig(300)): IO[Executor] =
-    createLilaClient.flatMap(ioExecutor(_)(noopMonitor, config))
+    createLilaClient.flatMap(createExecutor(_)(config))
+
+  def createExecutor(ref: Ref[IO, List[Lila.Move]])(config: ExecutorConfig): IO[Executor] =
+    ioExecutor(createLilaClient(ref))(noopMonitor, config)
 
   def ioExecutor(client: LilaClient)(monitor: Monitor, config: ExecutorConfig): IO[Executor] =
     Ref
