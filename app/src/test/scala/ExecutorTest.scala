@@ -67,8 +67,8 @@ object ExecutorTest extends SimpleIOSuite:
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
       _        <- executor.move(acquired.get.id, key, validMove)
-      move     <- ref.get.map(_.head)
-    yield expect.same(move, Lila.Move(request.id, request.moves, chess.format.Uci.Move("e2e4").get))
+      response <- ref.get.map(_.head)
+    yield expect.same(response, Lila.Response(request.id, request.moves, chess.format.Uci.Move("e2e4").get))
 
   test("post move after timeout should not send move"):
     for
@@ -90,8 +90,8 @@ object ExecutorTest extends SimpleIOSuite:
       _        <- executor.clean(Instant.now.plusSeconds(37))
       acquired <- executor.acquire(key)
       _        <- executor.move(acquired.get.id, key, validMove)
-      move     <- ref.get.map(_.head)
-    yield expect.same(move, Lila.Move(request.id, request.moves, chess.format.Uci.Move("e2e4").get))
+      response <- ref.get.map(_.head)
+    yield expect.same(response, Lila.Response(request.id, request.moves, chess.format.Uci.Move("e2e4").get))
 
   test("post an invalid move should not send move"):
     for
@@ -168,7 +168,7 @@ object ExecutorTest extends SimpleIOSuite:
   def createExecutor(config: ExecutorConfig = ExecutorConfig(300)): IO[Executor] =
     createLilaClient.flatMap(ioExecutor(_)(noopMonitor, config))
 
-  def createExecutor(ref: Ref[IO, List[Lila.Move]])(config: ExecutorConfig): IO[Executor] =
+  def createExecutor(ref: Ref[IO, List[Lila.Response]])(config: ExecutorConfig): IO[Executor] =
     ioExecutor(createLilaClient(ref))(noopMonitor, config)
 
   def ioExecutor(client: LilaClient)(monitor: Monitor, config: ExecutorConfig): IO[Executor] =
@@ -179,10 +179,10 @@ object ExecutorTest extends SimpleIOSuite:
   def createLilaClient: IO[LilaClient] =
     emptyMovesRef.map(createLilaClient)
 
-  def createLilaClient(ref: Ref[IO, List[Lila.Move]]): LilaClient =
+  def createLilaClient(ref: Ref[IO, List[Lila.Response]]): LilaClient =
     new LilaClient:
-      def send(move: Lila.Move): IO[Unit] =
+      def send(move: Lila.Response): IO[Unit] =
         ref.update(_ :+ move)
 
-  def emptyMovesRef: IO[Ref[IO, List[Lila.Move]]] =
-    Ref.of[IO, List[Lila.Move]](Nil)
+  def emptyMovesRef: IO[Ref[IO, List[Lila.Response]]] =
+    Ref.of[IO, List[Lila.Response]](Nil)

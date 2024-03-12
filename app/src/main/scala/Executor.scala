@@ -66,7 +66,7 @@ object Executor:
               response.uci match
                 case Some(uci) =>
                   state.remove(task.id) -> (monitor.success(task) >>
-                    client.send(Lila.Move(task.request.id, task.request.moves, uci)))
+                    client.send(Lila.Response(task.request.id, task.request.moves, uci)))
                 case _ =>
                   val (newState, io) = task.clearAssignedKey match
                     case None =>

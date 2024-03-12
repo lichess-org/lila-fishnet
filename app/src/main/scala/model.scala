@@ -70,7 +70,7 @@ object Lila:
 
   import ChessCirceCodecs.given
 
-  case class Move(gameId: GameId, moves: String, uci: Uci):
+  case class Response(gameId: GameId, moves: String, uci: Uci):
     def sign  = moves.takeRight(20).replace(" ", "")
     def write = s"$gameId $sign ${uci.uci}"
 
