@@ -48,11 +48,12 @@ object AppState:
         case Some(task)                           => GetTaskResult.AcquiredByOther(task)
 
     def updateOrGiveUp(candidates: List[Work.Task]): (AppState, List[Work.Task]) =
-      candidates.foldLeft(state -> Nil) { case ((state, xs), task) =>
-        task.clearAssignedKey match
-          case None                 => (state - task.id, task :: xs)
-          case Some(unAssignedTask) => (state.updated(task.id, unAssignedTask), xs)
-      }
+      candidates.mapAccumulateFilter(state)(_.clearOrGiveUp(_))
+
+    def clearOrGiveUp(task: Work.Task): (AppState, Option[Work.Task]) =
+      task.clearAssignedKey match
+        case None                 => (state - task.id, Some(task))
+        case Some(unAssignedTask) => (state.updated(task.id, unAssignedTask), None)  
 
     def acquiredBefore(since: Instant): List[Work.Task] =
       state.values.filter(_.acquiredBefore(since)).toList
