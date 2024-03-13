@@ -68,12 +68,10 @@ object Executor:
                   state.remove(task.id) -> (monitor.success(task) >>
                     client.send(Lila.Response(task.request.id, task.request.moves, uci)))
                 case _ =>
-                  val (newState, io) = task.clearAssignedKey match
-                    case None =>
-                      state.remove(workId) -> Logger[IO].warn(
-                        s"Give up move due to invalid move $response by $key for $task"
-                      )
-                    case Some(updated) => state.add(updated) -> IO.unit
+                  val (newState, maybeGivenUp) = state.unassignOrGiveUp(task)
+                  val io = maybeGivenUp.traverse_(task => Logger[IO].warn(
+                    s"Give up move due to invalid move $response by $key for $task"
+                  ))
                   newState -> io *> failure(task, key)
 
       def clean(since: Instant): IO[Unit] =
