@@ -54,6 +54,11 @@ object AppState:
           case Some(unAssignedTask) => (state.updated(task.id, unAssignedTask), xs)
       }
 
+    def unassignOrGiveUp(task: Work.Task): (AppState, Option[Work.Task]) =
+      task.clearAssignedKey match
+        case None                 => (state - task.id, Some(task))
+        case Some(unAssignedTask) => (state.updated(task.id, unAssignedTask), None)
+
     def acquiredBefore(since: Instant): List[Work.Task] =
       state.values.filter(_.acquiredBefore(since)).toList
 
