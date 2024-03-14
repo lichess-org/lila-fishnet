@@ -9,8 +9,6 @@ import Arbitraries.given
 
 class AppStateTest extends ScalaCheckSuite:
 
-  override def scalaCheckInitialSeed = "lwfNzhdC038hCsaHpM4QBkFYs5eFtR9GLPHuzIE08KP="
-
   test("tasks.fromTasks == identity"):
     forAll: (state: AppState) =>
       assertEquals(AppState.fromTasks(state.tasks), state)
