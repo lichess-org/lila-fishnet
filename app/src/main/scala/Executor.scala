@@ -78,7 +78,7 @@ object Executor:
         ref.flatModify: state =>
           val timedOut                 = state.acquiredBefore(since)
           val timedOutLogs             = logTimedOut(state, timedOut)
-          val (newState, gavedUpMoves) = state.updateOrGiveUp(timedOut)
+          val (newState, gavedUpMoves) = state.unassignOrGiveUp(timedOut)
           newState -> timedOutLogs
             *> gavedUpMoves.traverse_(m => Logger[IO].warn(s"Give up move due to clean up: $m"))
             *> monitor.updateSize(newState)

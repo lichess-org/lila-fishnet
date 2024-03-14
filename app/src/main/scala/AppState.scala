@@ -47,7 +47,7 @@ object AppState:
         case Some(task) if task.isAcquiredBy(key) => GetTaskResult.Found(task)
         case Some(task)                           => GetTaskResult.AcquiredByOther(task)
 
-    def updateOrGiveUp(candidates: List[Work.Task]): (AppState, List[Work.Task]) =
+    def unassignOrGiveUp(candidates: List[Work.Task]): (AppState, List[Work.Task]) =
       candidates.foldLeft(state -> Nil) { case ((state, xs), task) =>
         val (newState, maybeGivenUp) = state.unassignOrGiveUp(task)
         (newState, maybeGivenUp.fold(xs)(_ :: xs))
@@ -56,7 +56,7 @@ object AppState:
     def unassignOrGiveUp(task: Work.Task): (AppState, Option[Work.Task]) =
       task.clearAssignedKey match
         case None                 => (state - task.id, Some(task))
-        case Some(unAssignedTask) => (state.updated(task.id, unAssignedTask), None)
+        case Some(unassignedTask) => (state.updated(task.id, unassignedTask), None)
 
     def acquiredBefore(since: Instant): List[Work.Task] =
       state.values.filter(_.acquiredBefore(since)).toList
