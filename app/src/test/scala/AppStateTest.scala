@@ -9,8 +9,6 @@ import Arbitraries.given
 
 class AppStateTest extends ScalaCheckSuite:
 
-  override def scalaCheckInitialSeed = "lwfNzhdC038hCsaHpM4QBkFYs5eFtR9GLPHuzIE08KP="
-
   test("tasks.fromTasks == identity"):
     forAll: (state: AppState) =>
       assertEquals(AppState.fromTasks(state.tasks), state)
@@ -71,30 +69,30 @@ class AppStateTest extends ScalaCheckSuite:
   test("updateOrGiveUp is a subset of given tasks"):
     forAll: (state: AppState, before: Instant) =>
       val candidates   = state.acquiredBefore(before)
-      val (_, givenUp) = state.updateOrGiveUp(candidates)
+      val (_, givenUp) = state.unassignOrGiveUp(candidates)
       givenUp.toSet.subsetOf(candidates.toSet)
 
   test("updateOrGiveUp preserves size"):
     forAll: (state: AppState, before: Instant) =>
       val candidates          = state.acquiredBefore(before)
-      val (newState, givenUp) = state.updateOrGiveUp(candidates)
+      val (newState, givenUp) = state.unassignOrGiveUp(candidates)
       newState.size + givenUp.size == state.size
 
   test("all given up tasks are outOfTries"):
     forAll: (state: AppState, before: Instant) =>
       val candidates   = state.acquiredBefore(before)
-      val (_, givenUp) = state.updateOrGiveUp(candidates)
+      val (_, givenUp) = state.unassignOrGiveUp(candidates)
       givenUp.forall(_.isOutOfTries)
 
   test("all candidates that are not given up are not outOfTries"):
     forAll: (state: AppState, before: Instant) =>
       val candidates   = state.acquiredBefore(before)
-      val (_, givenUp) = state.updateOrGiveUp(candidates)
+      val (_, givenUp) = state.unassignOrGiveUp(candidates)
       val rest         = candidates.filterNot(givenUp.contains)
       rest.forall(!_.isOutOfTries)
 
   test("after cleanup, acquiredBefore is empty"):
     forAll: (state: AppState, before: Instant) =>
       val candidates    = state.acquiredBefore(before)
-      val (newState, _) = state.updateOrGiveUp(candidates)
+      val (newState, _) = state.unassignOrGiveUp(candidates)
       newState.acquiredBefore(before).isEmpty
