@@ -106,7 +106,7 @@ object Lila:
     Option.when(str.nonEmpty)(Fen.Epd(str))
 
   def readClock(s: String): Option[Clock] =
-    s.split(' ') match
+    s.split(" ", 3) match
       case Array(ws, bs, incs) =>
         (ws.toIntOption, bs.toIntOption, incs.toIntOption).mapN(Clock.apply)
       case _ => None
