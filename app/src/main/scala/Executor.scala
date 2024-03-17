@@ -17,7 +17,10 @@ trait Executor:
   def acquire(accquire: ClientKey): IO[Option[Work.Task]]
   // fishnet client sends the best move for it's assigned task
   def move(workId: WorkId, fishnetKey: ClientKey, move: BestMove): IO[Unit]
-  def invalidate(workId: WorkId, fishnetKey: ClientKey): IO[Unit] = IO.unit
+  // fishnet cannot find the best move
+  // so it either invalid moves or the game is already finished
+  // We may need to check if the task is really invalid
+  def invalidate(workId: WorkId, fishnetKey: ClientKey): IO[Unit]
   // Lila sends a position
   def add(work: Lila.Request): IO[Unit]
   // clean up all works that are acquired before a given time
@@ -74,6 +77,14 @@ object Executor:
                     Logger[IO].warn(s"Give up move due to invalid move $response by $key for $task")
                   ) *> failure(task, key)
                   newState -> logs
+
+      def invalidate(workId: WorkId, key: ClientKey): IO[Unit] =
+        ref.flatModify: state =>
+          state.remove(workId) ->
+            state
+              .get(workId)
+              .fold(Logger[IO].warn(s"unknown and invalid work from $key")): task =>
+                Logger[IO].warn(s"invalid lila work $task from $key")
 
       def clean(since: Instant): IO[Unit] =
         ref.flatModify: state =>

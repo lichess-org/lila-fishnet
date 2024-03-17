@@ -114,6 +114,17 @@ object ExecutorTest extends SimpleIOSuite:
       acquired = acquiredOption.get
     yield expect.same(acquired.request, request)
 
+  test("post null move should remove the task"):
+    for
+      ref      <- emptyMovesRef
+      executor <- createExecutor(ref)(ExecutorConfig(2))
+      _        <- executor.add(request)
+      acquired <- executor.acquire(key)
+      _        <- executor.invalidate(acquired.get.id, key)
+      response <- ref.get.map(_.headOption)
+      acquired <- executor.acquire(key)
+    yield assert(acquired.isEmpty && response.isEmpty)
+
   test("should not give up after 2 tries"):
     for
       executor <- createExecutor(ExecutorConfig(2))

@@ -30,6 +30,9 @@ object AppState:
     inline def remove(id: WorkId): AppState =
       state - id
 
+    inline def get(id: WorkId): Option[Work.Task] =
+      state.get(id)
+
     inline def size: Int = state.size
 
     inline def count(p: Task => Boolean): Int = state.count(x => p(x._2))
