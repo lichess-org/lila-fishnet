@@ -27,8 +27,6 @@ final class FishnetRoutes(executor: Executor) extends Http4sDsl[IO]:
           move.move.bestmove
             .fold(executor.invalidate(id, move.fishnet.apikey))(executor.move(id, move.fishnet.apikey, _))
             >> acquire(move.fishnet.apikey)
-      // executor.move(id, move.fishnet.apikey, move.move.bestmove)
-      //   >> acquire(move.fishnet.apikey)
 
   def acquire(key: ClientKey): IO[Response[IO]] =
     executor
