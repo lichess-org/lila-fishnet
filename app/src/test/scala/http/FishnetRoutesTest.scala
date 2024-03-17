@@ -31,6 +31,16 @@ object FishnetRoutesTest extends SimpleIOSuite:
     }
   }"""
 
+  val postNullMoveRequestBody = json"""{
+    "fishnet": {
+      "version": "1.0.0",
+      "apikey": "apikey"
+    },
+    "move": {
+      "bestmove": null
+    }
+  }"""
+
   val workResponse: Json = json"""{
     "work": {
       "id": "workid",
@@ -69,10 +79,16 @@ object FishnetRoutesTest extends SimpleIOSuite:
     val req      = Request[IO](Method.POST, uri"/fishnet/acquire").withEntity(acqurieRequestBody)
     exepectHttpBodyAndStatus(routes, req)(expectedBody = workResponse, expectedStatus = Status.Ok)
 
-  test("POST /fishnet/move should also return work response"):
+  test("POST /fishnet/move should return work response"):
     val executor = createExecutor()
     val routes   = createRoutes(executor)
     val req      = Request[IO](Method.POST, uri"/fishnet/move/workid").withEntity(postMoveRequestBody)
+    exepectHttpBodyAndStatus(routes, req)(expectedBody = workResponse, expectedStatus = Status.Ok)
+
+  test("POST /fishnet/move with null move should also return work response"):
+    val executor = createExecutor()
+    val routes   = createRoutes(executor)
+    val req      = Request[IO](Method.POST, uri"/fishnet/move/workid").withEntity(postNullMoveRequestBody)
     exepectHttpBodyAndStatus(routes, req)(expectedBody = workResponse, expectedStatus = Status.Ok)
 
   def exepectHttpBodyAndStatus(routes: HttpRoutes[IO], req: Request[IO])(

@@ -17,6 +17,7 @@ trait Executor:
   def acquire(accquire: ClientKey): IO[Option[Work.Task]]
   // fishnet client sends the best move for it's assigned task
   def move(workId: WorkId, fishnetKey: ClientKey, move: BestMove): IO[Unit]
+  def invalidate(workId: WorkId, fishnetKey: ClientKey): IO[Unit] = IO.unit
   // Lila sends a position
   def add(work: Lila.Request): IO[Unit]
   // clean up all works that are acquired before a given time
