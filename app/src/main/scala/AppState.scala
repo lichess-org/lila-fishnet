@@ -35,7 +35,7 @@ object AppState:
 
     inline def size: Int = state.size
 
-    inline def count(p: Task => Boolean): Int = state.count(x => p(x._2))
+    inline def count(p: Task => Boolean): Int = state.count((_, x) => p(x))
 
     def tryAcquire(key: ClientKey, at: Instant): (AppState, Option[Task]) =
       state.earliestNonAcquired

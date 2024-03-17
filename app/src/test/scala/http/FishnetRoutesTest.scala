@@ -110,9 +110,8 @@ object FishnetRoutesTest extends SimpleIOSuite:
   def createExecutor(): Executor =
     new Executor:
       def acquire(key: ClientKey) = IO.pure(task.some)
-      def move(id: WorkId, key: ClientKey, move: BestMove) =
+      def move(id: WorkId, key: ClientKey, move: Option[BestMove]) =
         if id == task.id then IO.unit
         else IO.raiseError(new Exception("invalid work id"))
-      def invalidate(workId: WorkId, fishnetKey: ClientKey) = IO.unit
-      def add(request: Lila.Request)                        = IO.unit
-      def clean(before: Instant)                            = IO.unit
+      def add(request: Lila.Request) = IO.unit
+      def clean(before: Instant)     = IO.unit

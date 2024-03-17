@@ -66,7 +66,7 @@ object ExecutorTest extends SimpleIOSuite:
       executor <- createExecutor(ref)(ExecutorConfig(2))
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
-      _        <- executor.move(acquired.get.id, key, validMove)
+      _        <- executor.move(acquired.get.id, key, validMove.some)
       response <- ref.get.map(_.head)
     yield expect.same(response, Lila.Response(request.id, request.moves, chess.format.Uci.Move("e2e4").get))
 
@@ -77,7 +77,7 @@ object ExecutorTest extends SimpleIOSuite:
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
       _        <- executor.clean(Instant.now.plusSeconds(37))
-      _        <- executor.move(acquired.get.id, key, validMove)
+      _        <- executor.move(acquired.get.id, key, validMove.some)
       moves    <- ref.get
     yield assert(moves.isEmpty)
 
@@ -89,7 +89,7 @@ object ExecutorTest extends SimpleIOSuite:
       _        <- executor.acquire(key)
       _        <- executor.clean(Instant.now.plusSeconds(37))
       acquired <- executor.acquire(key)
-      _        <- executor.move(acquired.get.id, key, validMove)
+      _        <- executor.move(acquired.get.id, key, validMove.some)
       response <- ref.get.map(_.head)
     yield expect.same(response, Lila.Response(request.id, request.moves, chess.format.Uci.Move("e2e4").get))
 
@@ -99,7 +99,7 @@ object ExecutorTest extends SimpleIOSuite:
       executor <- createExecutor(ref)(ExecutorConfig(2))
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
-      _        <- executor.move(acquired.get.id, key, invalidMove)
+      _        <- executor.move(acquired.get.id, key, invalidMove.some)
       moves    <- ref.get
     yield assert(moves.isEmpty)
 
@@ -109,7 +109,7 @@ object ExecutorTest extends SimpleIOSuite:
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
       workId = acquired.get.id
-      _              <- executor.move(workId, key, invalidMove)
+      _              <- executor.move(workId, key, invalidMove.some)
       acquiredOption <- executor.acquire(key)
       acquired = acquiredOption.get
     yield expect.same(acquired.request, request)
@@ -120,7 +120,7 @@ object ExecutorTest extends SimpleIOSuite:
       executor <- createExecutor(ref)(ExecutorConfig(2))
       _        <- executor.add(request)
       acquired <- executor.acquire(key)
-      _        <- executor.invalidate(acquired.get.id, key)
+      _        <- executor.move(acquired.get.id, key, none)
       response <- ref.get.map(_.headOption)
       acquired <- executor.acquire(key)
     yield assert(acquired.isEmpty && response.isEmpty)
@@ -129,7 +129,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       executor <- createExecutor(ExecutorConfig(2))
       _        <- executor.add(request)
-      _ <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(2)
+      _ <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove.some))).replicateA_(2)
       acquired <- executor.acquire(key)
     yield assert(acquired.isDefined)
 
@@ -137,7 +137,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       executor <- createExecutor(ExecutorConfig(2))
       _        <- executor.add(request)
-      _ <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(3)
+      _ <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove.some))).replicateA_(3)
       acquired <- executor.acquire(key)
     yield assert(acquired.isEmpty)
 
@@ -146,8 +146,8 @@ object ExecutorTest extends SimpleIOSuite:
       executor <- createExecutor(ExecutorConfig(2))
       _        <- executor.add(request)
       _        <- executor.add(request.copy(id = GameId("2")))
-      _  <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(3)
-      _  <- executor.add(request.copy(id = GameId("3")))
+      _ <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove.some))).replicateA_(3)
+      _ <- executor.add(request.copy(id = GameId("3")))
       a1 <- executor.acquire(key)
       a2 <- executor.acquire(key2)
     yield assert(a1.isDefined && a2.isDefined)
@@ -157,10 +157,10 @@ object ExecutorTest extends SimpleIOSuite:
       executor <- createExecutor(ExecutorConfig(2))
       _        <- executor.add(request)
       _        <- executor.add(request.copy(id = GameId("2")))
-      _  <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove))).replicateA_(2)
-      _  <- executor.acquire(key)
-      _  <- executor.clean(Instant.now.plusSeconds(37))
-      _  <- executor.add(request.copy(id = GameId("3")))
+      _ <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove.some))).replicateA_(2)
+      _ <- executor.acquire(key)
+      _ <- executor.clean(Instant.now.plusSeconds(37))
+      _ <- executor.add(request.copy(id = GameId("3")))
       a1 <- executor.acquire(key)
       a2 <- executor.acquire(key2)
     yield assert(a1.isDefined && a2.isDefined)
