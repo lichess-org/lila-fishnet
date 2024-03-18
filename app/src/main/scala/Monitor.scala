@@ -20,7 +20,7 @@ object Monitor:
   val lvl8AcquiredTimeRequest = Kamon.timer("move.acquired.lvl8").withoutTags()
   val lvl1FullTimeRequest     = Kamon.timer("move.full.lvl1").withoutTags()
 
-  def apply: Monitor =
+  def apply(): Monitor =
     new Monitor:
       def success(work: Work.Task): IO[Unit] =
         IO.realTimeInstant.map: now =>
