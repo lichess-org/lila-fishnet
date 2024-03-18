@@ -13,11 +13,13 @@ import java.time.Instant
   *   - adding work to the queue
   */
 trait Executor:
-  // fishnet client tries to get an unassigned task
+  // Get an unassigned task from the queue
+  // If there is no unassigned task, return None
   def acquire(accquire: ClientKey): IO[Option[Work.Task]]
   // fishnet client sends the best move for it's assigned task
-  def move(workId: WorkId, fishnetKey: ClientKey, move: BestMove): IO[Unit]
-  // Lila sends a position
+  // move is none if it's assigned task is invalid or the game is already finished
+  def move(workId: WorkId, key: ClientKey, move: Option[BestMove]): IO[Unit]
+  // Receive a new work from Lila
   def add(work: Lila.Request): IO[Unit]
   // clean up all works that are acquired before a given time
   // this is to prevent tasks from being stuck in the queue
@@ -57,7 +59,10 @@ object Executor:
         IO.realTimeInstant.flatMap: at =>
           ref.modify(_.tryAcquire(key, at))
 
-      def move(workId: WorkId, key: ClientKey, response: BestMove): IO[Unit] =
+      def move(workId: WorkId, key: ClientKey, response: Option[BestMove]): IO[Unit] =
+        response.fold(invalidate(workId, key))(move(workId, key, _))
+
+      private def move(workId: WorkId, key: ClientKey, response: BestMove): IO[Unit] =
         ref.flatModify: state =>
           state(workId, key) match
             case GetTaskResult.NotFound              => state -> logNotFound(workId, key)
@@ -73,6 +78,14 @@ object Executor:
                     Logger[IO].warn(s"Give up move due to invalid move $response by $key for $task")
                   ) *> failure(task, key)
                   newState -> logs
+
+      private def invalidate(workId: WorkId, key: ClientKey): IO[Unit] =
+        ref.flatModify: state =>
+          state.remove(workId) ->
+            state
+              .get(workId)
+              .fold(Logger[IO].warn(s"unknown and invalid work from $key")): task =>
+                Logger[IO].warn(s"invalid lila work $task from $key")
 
       def clean(since: Instant): IO[Unit] =
         ref.flatModify: state =>

@@ -54,7 +54,7 @@ object IntegrationTest extends IOSuite:
     val fishnet               = Fishnet("2.7.2", ClientKey("secret-key"))
     val fishnetAcquireRequest = Acquire(fishnet)
     val bestMoves             = List("e7e6", "d7d5", "d8d6")
-    val postMoves             = bestMoves.map(m => PostMove(fishnet, Move(BestMove(m))))
+    val postMoves             = bestMoves.map(m => PostMove(fishnet, Move(BestMove(m).some)))
 
     val gameId = "CPzkP0tq"
     val lilaRequests =

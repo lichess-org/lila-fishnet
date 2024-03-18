@@ -26,9 +26,7 @@ object CleaningJobTest extends SimpleIOSuite:
 
   def createExcutor(ref: Ref[IO, Int]): Executor =
     new Executor:
-      def acquire(accquire: ClientKey)                                = IO.none
-      def move(workId: WorkId, fishnetKey: ClientKey, move: BestMove) = IO.unit
-      def add(work: Lila.Request)                                     = IO.unit
-      def clean(before: Instant)                                      = ref.update(_ + 1)
-      def onStart                                                     = IO.unit
-      def onStop                                                      = IO.unit
+      def acquire(accquire: ClientKey)                                 = IO.none
+      def move(workId: WorkId, key: ClientKey, move: Option[BestMove]) = IO.unit
+      def add(work: Lila.Request)                                      = IO.unit
+      def clean(before: Instant)                                       = ref.update(_ + 1)
