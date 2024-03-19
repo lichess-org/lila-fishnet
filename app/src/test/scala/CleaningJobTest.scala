@@ -18,7 +18,7 @@ object CleaningJobTest extends SimpleIOSuite:
     val res = for
       ref <- Ref.of[IO, Int](0).toResource
       executor = createExcutor(ref)
-      _     <- WorkCleaningJob(executor).run().background
+      _     <- WorkCleaningJob(executor).run()
       _     <- IO.sleep(1.minute).toResource
       count <- ref.get.toResource
     yield count

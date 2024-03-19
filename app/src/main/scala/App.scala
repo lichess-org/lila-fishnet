@@ -26,8 +26,8 @@ class FishnetApp(res: AppResources, config: AppConfig)(using Logger[IO]):
       executor <- createExcutor
       httpApi = HttpApi(executor, HealthCheck(), config.server)
       server <- MkHttpServer.apply.newEmber(config.server, httpApi.httpApp)
-      _      <- RedisSubscriberJob(executor, res.redisPubsub).run().background
-      _      <- WorkCleaningJob(executor).run().background
+      _      <- RedisSubscriberJob(executor, res.redisPubsub).run()
+      _      <- WorkCleaningJob(executor).run()
       _      <- Logger[IO].info(s"Starting server on ${config.server.host}:${config.server.port}").toResource
     yield ()
 
