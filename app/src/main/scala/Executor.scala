@@ -50,8 +50,11 @@ object Executor:
           ref.flatModify: state =>
             val (newState, effect) =
               if state.isFull(config.maxSize) then
+                def ids = state.tasks.map(t => t.id -> t.request.id).mkString(", ")
                 AppState.empty ->
-                  Logger[IO].warn(s"stateSize=${state.size} maxSize=${config.maxSize}. Dropping all!")
+                  Logger[IO].warn(
+                    s"stateSize=${state.size} maxSize=${config.maxSize}. Dropping all! tasks: $ids"
+                  )
               else state -> IO.unit
             newState.add(task) -> effect *> monitor.updateSize(newState)
 
@@ -80,12 +83,13 @@ object Executor:
                   newState -> logs
 
       private def invalidate(workId: WorkId, key: ClientKey): IO[Unit] =
-        ref.flatModify: state =>
-          state.remove(workId) ->
-            state
-              .get(workId)
-              .fold(Logger[IO].warn(s"unknown and invalid work from $key")): task =>
-                Logger[IO].warn(s"invalid lila work $task from $key")
+        Logger[IO].info(s"invalid work: $workId by $key") *>
+          ref.flatModify: state =>
+            state.remove(workId) ->
+              state
+                .get(workId)
+                .fold(Logger[IO].warn(s"unknown and invalid work from $key")): task =>
+                  Logger[IO].warn(s"invalid lila work $task from $key")
 
       def clean(since: Instant): IO[Unit] =
         ref.flatModify: state =>

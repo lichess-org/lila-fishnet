@@ -9,12 +9,13 @@ import org.http4s.circe.CirceEntityDecoder.*
 import org.http4s.circe.CirceEntityEncoder.*
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.Router
+import org.typelevel.log4cats.Logger
 
-final class FishnetRoutes(executor: Executor) extends Http4sDsl[IO]:
+final class FishnetRoutes(executor: Executor)(using Logger[IO]) extends Http4sDsl[IO]:
 
-  private[http] val prefixPath = "/fishnet"
+  private val prefixPath = "/fishnet"
 
-  private val httpRoutes: HttpRoutes[IO] = HttpRoutes.of[IO]:
+  private val httpRoutes = HttpRoutes.of[IO]:
 
     case req @ POST -> Root / "acquire" =>
       req
@@ -27,13 +28,13 @@ final class FishnetRoutes(executor: Executor) extends Http4sDsl[IO]:
           executor.move(id, move.fishnet.apikey, move.move.bestmove)
             >> acquire(move.fishnet.apikey)
 
-  def acquire(key: ClientKey): IO[Response[IO]] =
+  private def acquire(key: ClientKey): IO[Response[IO]] =
     executor
       .acquire(key)
-      .map(_.map(_.toResponse))
-      .flatMap(_.fold(NoContent())(Ok(_)))
+      .flatMap(_.fold(NoContent())(task => Ok(task.toResponse)))
       .recoverWith:
-        case x => InternalServerError(x.getMessage().nn)
+        case x =>
+          Logger[IO].error(x.getMessage) *> InternalServerError(x.getMessage.nn)
 
   val routes: HttpRoutes[IO] = Router(prefixPath -> httpRoutes)
 
