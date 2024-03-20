@@ -10,7 +10,8 @@ import org.typelevel.log4cats.Logger
 
 object ApiErrorLogger:
 
-  val isResponseError: Response[IO] => Boolean = res => !res.status.isSuccess && res.status.code != 404
+  def isResponseError(res: Response[IO]): Boolean =
+    !res.status.isSuccess && res.status.code != 404
 
   private def logError(req: Request[IO], res: Response[IO])(using Logger[IO]): IO[Unit] =
     Http4sLogger.logMessage(req)(true, true)(Logger[IO].warn) >>
