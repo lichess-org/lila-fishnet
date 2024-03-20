@@ -8,6 +8,8 @@ import io.circe.literal.*
 import org.http4s.*
 import org.http4s.circe.*
 import org.http4s.implicits.*
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.noop.NoOpLogger
 import weaver.*
 
 import java.time.Instant
@@ -57,6 +59,8 @@ object FishnetRoutesTest extends SimpleIOSuite:
     "moves": "",
     "variant": "Standard"
   }"""
+
+  given Logger[IO] = NoOpLogger[IO]
 
   val task = Work.Task(
     id = WorkId("workid"),
