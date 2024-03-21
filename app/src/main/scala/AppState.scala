@@ -51,10 +51,10 @@ object AppState:
         case Some(task)                           => GetTaskResult.AcquiredByOther(task)
 
     def unassignOrGiveUp(candidates: List[Work.Task]): (AppState, List[Work.Task]) =
-      candidates.foldLeft(state -> Nil) { case ((state, xs), task) =>
-        val (newState, maybeGivenUp) = state.unassignOrGiveUp(task)
-        (newState, maybeGivenUp.fold(xs)(_ :: xs))
-      }
+      candidates.foldLeft(state -> Nil):
+        case ((state, xs), task) =>
+          val (newState, maybeGivenUp) = state.unassignOrGiveUp(task)
+          (newState, maybeGivenUp.fold(xs)(_ :: xs))
 
     def unassignOrGiveUp(task: Work.Task): (AppState, Option[Work.Task]) =
       task.clearAssignedKey match
