@@ -2,6 +2,7 @@ package lila.fishnet
 
 import cats.effect.IO
 import cats.effect.kernel.Resource
+import cats.syntax.all.*
 import io.chrisdavenport.rediculous.RedisPubSub
 import org.typelevel.log4cats.Logger
 
@@ -23,4 +24,4 @@ object RedisSubscriberJob:
                 case Some(request) => executor.add(request)
                 case None          => Logger[IO].warn(s"Failed to parse message from lila: $msg")
               >> Logger[IO].debug(s"Received message: $msg")
-        ) *> pubsub.runMessages).background.map(_ => ())
+        ) *> pubsub.runMessages).background.void
