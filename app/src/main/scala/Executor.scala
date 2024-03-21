@@ -82,13 +82,12 @@ object Executor:
                 newState -> logs
 
     private def invalidate(workId: WorkId, key: ClientKey): IO[Unit] =
-      Logger[IO].info(s"invalid work: $workId by $key") *>
-        ref.flatModify: state =>
-          state.remove(workId) ->
-            state
-              .get(workId)
-              .fold(Logger[IO].warn(s"unknown and invalid work from $key")): task =>
-                Logger[IO].warn(s"invalid lila work $task from $key")
+      ref.flatModify: state =>
+        state.remove(workId) ->
+          state
+            .get(workId)
+            .fold(Logger[IO].warn(s"unknown and invalid work from $key")): task =>
+              Logger[IO].warn(s"invalid lila work $task from $key")
 
     def clean(since: Instant): IO[Unit] =
       ref.flatModify: state =>
