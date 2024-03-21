@@ -24,9 +24,8 @@ object CleaningJobTest extends SimpleIOSuite:
     yield count
     TestControl.executeEmbed(res.use(count => IO(expect.same(count, times))))
 
-  def createExcutor(ref: Ref[IO, Int]): Executor =
-    new Executor:
-      def acquire(accquire: ClientKey)                                 = IO.none
-      def move(workId: WorkId, key: ClientKey, move: Option[BestMove]) = IO.unit
-      def add(work: Lila.Request)                                      = IO.unit
-      def clean(before: Instant)                                       = ref.update(_ + 1)
+  def createExcutor(ref: Ref[IO, Int]): Executor = new:
+    def acquire(accquire: ClientKey)                                 = IO.none
+    def move(workId: WorkId, key: ClientKey, move: Option[BestMove]) = IO.unit
+    def add(work: Lila.Request)                                      = IO.unit
+    def clean(before: Instant)                                       = ref.update(_ + 1)

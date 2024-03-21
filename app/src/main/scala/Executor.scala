@@ -43,78 +43,77 @@ object Executor:
 
   def instance(ref: Ref[IO, AppState], client: LilaClient, monitor: Monitor, config: ExecutorConfig)(using
       Logger[IO]
-  ): Executor =
-    new Executor:
-      def add(work: Lila.Request): IO[Unit] =
-        fromRequest(work).flatMap: task =>
-          ref.flatModify: state =>
-            val (newState, effect) =
-              if state.isFull(config.maxSize) then
-                def ids = state.tasks.map(t => t.id -> t.request.id).mkString(", ")
-                AppState.empty ->
-                  Logger[IO].warn(
-                    s"stateSize=${state.size} maxSize=${config.maxSize}. Dropping all! tasks: $ids"
-                  )
-              else state -> IO.unit
-            newState.add(task) -> effect *> monitor.updateSize(newState)
-
-      def acquire(key: ClientKey): IO[Option[Work.Task]] =
-        IO.realTimeInstant.flatMap: at =>
-          ref.modify(_.tryAcquire(key, at))
-
-      def move(workId: WorkId, key: ClientKey, response: Option[BestMove]): IO[Unit] =
-        response.fold(invalidate(workId, key))(move(workId, key, _))
-
-      private def move(workId: WorkId, key: ClientKey, response: BestMove): IO[Unit] =
+  ): Executor = new:
+    def add(work: Lila.Request): IO[Unit] =
+      fromRequest(work).flatMap: task =>
         ref.flatModify: state =>
-          state(workId, key) match
-            case GetTaskResult.NotFound              => state -> logNotFound(workId, key)
-            case GetTaskResult.AcquiredByOther(task) => state -> logNotAcquired(task, key)
-            case GetTaskResult.Found(task) =>
-              response.uci match
-                case Some(uci) =>
-                  state.remove(task.id) -> (monitor.success(task) >>
-                    client.send(Lila.Response(task.request.id, task.request.moves, uci)))
-                case _ =>
-                  val (newState, maybeGivenUp) = state.unassignOrGiveUp(task)
-                  val logs = maybeGivenUp.traverse_(task =>
-                    Logger[IO].warn(s"Give up move due to invalid move $response by $key for $task")
-                  ) *> failure(task, key)
-                  newState -> logs
+          val (newState, effect) =
+            if state.isFull(config.maxSize) then
+              def ids = state.tasks.map(t => t.id -> t.request.id).mkString(", ")
+              AppState.empty ->
+                Logger[IO].warn(
+                  s"stateSize=${state.size} maxSize=${config.maxSize}. Dropping all! tasks: $ids"
+                )
+            else state -> IO.unit
+          newState.add(task) -> effect *> monitor.updateSize(newState)
 
-      private def invalidate(workId: WorkId, key: ClientKey): IO[Unit] =
-        Logger[IO].info(s"invalid work: $workId by $key") *>
-          ref.flatModify: state =>
-            state.remove(workId) ->
-              state
-                .get(workId)
-                .fold(Logger[IO].warn(s"unknown and invalid work from $key")): task =>
-                  Logger[IO].warn(s"invalid lila work $task from $key")
+    def acquire(key: ClientKey): IO[Option[Work.Task]] =
+      IO.realTimeInstant.flatMap: at =>
+        ref.modify(_.tryAcquire(key, at))
 
-      def clean(since: Instant): IO[Unit] =
+    def move(workId: WorkId, key: ClientKey, response: Option[BestMove]): IO[Unit] =
+      response.fold(invalidate(workId, key))(move(workId, key, _))
+
+    private def move(workId: WorkId, key: ClientKey, response: BestMove): IO[Unit] =
+      ref.flatModify: state =>
+        state(workId, key) match
+          case GetTaskResult.NotFound              => state -> logNotFound(workId, key)
+          case GetTaskResult.AcquiredByOther(task) => state -> logNotAcquired(task, key)
+          case GetTaskResult.Found(task) =>
+            response.uci match
+              case Some(uci) =>
+                state.remove(task.id) -> (monitor.success(task) >>
+                  client.send(Lila.Response(task.request.id, task.request.moves, uci)))
+              case _ =>
+                val (newState, maybeGivenUp) = state.unassignOrGiveUp(task)
+                val logs = maybeGivenUp.traverse_(task =>
+                  Logger[IO].warn(s"Give up move due to invalid move $response by $key for $task")
+                ) *> failure(task, key)
+                newState -> logs
+
+    private def invalidate(workId: WorkId, key: ClientKey): IO[Unit] =
+      Logger[IO].info(s"invalid work: $workId by $key") *>
         ref.flatModify: state =>
-          val timedOut                 = state.acquiredBefore(since)
-          val timedOutLogs             = logTimedOut(state, timedOut)
-          val (newState, gavedUpMoves) = state.unassignOrGiveUp(timedOut)
-          newState -> timedOutLogs
-            *> gavedUpMoves.traverse_(m => Logger[IO].warn(s"Give up move due to clean up: $m"))
-            *> monitor.updateSize(newState)
+          state.remove(workId) ->
+            state
+              .get(workId)
+              .fold(Logger[IO].warn(s"unknown and invalid work from $key")): task =>
+                Logger[IO].warn(s"invalid lila work $task from $key")
 
-      private def logTimedOut(state: AppState, timeOut: List[Work.Task]): IO[Unit] =
-        IO.whenA(timeOut.nonEmpty):
-          Logger[IO].info(s"cleaning ${timeOut.size} of ${state.size} moves")
-            *> timeOut.traverse_(m => Logger[IO].info(s"Timeout move: $m"))
+    def clean(since: Instant): IO[Unit] =
+      ref.flatModify: state =>
+        val timedOut                 = state.acquiredBefore(since)
+        val timedOutLogs             = logTimedOut(state, timedOut)
+        val (newState, gavedUpMoves) = state.unassignOrGiveUp(timedOut)
+        newState -> timedOutLogs
+          *> gavedUpMoves.traverse_(m => Logger[IO].warn(s"Give up move due to clean up: $m"))
+          *> monitor.updateSize(newState)
 
-      private def failure(work: Work.Task, clientKey: ClientKey) =
-        Logger[IO].warn(s"Received invalid move ${work.id} for ${work.request.id} by $clientKey")
+    private def logTimedOut(state: AppState, timeOut: List[Work.Task]): IO[Unit] =
+      IO.whenA(timeOut.nonEmpty):
+        Logger[IO].info(s"cleaning ${timeOut.size} of ${state.size} moves")
+          *> timeOut.traverse_(m => Logger[IO].info(s"Timeout move: $m"))
 
-      private def logNotFound(id: WorkId, clientKey: ClientKey) =
-        Logger[IO].info(s"Received unknown work $id by $clientKey")
+    private def failure(work: Work.Task, clientKey: ClientKey) =
+      Logger[IO].warn(s"Received invalid move ${work.id} for ${work.request.id} by $clientKey")
 
-      private def logNotAcquired(work: Work.Task, clientKey: ClientKey) =
-        Logger[IO].info(
-          s"Received unacquired move ${work.id} for ${work.request.id} by $clientKey. Work current tries: ${work.tries} acquired: ${work.acquired}"
-        )
+    private def logNotFound(id: WorkId, clientKey: ClientKey) =
+      Logger[IO].info(s"Received unknown work $id by $clientKey")
+
+    private def logNotAcquired(work: Work.Task, clientKey: ClientKey) =
+      Logger[IO].info(
+        s"Received unacquired move ${work.id} for ${work.request.id} by $clientKey. Work current tries: ${work.tries} acquired: ${work.acquired}"
+      )
 
   def fromRequest(req: Lila.Request): IO[Work.Task] =
     (makeId, IO.realTimeInstant).mapN: (id, now) =>

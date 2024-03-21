@@ -14,14 +14,14 @@ object StateRepository:
     path.fold(noop)(file(_))
 
   def noop(using Logger[IO]): StateRepository =
-    new StateRepository:
+    new:
       def get: IO[AppState] =
         Logger[IO].info("There is no configed path, return empty AppState") *> IO(AppState.empty)
       def save(state: AppState): IO[Unit] = Logger[IO].info("There is no configed path, do nothing")
 
   def file(_path: String)(using Logger[IO]): StateRepository =
     val path = fs2.io.file.Path(_path)
-    new StateRepository:
+    new:
       def get: IO[AppState] =
         Logger[IO].info(s"Reading state from $path") *>
           fs2.io.file

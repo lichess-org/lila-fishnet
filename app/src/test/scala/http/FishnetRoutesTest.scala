@@ -111,11 +111,10 @@ object FishnetRoutesTest extends SimpleIOSuite:
   def createRoutes(executor: Executor): HttpRoutes[IO] =
     FishnetRoutes(executor).routes
 
-  def createExecutor(): Executor =
-    new Executor:
-      def acquire(key: ClientKey) = IO.pure(task.some)
-      def move(id: WorkId, key: ClientKey, move: Option[BestMove]) =
-        if id == task.id then IO.unit
-        else IO.raiseError(new Exception("invalid work id"))
-      def add(request: Lila.Request) = IO.unit
-      def clean(before: Instant)     = IO.unit
+  def createExecutor(): Executor = new:
+    def acquire(key: ClientKey) = IO.pure(task.some)
+    def move(id: WorkId, key: ClientKey, move: Option[BestMove]) =
+      if id == task.id then IO.unit
+      else IO.raiseError(new Exception("invalid work id"))
+    def add(request: Lila.Request) = IO.unit
+    def clean(before: Instant)     = IO.unit

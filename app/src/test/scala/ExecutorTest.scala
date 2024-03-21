@@ -190,10 +190,9 @@ object ExecutorTest extends SimpleIOSuite:
   def createLilaClient: IO[LilaClient] =
     emptyMovesRef.map(createLilaClient)
 
-  def createLilaClient(ref: Ref[IO, List[Lila.Response]]): LilaClient =
-    new LilaClient:
-      def send(move: Lila.Response): IO[Unit] =
-        ref.update(_ :+ move)
+  def createLilaClient(ref: Ref[IO, List[Lila.Response]]): LilaClient = new:
+    def send(move: Lila.Response): IO[Unit] =
+      ref.update(_ :+ move)
 
   def emptyMovesRef: IO[Ref[IO, List[Lila.Response]]] =
     Ref.of[IO, List[Lila.Response]](Nil)

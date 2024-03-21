@@ -13,7 +13,7 @@ final class HealthRoutes(
 ) extends Http4sDsl[IO]:
   private[http] val prefixPath = "/health"
 
-  private val httpRoutes: HttpRoutes[IO] = HttpRoutes.of[IO]:
+  private val httpRoutes = HttpRoutes.of[IO]:
     case GET -> Root =>
       Ok(healthCheck.status)
 

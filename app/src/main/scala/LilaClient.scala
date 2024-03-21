@@ -8,6 +8,5 @@ trait LilaClient:
 
 object LilaClient:
 
-  def apply(pubsub: RedisPubSub[IO]): LilaClient =
-    new LilaClient:
-      def send(move: Lila.Response): IO[Unit] = pubsub.publish("fishnet-in", move.write).void
+  def apply(pubsub: RedisPubSub[IO]): LilaClient = new:
+    def send(move: Lila.Response): IO[Unit] = pubsub.publish("fishnet-in", move.write).void
