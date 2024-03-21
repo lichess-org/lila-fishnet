@@ -7,6 +7,8 @@ import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.Server
 import org.typelevel.log4cats.Logger
 
+import scala.concurrent.duration.*
+
 trait MkHttpServer:
   def newEmber(cfg: HttpServerConfig, httpApp: HttpApp[IO]): Resource[IO, Server]
 
@@ -21,6 +23,7 @@ object MkHttpServer:
       .withHost(cfg.host)
       .withPort(cfg.port)
       .withHttpApp(httpApp)
+      .withShutdownTimeout(cfg.shutdownTimeout.seconds)
       .build
       .evalTap(showBanner)
 
