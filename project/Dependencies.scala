@@ -24,8 +24,8 @@ object Dependencies {
 
   val fs2          = "co.fs2"    %% "fs2-core"            % "3.10.0"
   val fs2IO        = "co.fs2"    %% "fs2-io"              % "3.10.0"
-  val fs2Json      = "org.gnieh" %% "fs2-data-json"       % "1.10.0"
-  val fs2JsonCirce = "org.gnieh" %% "fs2-data-json-circe" % "1.10.0"
+  val fs2Json      = "org.gnieh" %% "fs2-data-json"       % "1.11.0"
+  val fs2JsonCirce = "org.gnieh" %% "fs2-data-json-circe" % "1.11.0"
 
   val circeCore    = circe("core")
   val circeLiteral = circe("literal") % Test

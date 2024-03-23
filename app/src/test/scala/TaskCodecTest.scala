@@ -13,5 +13,5 @@ object TaskCodecTest extends SimpleIOSuite:
       .through(TasksSerDe.deserialize)
       .through(TasksSerDe.serialize)
       .compile
-      .lastOrError
+      .foldMonoid
       .map(expect.same(_, json))
