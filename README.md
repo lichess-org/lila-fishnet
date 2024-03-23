@@ -23,6 +23,18 @@ Use environment variables to start with custom config (`redis.host` and `kamon` 
 REDIS_HOST=redis KAMON_ENABLED=true CONFIG_FORCE_kamon_influxdb_port=8888 sbt app/run
 ```
 
+Or creating an `.env` file with environment variables, for example:
+```sh
+# kamon
+KAMON_ENABLED=false
+
+# logging
+HTTP_API_LOGGER=true
+
+# http
+HTTP_SHUTDOWN_TIMEOUT=1
+```
+
 For other `config` check [AppConfig.scala](https://github.com/lichess-org/lila-fishnet/blob/master/app/src/main/scala/AppConfig.scala)
 
 Run all tests (required Docker for IntegrationTest):
