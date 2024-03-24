@@ -75,10 +75,11 @@ object Executor:
                 state.remove(task.id) -> (monitor.success(task) >>
                   client.send(Lila.Response(task.request.id, task.request.moves, uci)))
               case _ =>
-                val (newState, maybeGivenUp) = state.unassignOrGiveUp(task)
-                val logs = maybeGivenUp.traverse_(t => warn"Give up an invalid move $response by $key for $t")
-                  *> failure(task, key)
-                newState -> logs
+                state
+                  .unassignOrGiveUp(task)
+                  .map: (x: Option[Work.Task]) =>
+                    x.traverse_(t => warn"Give up an invalid move $response by $key for $t")
+                      *> failure(task, key)
 
     private def invalidate(workId: WorkId, key: ClientKey): IO[Unit] =
       ref.flatModify: state =>
