@@ -4,6 +4,7 @@ import cats.effect.kernel.Resource
 import cats.effect.{ IO, Ref }
 import cats.syntax.all.*
 import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.syntax.*
 
 import java.time.Instant
 
@@ -51,9 +52,7 @@ object Executor:
             if state.isFull(config.maxSize) then
               def ids = state.tasks.map(t => t.id -> t.request.id).mkString(", ")
               AppState.empty ->
-                Logger[IO].warn(
-                  s"stateSize=${state.size} maxSize=${config.maxSize}. Dropping all! tasks: $ids"
-                )
+                warn"stateSize=${state.size} maxSize=${config.maxSize}. Dropping all! tasks: $ids"
             else state -> IO.unit
           newState.add(task) -> effect *> monitor.updateSize(newState)
 
@@ -62,7 +61,8 @@ object Executor:
         ref.modify(_.tryAcquire(key, at))
 
     def move(workId: WorkId, key: ClientKey, response: Option[BestMove]): IO[Unit] =
-      response.fold(invalidate(workId, key))(move(workId, key, _))
+      info"move $response for $workId by $key" *>
+        response.fold(invalidate(workId, key))(move(workId, key, _))
 
     private def move(workId: WorkId, key: ClientKey, response: BestMove): IO[Unit] =
       ref.flatModify: state =>
@@ -76,9 +76,8 @@ object Executor:
                   client.send(Lila.Response(task.request.id, task.request.moves, uci)))
               case _ =>
                 val (newState, maybeGivenUp) = state.unassignOrGiveUp(task)
-                val logs = maybeGivenUp.traverse_(task =>
-                  Logger[IO].warn(s"Give up move due to invalid move $response by $key for $task")
-                ) *> failure(task, key)
+                val logs = maybeGivenUp.traverse_(t => warn"Give up an invalid move $response by $key for $t")
+                  *> failure(task, key)
                 newState -> logs
 
     private def invalidate(workId: WorkId, key: ClientKey): IO[Unit] =
@@ -86,8 +85,8 @@ object Executor:
         state.remove(workId) ->
           state
             .get(workId)
-            .fold(Logger[IO].warn(s"unknown and invalid work from $key")): task =>
-              Logger[IO].warn(s"invalid lila work $task from $key")
+            .fold(warn"unknown and invalid work from $key"): task =>
+              warn"invalid lila work $task from $key"
 
     def clean(since: Instant): IO[Unit] =
       ref.flatModify: state =>
@@ -95,24 +94,22 @@ object Executor:
         val timedOutLogs             = logTimedOut(state, timedOut)
         val (newState, gavedUpMoves) = state.unassignOrGiveUp(timedOut)
         newState -> timedOutLogs
-          *> gavedUpMoves.traverse_(m => Logger[IO].warn(s"Give up move due to clean up: $m"))
+          *> gavedUpMoves.traverse_(m => warn"Give up move due to clean up: $m")
           *> monitor.updateSize(newState)
 
     private def logTimedOut(state: AppState, timeOut: List[Work.Task]): IO[Unit] =
       IO.whenA(timeOut.nonEmpty):
-        Logger[IO].info(s"cleaning ${timeOut.size} of ${state.size} moves")
-          *> timeOut.traverse_(m => Logger[IO].info(s"Timeout move: $m"))
+        info"cleaning ${timeOut.size} of ${state.size} moves"
+          *> timeOut.traverse_(m => info"Timeout move: $m")
 
     private def failure(work: Work.Task, clientKey: ClientKey) =
-      Logger[IO].warn(s"Received invalid move ${work.id} for ${work.request.id} by $clientKey")
+      warn"Received invalid move ${work.id} for ${work.request.id} by $clientKey"
 
     private def logNotFound(id: WorkId, clientKey: ClientKey) =
-      Logger[IO].info(s"Received unknown work $id by $clientKey")
+      info"Received unknown work $id by $clientKey"
 
     private def logNotAcquired(work: Work.Task, clientKey: ClientKey) =
-      Logger[IO].info(
-        s"Received unacquired move ${work.id} for ${work.request.id} by $clientKey. Work current tries: ${work.tries} acquired: ${work.acquired}"
-      )
+      info"Received unacquired move ${work.id} for ${work.request.id} by $clientKey. Work current tries: ${work.tries} acquired: ${work.acquired}"
 
   def fromRequest(req: Lila.Request): IO[Work.Task] =
     (makeId, IO.realTimeInstant).mapN: (id, now) =>
