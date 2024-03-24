@@ -61,8 +61,7 @@ object Executor:
         ref.modify(_.tryAcquire(key, at))
 
     def move(workId: WorkId, key: ClientKey, response: Option[BestMove]): IO[Unit] =
-      info"move $response for $workId by $key" *>
-        response.fold(invalidate(workId, key))(move(workId, key, _))
+      response.fold(invalidate(workId, key))(move(workId, key, _))
 
     private def move(workId: WorkId, key: ClientKey, response: BestMove): IO[Unit] =
       ref.flatModify: state =>
