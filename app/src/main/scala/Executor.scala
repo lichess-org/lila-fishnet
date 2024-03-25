@@ -69,15 +69,12 @@ object Executor:
           case GetTaskResult.NotFound              => state -> logNotFound(workId, key)
           case GetTaskResult.AcquiredByOther(task) => state -> logNotAcquired(task, key)
           case GetTaskResult.Found(task) =>
-            response.uci match
-              case Some(uci) =>
-                state.remove(task.id) -> (monitor.success(task) >>
-                  client.send(Lila.Response(task.request.id, task.request.moves, uci)))
-              case _ =>
-                val (newState, maybeGivenUp) = state.unassignOrGiveUp(task)
-                val logs = maybeGivenUp.traverse_(t => warn"Give up an invalid move $response by $key for $t")
+            state.remove(task.id) -> client
+              .send(Lila.Response(task.request.id, task.request.moves, response.value))
+              .handleErrorWith: e =>
+                error"Failed to send move ${task.id} for ${task.request.id} by $key: $e"
                   *> failure(task, key)
-                newState -> logs
+            *> monitor.success(task)
 
     private def invalidate(workId: WorkId, key: ClientKey): IO[Unit] =
       ref.flatModify: state =>

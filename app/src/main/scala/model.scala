@@ -15,14 +15,12 @@ object ClientKey:
   given Decoder[ClientKey]                    = decodeString
   extension (ck: ClientKey) def value: String = ck
 
-opaque type BestMove = String
+opaque type BestMove = Uci
 object BestMove:
-  def apply(value: String): BestMove = value
-  given Encoder[BestMove]            = encodeString
-  given Decoder[BestMove]            = decodeString
-  extension (bm: BestMove)
-    def value: String    = bm
-    def uci: Option[Uci] = Uci(bm)
+  def apply(value: Uci): BestMove         = value
+  given Encoder[BestMove]                 = encodeString.contramap(_.uci)
+  given Decoder[BestMove]                 = decodeString.emap(Uci.apply(_).toRight("Invalid Uci"))
+  extension (bm: BestMove) def value: Uci = bm
 
 opaque type WorkId = String
 object WorkId:

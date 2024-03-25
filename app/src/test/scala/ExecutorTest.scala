@@ -2,6 +2,7 @@ package lila.fishnet
 
 import cats.effect.{ IO, Ref }
 import cats.syntax.all.*
+import chess.format.Uci
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.noop.NoOpLogger
 import weaver.*
@@ -26,8 +27,7 @@ object ExecutorTest extends SimpleIOSuite:
   val key  = ClientKey("key")
   val key2 = ClientKey("key2")
 
-  val validMove   = BestMove("e2e4")
-  val invalidMove = BestMove("2e4")
+  val validMove = BestMove(Uci("e2e4").get)
 
   test("acquire when there is no work should return none"):
     for
@@ -93,27 +93,6 @@ object ExecutorTest extends SimpleIOSuite:
       response <- ref.get.map(_.head)
     yield expect.same(response, Lila.Response(request.id, request.moves, chess.format.Uci.Move("e2e4").get))
 
-  test("post an invalid move should not send move"):
-    for
-      ref      <- emptyMovesRef
-      executor <- createExecutor(ref)(ExecutorConfig(2))
-      _        <- executor.add(request)
-      acquired <- executor.acquire(key)
-      _        <- executor.move(acquired.get.id, key, invalidMove.some)
-      moves    <- ref.get
-    yield assert(moves.isEmpty)
-
-  test("after post an invalid move, acquire again should return work.some"):
-    for
-      executor <- createExecutor(ExecutorConfig(2))
-      _        <- executor.add(request)
-      acquired <- executor.acquire(key)
-      workId = acquired.get.id
-      _              <- executor.move(workId, key, invalidMove.some)
-      acquiredOption <- executor.acquire(key)
-      acquired = acquiredOption.get
-    yield expect.same(acquired.request, request)
-
   test("post null move should remove the task"):
     for
       ref      <- emptyMovesRef
@@ -129,7 +108,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       executor <- createExecutor(ExecutorConfig(2))
       _        <- executor.add(request)
-      _ <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove.some))).replicateA_(2)
+      _ <- (executor.acquire(key).flatMap(x => executor.clean(Instant.now.plusSeconds(17)))).replicateA_(2)
       acquired <- executor.acquire(key)
     yield assert(acquired.isDefined)
 
@@ -137,30 +116,19 @@ object ExecutorTest extends SimpleIOSuite:
     for
       executor <- createExecutor(ExecutorConfig(2))
       _        <- executor.add(request)
-      _ <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove.some))).replicateA_(3)
+      _ <- (executor.acquire(key).flatMap(x => executor.clean(Instant.now.plusSeconds(17)))).replicateA_(3)
       acquired <- executor.acquire(key)
     yield assert(acquired.isEmpty)
-
-  test("give up due to invalid move should reduce task's size"):
-    for
-      executor <- createExecutor(ExecutorConfig(2))
-      _        <- executor.add(request)
-      _        <- executor.add(request.copy(id = GameId("2")))
-      _ <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove.some))).replicateA_(3)
-      _ <- executor.add(request.copy(id = GameId("3")))
-      a1 <- executor.acquire(key)
-      a2 <- executor.acquire(key2)
-    yield assert(a1.isDefined && a2.isDefined)
 
   test("give up due to cleaning should reduce task's size"):
     for
       executor <- createExecutor(ExecutorConfig(2))
       _        <- executor.add(request)
       _        <- executor.add(request.copy(id = GameId("2")))
-      _ <- (executor.acquire(key).flatMap(x => executor.move(x.get.id, key, invalidMove.some))).replicateA_(2)
-      _ <- executor.acquire(key)
-      _ <- executor.clean(Instant.now.plusSeconds(37))
-      _ <- executor.add(request.copy(id = GameId("3")))
+      _  <- (executor.acquire(key).flatMap(x => executor.clean(Instant.now.plusSeconds(17)))).replicateA_(2)
+      _  <- executor.acquire(key)
+      _  <- executor.clean(Instant.now.plusSeconds(37))
+      _  <- executor.add(request.copy(id = GameId("3")))
       a1 <- executor.acquire(key)
       a2 <- executor.acquire(key2)
     yield assert(a1.isDefined && a2.isDefined)
