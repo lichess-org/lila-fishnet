@@ -53,8 +53,7 @@ object AppState:
     def unassignOrGiveUp(candidates: List[Work.Task]): (AppState, List[Work.Task]) =
       candidates.foldLeft(state -> Nil):
         case ((state, xs), task) =>
-          val (newState, maybeGivenUp) = state.unassignOrGiveUp(task)
-          (newState, maybeGivenUp.fold(xs)(_ :: xs))
+          state.unassignOrGiveUp(task).map((x: Option[Work.Task]) => x.fold(xs)(_ :: xs))
 
     def unassignOrGiveUp(task: Work.Task): (AppState, Option[Work.Task]) =
       task.clearAssignedKey match
