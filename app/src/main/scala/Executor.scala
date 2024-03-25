@@ -61,8 +61,7 @@ object Executor:
         ref.modify(_.tryAcquire(key, at))
 
     def move(workId: WorkId, key: ClientKey, response: Option[BestMove]): IO[Unit] =
-      info"move $response for $workId by $key" *>
-        response.fold(invalidate(workId, key))(move(workId, key, _))
+      response.fold(invalidate(workId, key))(move(workId, key, _))
 
     private def move(workId: WorkId, key: ClientKey, response: BestMove): IO[Unit] =
       ref.flatModify: state =>
@@ -70,16 +69,12 @@ object Executor:
           case GetTaskResult.NotFound              => state -> logNotFound(workId, key)
           case GetTaskResult.AcquiredByOther(task) => state -> logNotAcquired(task, key)
           case GetTaskResult.Found(task) =>
-            response.uci match
-              case Some(uci) =>
-                state.remove(task.id) -> (monitor.success(task) >>
-                  client.send(Lila.Response(task.request.id, task.request.moves, uci)))
-              case _ =>
-                state
-                  .unassignOrGiveUp(task)
-                  .map: (x: Option[Work.Task]) =>
-                    x.traverse_(t => warn"Give up an invalid move $response by $key for $t")
-                      *> failure(task, key)
+            state.remove(task.id) -> client
+              .send(Lila.Response(task.request.id, task.request.moves, response.value))
+              .handleErrorWith: e =>
+                error"Failed to send move ${task.id} for ${task.request.id} by $key: $e"
+                  *> failure(task, key)
+            *> monitor.success(task)
 
     private def invalidate(workId: WorkId, key: ClientKey): IO[Unit] =
       ref.flatModify: state =>
