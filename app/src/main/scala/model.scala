@@ -19,7 +19,7 @@ opaque type BestMove = Uci
 object BestMove:
   def apply(value: Uci): BestMove         = value
   given Encoder[BestMove]                 = encodeString.contramap(_.uci)
-  given Decoder[BestMove]                 = decodeString.emap(Uci.apply(_).toRight("Invalid Uci"))
+  given Decoder[BestMove]                 = decodeString.emap(s => Uci(s).toRight(s"Invalid Uci: $s"))
   extension (bm: BestMove) def value: Uci = bm
 
 opaque type WorkId = String
@@ -27,14 +27,14 @@ object WorkId:
   def apply(value: String): WorkId         = value
   given Encoder[WorkId]                    = encodeString
   given Decoder[WorkId]                    = decodeString
-  extension (bm: WorkId) def value: String = bm
+  extension (id: WorkId) def value: String = id
 
 opaque type GameId = String
 object GameId:
   def apply(value: String): GameId         = value
   given Encoder[GameId]                    = encodeString
   given Decoder[GameId]                    = decodeString
-  extension (bm: GameId) def value: String = bm
+  extension (id: GameId) def value: String = id
 
 object ChessCirceCodecs:
   given Encoder[Fen.Epd] = encodeString.contramap(_.value)
