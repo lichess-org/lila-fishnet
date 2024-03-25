@@ -2,6 +2,7 @@ package lila.fishnet
 
 import cats.effect.{ IO, Ref, Resource }
 import cats.syntax.all.*
+import chess.format.Uci
 import com.comcast.ip4s.*
 import com.dimafeng.testcontainers.GenericContainer
 import io.chrisdavenport.rediculous.RedisPubSub
@@ -53,7 +54,7 @@ object IntegrationTest extends IOSuite:
   test("let's play a game"): res =>
     val fishnet               = Fishnet("2.7.2", ClientKey("secret-key"))
     val fishnetAcquireRequest = Acquire(fishnet)
-    val bestMoves             = List("e7e6", "d7d5", "d8d6")
+    val bestMoves             = List("e7e6", "d7d5", "d8d6").traverse(Uci.apply).get
     val postMoves             = bestMoves.map(m => PostMove(fishnet, Move(BestMove(m).some)))
 
     val gameId = "CPzkP0tq"
