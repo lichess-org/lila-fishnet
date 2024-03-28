@@ -2,7 +2,7 @@ import Dependencies.*
 
 inThisBuild(
   Seq(
-    scalaVersion  := "3.4.0",
+    scalaVersion  := "3.4.1",
     versionScheme := Some("early-semver"),
     version       := "3.0",
     run / fork    := true,
@@ -16,7 +16,15 @@ lazy val app = project
   .settings(
     name         := "lila-fishnet",
     organization := "org.lichess",
-    scalacOptions ++= Seq("-source:future", "-rewrite", "-indent", "-explain", "-Wunused:all", "-release:21", "-Ysafe-init"),
+    scalacOptions ++= Seq(
+      "-source:future",
+      "-rewrite",
+      "-indent",
+      "-explain",
+      "-Wunused:all",
+      "-release:21",
+      "-Ysafe-init"
+    ),
     resolvers ++= Seq(Dependencies.lilaMaven),
     libraryDependencies ++= Seq(
       catsCore,
