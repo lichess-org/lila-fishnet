@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: sbtscala/scala-sbt:eclipse-temurin-jammy-21.0.2_13_1.9.9_3.4.0
+    container: sbtscala/scala-sbt:eclipse-temurin-alpine-21.0.2_13_1.9.9_3.4.0
     steps:
 
       - name: Checkout current branch
@@ -20,7 +20,7 @@ jobs:
 
   format:
     runs-on: ubuntu-latest
-    container: sbtscala/scala-sbt:eclipse-temurin-jammy-21.0.2_13_1.9.9_3.4.0
+    container: sbtscala/scala-sbt:eclipse-temurin-alpine-21.0.2_13_1.9.9_3.4.0
     steps:
 
       - name: Checkout current branch
