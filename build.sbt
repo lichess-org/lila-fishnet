@@ -16,7 +16,15 @@ lazy val app = project
   .settings(
     name         := "lila-fishnet",
     organization := "org.lichess",
-    scalacOptions ++= Seq("-source:future", "-rewrite", "-indent", "-explain", "-Wunused:all", "-release:21", "-Ysafe-init"),
+    scalacOptions ++= Seq(
+      "-source:future",
+      "-rewrite",
+      "-indent",
+      "-explain",
+      "-Wunused:all",
+      "-release:21",
+      "-Ysafe-init"
+    ),
     resolvers ++= Seq(Dependencies.lilaMaven),
     libraryDependencies ++= Seq(
       catsCore,
