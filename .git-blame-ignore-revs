@@ -1,2 +1,5 @@
 # Apply scala-fix
 2b007bb61406c1b441d3f5cf443545d6ea25af61
+
+# Scala Steward: Reformat with scalafmt 3.8.1
+34add1371a9fc4f00fa198ba6283f6018c970b8c
