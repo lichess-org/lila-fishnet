@@ -50,9 +50,9 @@ object Executor:
         ref.flatModify: state =>
           val (newState, effect) =
             if state.isFull(config.maxSize) then
-              def ids = state.tasks.map(t => t.id -> t.request.id).mkString(", ")
+              def ids = state.tasks.mkString("\n")
               AppState.empty ->
-                warn"stateSize=${state.size} maxSize=${config.maxSize}. Dropping all! tasks: $ids"
+                warn"stateSize=${state.size} maxSize=${config.maxSize}. Dropping all!\ntasks: $ids"
             else state -> IO.unit
           newState.add(task) -> effect *> monitor.updateSize(newState)
 
