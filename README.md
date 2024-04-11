@@ -25,14 +25,7 @@ REDIS_HOST=redis KAMON_ENABLED=true CONFIG_FORCE_kamon_influxdb_port=8888 sbt ap
 
 Or creating an `.env` file with environment variables, for example:
 ```sh
-# kamon
-KAMON_ENABLED=false
-
-# logging
-HTTP_API_LOGGER=true
-
-# http
-HTTP_SHUTDOWN_TIMEOUT=1
+cp .env.example .env
 ```
 
 For other `config` check [AppConfig.scala](https://github.com/lichess-org/lila-fishnet/blob/master/app/src/main/scala/AppConfig.scala)
