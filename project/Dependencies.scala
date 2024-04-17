@@ -56,5 +56,5 @@ object Dependencies {
   val catsEffectTestKit = "org.typelevel"       %% "cats-effect-testkit"       % V.catsEffect % Test
   val munit             = "org.scalameta"       %% "munit"                     % "1.0.0-M11"  % Test
   val munitScalaCheck   = "org.scalameta"       %% "munit-scalacheck"          % "1.0.0-M11"  % Test
-  val scalacheck        = "org.scalacheck"      %% "scalacheck"                % "1.17.0"     % Test
+  val scalacheck        = "org.scalacheck"      %% "scalacheck"                % "1.17.1"     % Test
 }
