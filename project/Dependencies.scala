@@ -55,6 +55,6 @@ object Dependencies {
   val weaverScalaCheck  = "com.disneystreaming" %% "weaver-scalacheck"         % "0.8.4"      % Test
   val catsEffectTestKit = "org.typelevel"       %% "cats-effect-testkit"       % V.catsEffect % Test
   val scalacheck        = "org.scalacheck"      %% "scalacheck"                % "1.18.0"     % Test
-  val munit             = "org.scalameta"       %% "munit"                     % "1.0.0-M12"  % Test
+  val munit             = "org.scalameta"       %% "munit"                     % "1.0.0-RC1"  % Test
   val munitScalaCheck   = "org.scalameta"       %% "munit-scalacheck"          % "1.0.0-M12"  % Test
 }
