@@ -51,7 +51,6 @@ lazy val app = project
       weaver,
       weaverScalaCheck,
       testContainers,
-      log4CatsNoop,
       http4sClient,
       catsEffectTestKit,
       munit,

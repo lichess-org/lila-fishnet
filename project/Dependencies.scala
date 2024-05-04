@@ -43,13 +43,12 @@ object Dependencies {
   val http4sClient = http4s("ember-client") % Test
   val http4sCirce  = http4s("circe")
 
-  val log4Cats = "org.typelevel" %% "log4cats-slf4j"  % "2.6.0"
+  val log4Cats = "org.typelevel" %% "log4cats-slf4j"  % "2.7.0"
   val logback  = "ch.qos.logback" % "logback-classic" % "1.5.6"
 
   val redis = "io.chrisdavenport" %% "rediculous" % "0.5.1"
 
   val chessTestKit      = "org.lichess"         %% "scalachess-test-kit"       % V.chess      % Test
-  val log4CatsNoop      = "org.typelevel"       %% "log4cats-noop"             % "2.6.0"      % Test
   val testContainers    = "com.dimafeng"        %% "testcontainers-scala-core" % "0.41.3"     % Test
   val weaver            = "com.disneystreaming" %% "weaver-cats"               % "0.8.4"      % Test
   val weaverScalaCheck  = "com.disneystreaming" %% "weaver-scalacheck"         % "0.8.4"      % Test
