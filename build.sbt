@@ -7,7 +7,9 @@ inThisBuild(
     version       := "3.0",
     run / fork    := true,
     run / javaOptions += "-Dconfig.override_with_env_vars=true",
-    semanticdbEnabled := true // for scalafix
+    semanticdbEnabled  := true, // for scalafix
+    dockerBaseImage    := "openjdk:21",
+    dockerUpdateLatest := true
   )
 )
 
@@ -57,9 +59,12 @@ lazy val app = project
       munitScalaCheck,
       scalacheck
     ),
-    javaAgents += kamonAgent
+    javaAgents += kamonAgent,
+    Docker / packageName      := "lichess-org/lila-fishnet",
+    Docker / maintainer       := "lichess.org",
+    Docker / dockerRepository := Some("ghcr.io")
   )
-  .enablePlugins(JavaAppPackaging, JavaAgent)
+  .enablePlugins(JavaAppPackaging, JavaAgent, DockerPlugin)
 
 lazy val root = project
   .in(file("."))
