@@ -50,10 +50,8 @@ object Executor:
         ref.flatModify: state =>
           val (newState, effect) =
             if state.isFull(config.maxSize) then
-              def ids = state.tasks.mkString("\n")
-              AppState.empty ->
-                warn"stateSize=${state.size} maxSize=${config.maxSize}. Dropping all!\ntasks: $ids"
-            else state -> IO.unit
+              AppState.empty -> warn"stateSize=${state.size} maxSize=${config.maxSize}. Dropping all!"
+            else state       -> IO.unit
           newState.add(task) -> effect *> monitor.updateSize(newState)
 
     def acquire(key: ClientKey): IO[Option[Work.Task]] =
