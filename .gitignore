@@ -8,3 +8,4 @@ RUNNING_PID
 .env
 # docker sbt
 /?
+backup.json
