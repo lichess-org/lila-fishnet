@@ -44,3 +44,9 @@ Run code format and auto code refactor with scalafmt & scalafix:
 ```sh
 sbt prepare
 ```
+
+### release
+
+```bash
+sbt release with-defaults
+```
