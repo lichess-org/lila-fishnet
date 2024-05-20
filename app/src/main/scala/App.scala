@@ -23,7 +23,7 @@ object App extends IOApp.Simple:
 class FishnetApp(res: AppResources, config: AppConfig)(using Logger[IO]):
   def run(): Resource[IO, Unit] =
     for
-      executor <- createExcutor
+      executor <- createExecutor
       httpApp = HttpApi(executor, HealthCheck(), config.server).httpApp
       server <- MkHttpServer.apply.newEmber(config.server, httpApp)
       _      <- RedisSubscriberJob(executor, res.redisPubsub).run()
@@ -31,7 +31,7 @@ class FishnetApp(res: AppResources, config: AppConfig)(using Logger[IO]):
       _      <- Logger[IO].info(s"Starting server on ${config.server.host}:${config.server.port}").toResource
     yield ()
 
-  private def createExcutor: Resource[IO, Executor] =
+  private def createExecutor: Resource[IO, Executor] =
     val lilaClient = LilaClient(res.redisPubsub)
     val repository = StateRepository.instance(config.repository.path)
     Executor.instance(lilaClient, repository, Monitor(), config.executor)
