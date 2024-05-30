@@ -19,7 +19,7 @@ object Dependencies {
 
   val chess = "org.lichess" %% "scalachess" % V.chess
 
-  val catsCore   = "org.typelevel" %% "cats-core"   % "2.10.0"
+  val catsCore   = "org.typelevel" %% "cats-core"   % "2.12.0"
   val catsEffect = "org.typelevel" %% "cats-effect" % V.catsEffect
 
   val fs2          = "co.fs2"    %% "fs2-core"            % "3.10.2"
