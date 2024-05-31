@@ -54,9 +54,6 @@ lazy val app = project
       testContainers,
       http4sClient,
       catsEffectTestKit,
-      munit,
-      munitScalaCheck,
-      scalacheck
     ),
     javaAgents += kamonAgent,
     Docker / packageName      := "lichess-org/lila-fishnet",
