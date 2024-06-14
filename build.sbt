@@ -53,7 +53,7 @@ lazy val app = project
       weaverScalaCheck,
       testContainers,
       http4sClient,
-      catsEffectTestKit,
+      catsEffectTestKit
     ),
     javaAgents += kamonAgent,
     Docker / packageName      := "lichess-org/lila-fishnet",
