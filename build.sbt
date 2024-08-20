@@ -2,7 +2,7 @@ import Dependencies.*
 
 inThisBuild(
   Seq(
-    scalaVersion  := "3.4.3",
+    scalaVersion  := "3.5.0",
     versionScheme := Some("early-semver"),
     run / fork    := true,
     run / javaOptions += "-Dconfig.override_with_env_vars=true",
@@ -24,7 +24,7 @@ lazy val app = project
       "-explain",
       "-Wunused:all",
       "-release:21",
-      "-Ysafe-init"
+      "-Wsafe-init"
     ),
     resolvers ++= Seq(Dependencies.lilaMaven),
     libraryDependencies ++= Seq(
