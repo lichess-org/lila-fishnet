@@ -7,8 +7,6 @@ import org.scalacheck.{ Arbitrary, Cogen, Gen }
 
 import java.time.Instant
 
-import Work.Acquired
-
 object Arbitraries:
 
   given Arbitrary[WorkId]    = Arbitrary(Gen.stringOfN(8, Gen.alphaNumChar).map(WorkId.apply))
