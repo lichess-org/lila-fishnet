@@ -1,4 +1,6 @@
 import Dependencies.*
+import org.typelevel.scalacoptions.ScalacOption
+import org.typelevel.scalacoptions.ScalacOptions
 
 inThisBuild(
   Seq(
@@ -18,13 +20,14 @@ lazy val app = project
     name         := "lila-fishnet",
     organization := "org.lichess",
     scalacOptions ++= Seq(
-      "-source:future",
-      "-rewrite",
-      "-indent",
-      "-explain",
-      "-Wunused:all",
-      "-release:21",
-      "-Wsafe-init"
+      "-Wsafe-init" // fix in: https://github.com/typelevel/scalac-options/pull/136
+    ),
+    tpolecatScalacOptions ++= Set(
+      ScalacOptions.sourceFuture,
+      ScalacOptions.other("-rewrite"),
+      ScalacOptions.other("-indent"),
+      ScalacOptions.explain,
+      ScalacOptions.release("21")
     ),
     resolvers ++= Seq(Dependencies.lilaMaven),
     libraryDependencies ++= Seq(
