@@ -1,5 +1,4 @@
 import Dependencies.*
-import org.typelevel.scalacoptions.ScalacOption
 import org.typelevel.scalacoptions.ScalacOptions
 
 inThisBuild(
