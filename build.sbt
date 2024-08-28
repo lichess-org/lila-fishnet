@@ -18,15 +18,13 @@ lazy val app = project
   .settings(
     name         := "lila-fishnet",
     organization := "org.lichess",
-    scalacOptions ++= Seq(
-      "-Wsafe-init" // fix in: https://github.com/typelevel/scalac-options/pull/136
-    ),
     tpolecatScalacOptions ++= Set(
       ScalacOptions.sourceFuture,
       ScalacOptions.other("-rewrite"),
       ScalacOptions.other("-indent"),
       ScalacOptions.explain,
-      ScalacOptions.release("21")
+      ScalacOptions.release("21"),
+      ScalacOptions.other("-Wsafe-init"), // fix in: https://github.com/typelevel/scalac-options/pull/136
     ),
     resolvers ++= Seq(Dependencies.lilaMaven),
     libraryDependencies ++= Seq(
