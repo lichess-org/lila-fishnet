@@ -6,7 +6,7 @@ object Dependencies {
 
   object V {
     val circe      = "0.14.10"
-    val http4s     = "0.23.27"
+    val http4s     = "0.23.28"
     val ciris      = "3.6.0"
     val kamon      = "2.5.11"
     val kamonAgent = "1.0.18"
