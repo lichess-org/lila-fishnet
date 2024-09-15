@@ -68,7 +68,7 @@ object ExecutorTest extends SimpleIOSuite:
       acquired <- executor.acquire(key)
       _        <- executor.move(acquired.get.id, key, validMove.some)
       response <- ref.get.map(_.head)
-    yield expect.same(response, Lila.Response(request.id, request.moves, chess.format.Uci.Move("e2e4").get))
+    yield expect.same(response, Lila.Response(request.id, request.moves, Uci.Move("e2e4").get))
 
   test("post move after timeout should not send move"):
     for
@@ -91,7 +91,7 @@ object ExecutorTest extends SimpleIOSuite:
       acquired <- executor.acquire(key)
       _        <- executor.move(acquired.get.id, key, validMove.some)
       response <- ref.get.map(_.head)
-    yield expect.same(response, Lila.Response(request.id, request.moves, chess.format.Uci.Move("e2e4").get))
+    yield expect.same(response, Lila.Response(request.id, request.moves, Uci.Move("e2e4").get))
 
   test("post null move should remove the task"):
     for
