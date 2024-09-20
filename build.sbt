@@ -3,7 +3,7 @@ import org.typelevel.scalacoptions.ScalacOptions
 
 inThisBuild(
   Seq(
-    scalaVersion  := "3.5.0",
+    scalaVersion  := "3.5.1",
     versionScheme := Some("early-semver"),
     run / fork    := true,
     run / javaOptions += "-Dconfig.override_with_env_vars=true",
@@ -24,7 +24,7 @@ lazy val app = project
       ScalacOptions.other("-indent"),
       ScalacOptions.explain,
       ScalacOptions.release("21"),
-      ScalacOptions.other("-Wsafe-init"), // fix in: https://github.com/typelevel/scalac-options/pull/136
+      ScalacOptions.other("-Wsafe-init") // fix in: https://github.com/typelevel/scalac-options/pull/136
     ),
     resolvers ++= Seq(Dependencies.lilaMaven),
     libraryDependencies ++= Seq(
