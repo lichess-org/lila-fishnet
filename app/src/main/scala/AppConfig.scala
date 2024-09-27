@@ -8,7 +8,7 @@ import com.comcast.ip4s.*
 
 object AppConfig:
 
-  def load: IO[AppConfig] = appConfig.load[IO]
+  def load(): IO[AppConfig] = appConfig.load[IO]
 
   def appConfig = (
     RedisConfig.config,

@@ -13,9 +13,9 @@ object App extends IOApp.Simple:
 
   def app: Resource[IO, Unit] =
     for
-      config <- AppConfig.load.toResource
+      config <- AppConfig.load().toResource
       _      <- Logger[IO].info(s"Starting lila-fishnet with config: $config").toResource
-      _      <- KamonInitiator.apply.init(config.kamon).toResource
+      _      <- KamonInitiator.apply().init(config.kamon).toResource
       res    <- AppResources.instance(config.redis)
       _      <- FishnetApp(res, config).run()
     yield ()
@@ -34,4 +34,4 @@ class FishnetApp(res: AppResources, config: AppConfig)(using Logger[IO]):
   private def createExecutor: Resource[IO, Executor] =
     val lilaClient = LilaClient(res.redisPubsub)
     val repository = StateRepository.instance(config.repository.path)
-    Executor.instance(lilaClient, repository, Monitor(), config.executor)
+    Monitor().toResource.flatMap(Executor.instance(lilaClient, repository, _, config.executor))

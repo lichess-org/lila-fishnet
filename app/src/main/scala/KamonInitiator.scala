@@ -8,6 +8,6 @@ trait KamonInitiator:
   def init(config: KamonConfig): IO[Unit]
 
 object KamonInitiator:
-  def apply: KamonInitiator = new:
+  def apply(): KamonInitiator = new:
     def init(config: KamonConfig): IO[Unit] =
-      IO(Kamon.init()).whenA(config.enabled)
+      IO.blocking(Kamon.init()).whenA(config.enabled)
