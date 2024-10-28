@@ -11,7 +11,7 @@ object Dependencies {
     val kamon      = "2.5.11"
     val kamonAgent = "1.0.18"
     val chess      = "15.7.11"
-    val catsEffect = "3.5.4"
+    val catsEffect = "3.5.5"
   }
 
   def http4s(artifact: String) = "org.http4s" %% s"http4s-$artifact" % V.http4s
