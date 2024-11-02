@@ -24,8 +24,8 @@ class FishnetApp(res: AppResources, config: AppConfig)(using Logger[IO]):
   def run(): Resource[IO, Unit] =
     for
       executor <- createExecutor
-      httpApp = HttpApi(executor, HealthCheck(), config.server).httpApp
-      server <- MkHttpServer.apply.newEmber(config.server, httpApp)
+      httpRoutes = HttpApi(executor, HealthCheck(), config.server).routes
+      server <- MkHttpServer.apply.newEmber(config.server, httpRoutes.orNotFound)
       _      <- RedisSubscriberJob(executor, res.redisPubsub).run()
       _      <- WorkCleaningJob(executor).run()
       _      <- Logger[IO].info(s"Starting server on ${config.server.host}:${config.server.port}").toResource
