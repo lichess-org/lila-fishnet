@@ -15,23 +15,9 @@ final class HttpApi(
     config: HttpServerConfig
 )(using Logger[IO]):
 
-  private val fishnetRoutes = FishnetRoutes(executor).routes
-  private val healthRoutes  = HealthRoutes(healthCheck).routes
+  private def fishnetRoutes = FishnetRoutes(executor).routes
+  private def healthRoutes  = HealthRoutes(healthCheck).routes
 
-  type Middleware = HttpRoutes[IO] => HttpRoutes[IO]
+  private def middleware = ApiLogger(config.apiLogger).andThen(AutoSlash(_)).andThen(Timeout(60.seconds))
 
-  private val autoSlash: Middleware = AutoSlash(_)
-  private val timeout: Middleware   = Timeout(60.seconds)
-
-  private val middleware = autoSlash andThen timeout
-
-  private def verboseLogger =
-    RequestLogger.httpRoutes[IO](true, true) andThen
-      ResponseLogger.httpRoutes[IO, Request[IO]](true, true)
-
-  private val loggers =
-    if config.apiLogger then verboseLogger
-    else ApiErrorLogger.instance
-
-  val routes: HttpRoutes[IO] =
-    loggers(middleware(fishnetRoutes <+> healthRoutes))
+  def routes: HttpRoutes[IO] = middleware(fishnetRoutes <+> healthRoutes)
