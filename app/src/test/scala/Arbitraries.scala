@@ -1,7 +1,7 @@
 package lila.fishnet
 
 import chess.CoreArbitraries.given
-import chess.format.Fen.Epd
+import chess.format.Fen.Full
 import org.scalacheck.Arbitrary.*
 import org.scalacheck.{ Arbitrary, Cogen, Gen }
 
@@ -34,7 +34,7 @@ object Arbitraries:
       level   <- Gen.choose(1, 8)
       clock   <- arbitrary[Option[Lila.Clock]]
       variant <- arbitrary[chess.variant.Variant]
-    yield Lila.Request(id, Epd.initial, variant, moves, level, clock)
+    yield Lila.Request(id, Full.initial, variant, moves, level, clock)
 
   given Arbitrary[Work.Task] = Arbitrary:
     for

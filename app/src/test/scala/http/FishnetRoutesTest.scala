@@ -66,7 +66,7 @@ object FishnetRoutesTest extends SimpleIOSuite:
     id = WorkId("workid"),
     request = Lila.Request(
       id = GameId("gameid"),
-      initialFen = chess.format.Fen.Epd("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"),
+      initialFen = chess.format.Fen.Full("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"),
       moves = "",
       variant = chess.variant.Standard,
       level = 1,
