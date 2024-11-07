@@ -39,7 +39,7 @@ object GameId:
 object ChessCirceCodecs:
   given Encoder[Fen.Full] = encodeString.contramap(_.value)
   given Decoder[Fen.Full] = decodeString.map(Fen.Full.apply)
-  given Encoder[Variant] = encodeString.contramap(_.name)
+  given Encoder[Variant]  = encodeString.contramap(_.name)
   given Decoder[Variant] =
     decodeString.emap: s =>
       Variant.byName(s).toRight(s"Invalid variant: $s")

@@ -3,6 +3,7 @@ package lila.fishnet
 import cats.effect.{ IO, Ref }
 import cats.syntax.all.*
 import chess.format.Uci
+import chess.macros.uci
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.noop.NoOpLogger
 import weaver.*
@@ -27,7 +28,7 @@ object ExecutorTest extends SimpleIOSuite:
   val key  = ClientKey("key")
   val key2 = ClientKey("key2")
 
-  val validMove = BestMove(Uci("e2e4").get)
+  val validMove = BestMove(uci"e2e4")
 
   test("acquire when there is no work should return none"):
     for
@@ -68,7 +69,7 @@ object ExecutorTest extends SimpleIOSuite:
       acquired <- executor.acquire(key)
       _        <- executor.move(acquired.get.id, key, validMove.some)
       response <- ref.get.map(_.head)
-    yield expect.same(response, Lila.Response(request.id, request.moves, Uci.Move("e2e4").get))
+    yield expect.same(response, Lila.Response(request.id, request.moves, uci"e2e4"))
 
   test("post move after timeout should not send move"):
     for
@@ -91,7 +92,7 @@ object ExecutorTest extends SimpleIOSuite:
       acquired <- executor.acquire(key)
       _        <- executor.move(acquired.get.id, key, validMove.some)
       response <- ref.get.map(_.head)
-    yield expect.same(response, Lila.Response(request.id, request.moves, Uci.Move("e2e4").get))
+    yield expect.same(response, Lila.Response(request.id, request.moves, uci"e2e4"))
 
   test("post null move should remove the task"):
     for
