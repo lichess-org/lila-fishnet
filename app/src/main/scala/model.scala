@@ -37,8 +37,8 @@ object GameId:
   extension (id: GameId) def value: String = id
 
 object ChessCirceCodecs:
-  given Encoder[Fen.Epd] = encodeString.contramap(_.value)
-  given Decoder[Fen.Epd] = decodeString.map(Fen.Epd.apply)
+  given Encoder[Fen.Full] = encodeString.contramap(_.value)
+  given Decoder[Fen.Full] = decodeString.map(Fen.Full.apply)
   given Encoder[Variant] = encodeString.contramap(_.name)
   given Decoder[Variant] =
     decodeString.emap: s =>
@@ -59,7 +59,7 @@ object Fishnet:
   case class WorkResponse(
       work: Work,
       game_id: GameId,
-      position: Fen.Epd,
+      position: Fen.Full,
       moves: String,
       variant: Variant
   ) derives Encoder.AsObject
@@ -74,7 +74,7 @@ object Lila:
 
   case class Request(
       id: GameId,
-      initialFen: Fen.Epd,
+      initialFen: Fen.Full,
       variant: Variant,
       moves: String,
       level: Int,
@@ -100,8 +100,8 @@ object Lila:
           )
       case _ => None
 
-  def readFen(str: String): Option[Fen.Epd] =
-    Option.when(str.nonEmpty)(Fen.Epd(str))
+  def readFen(str: String): Option[Fen.Full] =
+    Option.when(str.nonEmpty)(Fen.Full(str))
 
   def readClock(s: String): Option[Clock] =
     s.split(" ", 3) match

@@ -10,7 +10,7 @@ object Dependencies {
     val ciris      = "3.6.0"
     val kamon      = "2.5.11"
     val kamonAgent = "1.0.18"
-    val chess      = "15.7.11"
+    val chess      = "16.3.3"
     val catsEffect = "3.5.5"
   }
 
