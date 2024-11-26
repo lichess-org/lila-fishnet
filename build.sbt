@@ -55,12 +55,11 @@ lazy val app = project
       http4sClient,
       catsEffectTestKit
     ),
-    javaAgents += kamonAgent,
     Docker / packageName      := "lichess-org/lila-fishnet",
     Docker / maintainer       := "lichess.org",
     Docker / dockerRepository := Some("ghcr.io")
   )
-  .enablePlugins(JavaAppPackaging, JavaAgent, DockerPlugin)
+  .enablePlugins(JavaAppPackaging, DockerPlugin)
 
 lazy val root = project
   .in(file("."))

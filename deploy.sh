@@ -25,7 +25,7 @@ RSYNC_OPTIONS=" \
   --exclude '.git/'"
 
 stage="app/target/universal/stage"
-include="$stage/bin $stage/kanela-agent $stage/lib"
+include="$stage/bin $stage/lib"
 rsync_command="rsync $RSYNC_OPTIONS $include $REMOTE:$REMOTE_DIR"
 echo "$rsync_command"
 $rsync_command
