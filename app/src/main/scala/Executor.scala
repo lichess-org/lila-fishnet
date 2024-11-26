@@ -31,16 +31,13 @@ object Executor:
 
   import AppState.*
 
-  def instance(client: LilaClient, repository: StateRepository, monitor: Monitor, config: ExecutorConfig)(
-      using Logger[IO]
+  def instance(client: LilaClient, monitor: Monitor, config: ExecutorConfig)(using
+      Logger[IO]
   ): Resource[IO, Executor] =
     Ref
       .of[IO, AppState](AppState.empty)
       .toResource
-      .flatMap: ref =>
-        Resource
-          .make(repository.get.flatMap(ref.set))(_ => ref.get.flatMap(repository.save))
-          .as(instance(ref, client, monitor, config))
+      .map(instance(_, client, monitor, config))
 
   def instance(ref: Ref[IO, AppState], client: LilaClient, monitor: Monitor, config: ExecutorConfig)(using
       Logger[IO]

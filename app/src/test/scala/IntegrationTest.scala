@@ -41,8 +41,7 @@ object IntegrationTest extends IOSuite:
     server = HttpServerConfig(ip"0.0.0.0", port"9999", apiLogger = false, shutdownTimeout = 30),
     redis = redis,
     kamon = KamonConfig(enabled = false),
-    executor = ExecutorConfig(maxSize = 300),
-    repository = RepositoryConfig(path = None)
+    executor = ExecutorConfig(maxSize = 300)
   )
 
   test("health check should return healthy"):

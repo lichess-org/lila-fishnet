@@ -33,5 +33,4 @@ class FishnetApp(res: AppResources, config: AppConfig)(using Logger[IO]):
 
   private def createExecutor: Resource[IO, Executor] =
     val lilaClient = LilaClient(res.redisPubsub)
-    val repository = StateRepository.instance(config.repository.path)
-    Monitor().toResource.flatMap(Executor.instance(lilaClient, repository, _, config.executor))
+    Monitor().toResource.flatMap(Executor.instance(lilaClient, _, config.executor))

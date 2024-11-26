@@ -30,4 +30,3 @@ object ApiLogger:
   private def logError(req: Request[IO], res: Response[IO])(using Logger[IO]): IO[Unit] =
     Http4sLogger.logMessage(req)(true, true)(Logger[IO].warn) >>
       Http4sLogger.logMessage(res)(true, true)(Logger[IO].warn)
-
