@@ -11,13 +11,6 @@ import org.typelevel.log4cats.Logger
 
 object ApiLogger:
 
-  private def isResponseError(res: Response[IO]): Boolean =
-    !res.status.isSuccess && res.status.code != 404
-
-  private def logError(req: Request[IO], res: Response[IO])(using Logger[IO]): IO[Unit] =
-    Http4sLogger.logMessage(req)(true, true)(Logger[IO].warn) >>
-      Http4sLogger.logMessage(res)(true, true)(Logger[IO].warn)
-
   def apply(isVerbose: Boolean)(using Logger[IO]): HttpRoutes[IO] => HttpRoutes[IO] =
     if isVerbose then verboseLogger
     else errorLogger
@@ -30,3 +23,10 @@ object ApiLogger:
   private def verboseLogger =
     RequestLogger.httpRoutes[IO](true, true) andThen
       ResponseLogger.httpRoutes[IO, Request[IO]](true, true)
+
+  private def isResponseError(res: Response[IO]): Boolean =
+    !res.status.isSuccess && res.status.code != 404
+
+  private def logError(req: Request[IO], res: Response[IO])(using Logger[IO]): IO[Unit] =
+    Http4sLogger.logMessage(req)(true, true)(Logger[IO].warn) >>
+      Http4sLogger.logMessage(res)(true, true)(Logger[IO].warn)
