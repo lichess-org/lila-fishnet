@@ -9,4 +9,4 @@ trait KamonInitiator:
 object KamonInitiator:
   def apply(): KamonInitiator = new:
     def init(config: KamonConfig): IO[Unit] =
-      IO.blocking(kamon.Kamon.init()).whenA(config.enabled)
+      IO.blocking(kamon.Kamon.initWithoutAttaching()).whenA(config.enabled)
