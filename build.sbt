@@ -15,7 +15,6 @@ inThisBuild(
 
 lazy val app = project
   .in(file("app"))
-  .enablePlugins(JavaAppPackaging, DockerPlugin)
   .settings(
     name         := "lila-fishnet",
     organization := "org.lichess",
@@ -54,11 +53,9 @@ lazy val app = project
     ),
     Docker / packageName      := "lichess-org/lila-fishnet",
     Docker / maintainer       := "lichess.org",
-    Docker / dockerRepository := Some("ghcr.io"),
-    Universal / javaOptions := Seq(
-      "-J-Dconfig.override_with_env_vars=true"
-    )
+    Docker / dockerRepository := Some("ghcr.io")
   )
+  .enablePlugins(JavaAppPackaging, DockerPlugin)
 
 lazy val root = project
   .in(file("."))
