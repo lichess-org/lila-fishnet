@@ -3,7 +3,7 @@ import org.typelevel.scalacoptions.ScalacOptions
 
 inThisBuild(
   Seq(
-    scalaVersion  := "3.5.2",
+    scalaVersion  := "3.6.2",
     versionScheme := Some("early-semver"),
     run / fork    := true,
     run / javaOptions += "-Dconfig.override_with_env_vars=true",
