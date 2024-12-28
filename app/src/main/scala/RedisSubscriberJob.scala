@@ -23,5 +23,5 @@ object RedisSubscriberJob:
               .match
                 case Some(request) => executor.add(request)
                 case None          => Logger[IO].warn(s"Failed to parse message from lila: $msg")
-              >> Logger[IO].debug(s"Received message: $msg")
+            >> Logger[IO].debug(s"Received message: $msg")
         ) *> pubsub.runMessages).background.void
