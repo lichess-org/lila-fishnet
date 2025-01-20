@@ -15,6 +15,9 @@ jobs:
       - name: Checkout current branch
         uses: actions/checkout@v4
 
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
+
       - name: Test
         run: sbt test
 
@@ -25,6 +28,9 @@ jobs:
 
       - name: Checkout current branch
         uses: actions/checkout@v4
+
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
 
       - name: Check Formatting
         run: sbt check
