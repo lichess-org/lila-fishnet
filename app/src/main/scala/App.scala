@@ -29,6 +29,7 @@ class FishnetApp(res: AppResources, config: AppConfig)(using Logger[IO]):
       _      <- RedisSubscriberJob(executor, res.redisPubsub).run()
       _      <- WorkCleaningJob(executor).run()
       _      <- Logger[IO].info(s"Starting server on ${config.server.host}:${config.server.port}").toResource
+      _      <- Logger[IO].info(s"BuildInfo: $BuildInfo").toResource
     yield ()
 
   private def createExecutor: Resource[IO, Executor] =
