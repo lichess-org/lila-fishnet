@@ -34,6 +34,7 @@ lazy val app = project
       circeCore,
       cirisCore,
       cirisHtt4s,
+      fs2,
       http4sCirce,
       http4sDsl,
       http4sServer,
