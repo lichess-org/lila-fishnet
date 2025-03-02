@@ -3,8 +3,8 @@ package lila.fishnet
 import cats.effect.kernel.Resource
 import cats.effect.{ IO, Ref }
 import cats.syntax.all.*
-import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax.*
+import org.typelevel.log4cats.{ Logger, LoggerFactory }
 
 import java.time.Instant
 
@@ -32,16 +32,17 @@ object Executor:
   import AppState.*
 
   def instance(client: LilaClient, monitor: Monitor, config: ExecutorConfig)(using
-      Logger[IO]
+      LoggerFactory[IO]
   ): Resource[IO, Executor] =
     Ref
       .of[IO, AppState](AppState.empty)
       .toResource
-      .map(instance(_, client, monitor, config))
+      .map(instance(client, monitor, config))
 
-  def instance(ref: Ref[IO, AppState], client: LilaClient, monitor: Monitor, config: ExecutorConfig)(using
-      Logger[IO]
+  def instance(client: LilaClient, monitor: Monitor, config: ExecutorConfig)(ref: Ref[IO, AppState])(using
+      LoggerFactory[IO]
   ): Executor = new:
+    given Logger[IO] = LoggerFactory.getLoggerFromName("Executor")
     def add(work: Lila.Request): IO[Unit] =
       fromRequest(work).flatMap: task =>
         ref.flatModify: state =>

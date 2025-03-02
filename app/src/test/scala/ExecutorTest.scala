@@ -4,8 +4,8 @@ import cats.effect.{ IO, Ref }
 import cats.syntax.all.*
 import chess.format.Uci
 import chess.macros.uci
-import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.noop.NoOpLogger
+import org.typelevel.log4cats.LoggerFactory
+import org.typelevel.log4cats.noop.NoOpFactory
 import weaver.*
 
 import java.time.Instant
@@ -14,7 +14,7 @@ import Helper.*
 
 object ExecutorTest extends SimpleIOSuite:
 
-  given Logger[IO] = NoOpLogger[IO]
+  given LoggerFactory[IO] = NoOpFactory[IO]
 
   val request: Lila.Request = Lila.Request(
     id = GameId("1"),
@@ -154,7 +154,7 @@ object ExecutorTest extends SimpleIOSuite:
   def ioExecutor(client: LilaClient)(monitor: Monitor, config: ExecutorConfig): IO[Executor] =
     Ref
       .of[IO, AppState](AppState.empty)
-      .map(Executor.instance(_, client, monitor, config))
+      .map(Executor.instance(client, monitor, config))
 
   def createLilaClient: IO[LilaClient] =
     emptyMovesRef.map(createLilaClient)

@@ -2,12 +2,13 @@ package lila.fishnet
 
 import cats.effect.{ IO, IOApp, Resource }
 import lila.fishnet.http.*
-import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.slf4j.Slf4jLogger
+import org.typelevel.log4cats.slf4j.{ Slf4jFactory, Slf4jLogger }
+import org.typelevel.log4cats.{ Logger, LoggerFactory }
 
 object App extends IOApp.Simple:
 
-  given Logger[IO] = Slf4jLogger.getLogger[IO]
+  given Logger[IO]        = Slf4jLogger.getLogger[IO]
+  given LoggerFactory[IO] = Slf4jFactory.create[IO]
 
   override def run: IO[Unit] = app.useForever
 
@@ -20,7 +21,8 @@ object App extends IOApp.Simple:
       _      <- FishnetApp(res, config).run()
     yield ()
 
-class FishnetApp(res: AppResources, config: AppConfig)(using Logger[IO]):
+class FishnetApp(res: AppResources, config: AppConfig)(using LoggerFactory[IO]):
+  given Logger[IO] = LoggerFactory[IO].getLoggerFromName("FishnetApp")
   def run(): Resource[IO, Unit] =
     for
       executor <- createExecutor

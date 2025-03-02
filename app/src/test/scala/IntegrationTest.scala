@@ -17,15 +17,15 @@ import org.http4s.client.Client
 import org.http4s.ember.client.EmberClientBuilder
 import org.http4s.implicits.*
 import org.testcontainers.containers.wait.strategy.Wait
-import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.noop.NoOpLogger
+import org.typelevel.log4cats.LoggerFactory
+import org.typelevel.log4cats.noop.NoOpFactory
 import weaver.*
 
 import scala.concurrent.duration.*
 
 object IntegrationTest extends IOSuite:
 
-  given Logger[IO] = NoOpLogger[IO]
+  given LoggerFactory[IO] = NoOpFactory[IO]
 
   override type Res = AppResources
   // start our server
