@@ -9,9 +9,11 @@ import org.http4s.circe.CirceEntityDecoder.*
 import org.http4s.circe.CirceEntityEncoder.*
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.Router
-import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.{ Logger, LoggerFactory }
 
-final class FishnetRoutes(executor: Executor)(using Logger[IO]) extends Http4sDsl[IO]:
+final class FishnetRoutes(executor: Executor)(using LoggerFactory[IO]) extends Http4sDsl[IO]:
+
+  given Logger[IO] = LoggerFactory[IO].getLoggerFromName("FishnetRoutes")
 
   private val prefixPath = "/fishnet"
 
@@ -32,9 +34,7 @@ final class FishnetRoutes(executor: Executor)(using Logger[IO]) extends Http4sDs
     executor
       .acquire(key)
       .flatMap(_.fold(NoContent())(task => Ok(task.toResponse)))
-      .recoverWith:
-        case x =>
-          Logger[IO].error(x.getMessage) *> InternalServerError(x.getMessage.nn)
+      .handleErrorWith(x => Logger[IO].error(x.getMessage) *> InternalServerError(x.getMessage.nn))
 
   val routes: HttpRoutes[IO] = Router(prefixPath -> httpRoutes)
 
