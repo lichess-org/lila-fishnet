@@ -22,7 +22,7 @@ object Dependencies {
   val catsCore   = "org.typelevel" %% "cats-core"   % "2.13.0"
   val catsEffect = "org.typelevel" %% "cats-effect" % V.catsEffect
 
-  val fs2        = "co.fs2"        %% "fs2-core"    % V.fs2
+  val fs2 = "co.fs2" %% "fs2-core" % V.fs2
 
   val circeCore    = circe("core")
   val circeLiteral = circe("literal") % Test
