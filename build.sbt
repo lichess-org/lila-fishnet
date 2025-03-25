@@ -42,7 +42,7 @@ lazy val app = project
       kamonInflux,
       kamonSystemMetrics,
       log4Cats,
-      logback,
+      logback % Runtime,
       redis,
       circeLiteral,
       chessTestKit,
