@@ -5,11 +5,11 @@ object Dependencies {
   val lilaMaven = "lila-maven" at "https://raw.githubusercontent.com/lichess-org/lila-maven/master"
 
   object V {
-    val catsEffect = "3.6.0-RC2"
+    val catsEffect = "3.6.0"
     val chess      = "16.3.3"
     val circe      = "0.14.12"
     val ciris      = "3.7.0"
-    val fs2        = "3.12.0-RC1"
+    val fs2        = "3.12.0"
     val http4s     = "0.23.30"
     val kamon      = "2.7.5"
   }
