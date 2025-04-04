@@ -31,7 +31,7 @@ object Executor:
 
   import AppState.*
 
-  def instance(client: LilaClient, monitor: Monitor, config: ExecutorConfig)(using
+  def instance(client: LilaClient, config: ExecutorConfig)(monitor: Monitor)(using
       LoggerFactory[IO]
   ): Resource[IO, Executor] =
     Ref
@@ -94,13 +94,13 @@ object Executor:
         info"cleaning ${timeOut.size} of ${state.size} moves"
           *> timeOut.traverse_(m => info"Timeout move: $m")
 
-    private def failure(work: Work.Task, clientKey: ClientKey) =
+    private inline def failure(work: Work.Task, clientKey: ClientKey) =
       warn"Received invalid move ${work.id} for ${work.request.id} by $clientKey"
 
-    private def logNotFound(id: WorkId, clientKey: ClientKey) =
+    private inline def logNotFound(id: WorkId, clientKey: ClientKey) =
       info"Received unknown work $id by $clientKey"
 
-    private def logNotAcquired(work: Work.Task, clientKey: ClientKey) =
+    private inline def logNotAcquired(work: Work.Task, clientKey: ClientKey) =
       info"Received unacquired move ${work.id} for ${work.request.id} by $clientKey. Work current tries: ${work.tries} acquired: ${work.acquired}"
 
   def fromRequest(req: Lila.Request): IO[Work.Task] =

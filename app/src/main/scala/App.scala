@@ -1,6 +1,7 @@
 package lila.fishnet
 
 import cats.effect.{ IO, IOApp, Resource }
+import cats.syntax.all.*
 import lila.fishnet.http.*
 import org.typelevel.log4cats.slf4j.{ Slf4jFactory, Slf4jLogger }
 import org.typelevel.log4cats.{ Logger, LoggerFactory }
@@ -36,4 +37,4 @@ class FishnetApp(res: AppResources, config: AppConfig)(using LoggerFactory[IO]):
 
   private def createExecutor: Resource[IO, Executor] =
     val lilaClient = LilaClient(res.redisPubsub)
-    Monitor().toResource.flatMap(Executor.instance(lilaClient, _, config.executor))
+    Monitor().toResource >>= Executor.instance(lilaClient, config.executor)
