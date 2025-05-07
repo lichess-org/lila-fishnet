@@ -109,7 +109,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       executor <- createExecutor(ExecutorConfig(2))
       _        <- executor.add(request)
-      _ <- (executor.acquire(key).flatMap(x => executor.clean(Instant.now.plusSeconds(17)))).replicateA_(2)
+      _ <- (executor.acquire(key).flatMap(_ => executor.clean(Instant.now.plusSeconds(17)))).replicateA_(2)
       acquired <- executor.acquire(key)
     yield assert(acquired.isDefined)
 
@@ -117,7 +117,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       executor <- createExecutor(ExecutorConfig(2))
       _        <- executor.add(request)
-      _ <- (executor.acquire(key).flatMap(x => executor.clean(Instant.now.plusSeconds(17)))).replicateA_(3)
+      _ <- (executor.acquire(key).flatMap(_ => executor.clean(Instant.now.plusSeconds(17)))).replicateA_(3)
       acquired <- executor.acquire(key)
     yield assert(acquired.isEmpty)
 
@@ -126,7 +126,7 @@ object ExecutorTest extends SimpleIOSuite:
       executor <- createExecutor(ExecutorConfig(2))
       _        <- executor.add(request)
       _        <- executor.add(request.copy(id = GameId("2")))
-      _  <- (executor.acquire(key).flatMap(x => executor.clean(Instant.now.plusSeconds(17)))).replicateA_(2)
+      _  <- (executor.acquire(key).flatMap(_ => executor.clean(Instant.now.plusSeconds(17)))).replicateA_(2)
       _  <- executor.acquire(key)
       _  <- executor.clean(Instant.now.plusSeconds(37))
       _  <- executor.add(request.copy(id = GameId("3")))
