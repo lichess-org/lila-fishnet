@@ -3,7 +3,7 @@ import org.typelevel.scalacoptions.ScalacOptions
 
 inThisBuild(
   Seq(
-    scalaVersion  := "3.6.4",
+    scalaVersion  := "3.7.0",
     versionScheme := Some("early-semver"),
     run / fork    := true,
     run / javaOptions += "-Dconfig.override_with_env_vars=true",
@@ -19,7 +19,6 @@ lazy val app = project
     name         := "lila-fishnet",
     organization := "org.lichess",
     tpolecatScalacOptions ++= Set(
-      ScalacOptions.sourceFuture,
       ScalacOptions.other("-rewrite"),
       ScalacOptions.other("-indent"),
       ScalacOptions.explain,
