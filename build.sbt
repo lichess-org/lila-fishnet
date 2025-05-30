@@ -54,7 +54,7 @@ lazy val app = project
     Docker / packageName      := "lichess-org/lila-fishnet",
     Docker / maintainer       := "lichess.org",
     Docker / dockerRepository := Some("ghcr.io"),
-    buildInfoKeys := Seq[BuildInfoKey](
+    buildInfoKeys             := Seq[BuildInfoKey](
       version,
       BuildInfoKey.map(git.gitHeadCommit) { case (k, v) => k -> v.getOrElse("unknown").take(7) }
     ),

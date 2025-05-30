@@ -23,7 +23,7 @@ object App extends IOApp.Simple:
     yield ()
 
 class FishnetApp(res: AppResources, config: AppConfig)(using LoggerFactory[IO]):
-  given Logger[IO] = LoggerFactory[IO].getLoggerFromName("FishnetApp")
+  given Logger[IO]              = LoggerFactory[IO].getLoggerFromName("FishnetApp")
   def run(): Resource[IO, Unit] =
     for
       executor <- createExecutor

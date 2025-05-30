@@ -57,7 +57,7 @@ object IntegrationTest extends IOSuite:
     val bestMoves             = List(uci"e7e6", uci"d7d5", uci"d8d6")
     val postMoves             = bestMoves.map(m => PostMove(fishnet, Move(BestMove(m).some)))
 
-    val gameId = "CPzkP0tq"
+    val gameId       = "CPzkP0tq"
     val lilaRequests =
       List(
         "CPzkP0tq;1;;;;d2d4",
@@ -120,7 +120,7 @@ object RedisFishnetInListener:
 
 object RedisContainer:
 
-  private val REDIS_PORT = 6379
+  private val REDIS_PORT     = 6379
   private val redisContainer =
     val start = IO(
       GenericContainer(
