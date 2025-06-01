@@ -25,7 +25,7 @@ lazy val app = project
       ScalacOptions.release("21"),
       ScalacOptions.other("-Wsafe-init") // fix in: https://github.com/typelevel/scalac-options/pull/136
     ),
-    resolvers ++= Seq(Dependencies.lilaMaven),
+    resolvers ++= Seq(lilaMaven, jitpack),
     libraryDependencies ++= Seq(
       catsCore,
       catsEffect,

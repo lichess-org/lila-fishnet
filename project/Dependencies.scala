@@ -2,11 +2,12 @@ import sbt.*
 
 object Dependencies {
 
-  val lilaMaven = "lila-maven" at "https://raw.githubusercontent.com/lichess-org/lila-maven/master"
+  val lilaMaven = "lila-maven".at("https://raw.githubusercontent.com/lichess-org/lila-maven/master")
+  val jitpack   = "jitpack".at("https://jitpack.io")
 
   object V {
     val catsEffect = "3.6.1"
-    val chess      = "17.3.0"
+    val chess      = "17.7.2"
     val circe      = "0.14.13"
     val ciris      = "3.8.0"
     val fs2        = "3.12.0"
@@ -17,7 +18,7 @@ object Dependencies {
   def http4s(artifact: String) = "org.http4s" %% s"http4s-$artifact" % V.http4s
   def circe(artifact: String)  = "io.circe"   %% s"circe-$artifact"  % V.circe
 
-  val chess = "org.lichess" %% "scalachess" % V.chess
+  val chess = "com.github.lichess-org.scalachess" %% "scalachess" % V.chess
 
   val catsCore   = "org.typelevel" %% "cats-core"   % "2.13.0"
   val catsEffect = "org.typelevel" %% "cats-effect" % V.catsEffect
@@ -44,9 +45,9 @@ object Dependencies {
 
   val redis = "io.chrisdavenport" %% "rediculous" % "0.5.1"
 
-  val chessTestKit      = "org.lichess"         %% "scalachess-test-kit"       % V.chess      % Test
-  val testContainers    = "com.dimafeng"        %% "testcontainers-scala-core" % "0.43.0"     % Test
-  val weaver            = "com.disneystreaming" %% "weaver-cats"               % "0.8.4"      % Test
-  val weaverScalaCheck  = "com.disneystreaming" %% "weaver-scalacheck"         % "0.8.4"      % Test
-  val catsEffectTestKit = "org.typelevel"       %% "cats-effect-testkit"       % V.catsEffect % Test
+  val chessTestKit     = "com.github.lichess-org.scalachess" %% "scalachess-test-kit"       % V.chess
+  val testContainers   = "com.dimafeng"                      %% "testcontainers-scala-core" % "0.43.0" % Test
+  val weaver           = "com.disneystreaming"               %% "weaver-cats"               % "0.8.4"  % Test
+  val weaverScalaCheck = "com.disneystreaming"               %% "weaver-scalacheck"         % "0.8.4"  % Test
+  val catsEffectTestKit = "org.typelevel" %% "cats-effect-testkit" % V.catsEffect % Test
 }
