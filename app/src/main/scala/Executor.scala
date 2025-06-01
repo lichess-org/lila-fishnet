@@ -42,7 +42,7 @@ object Executor:
   def instance(client: LilaClient, monitor: Monitor, config: ExecutorConfig)(ref: Ref[IO, AppState])(using
       LoggerFactory[IO]
   ): Executor = new:
-    given Logger[IO] = LoggerFactory.getLoggerFromName("Executor")
+    given Logger[IO]                      = LoggerFactory.getLoggerFromName("Executor")
     def add(work: Lila.Request): IO[Unit] =
       fromRequest(work).flatMap: task =>
         ref.flatModify: state =>
@@ -64,7 +64,7 @@ object Executor:
         state(workId, key) match
           case GetTaskResult.NotFound              => state -> logNotFound(workId, key)
           case GetTaskResult.AcquiredByOther(task) => state -> logNotAcquired(task, key)
-          case GetTaskResult.Found(task) =>
+          case GetTaskResult.Found(task)           =>
             state.remove(task.id) -> client
               .send(Lila.Response(task.request.id, task.request.moves, response.value))
               .handleErrorWith: e =>

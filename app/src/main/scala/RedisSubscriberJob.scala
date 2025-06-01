@@ -13,7 +13,7 @@ trait RedisSubscriberJob:
 
 object RedisSubscriberJob:
   def apply(executor: Executor, pubsub: RedisPubSub[IO])(using LoggerFactory[IO]): RedisSubscriberJob = new:
-    given Logger[IO] = LoggerFactory[IO].getLoggerFromName("RedisSubscriberJob")
+    given Logger[IO]              = LoggerFactory[IO].getLoggerFromName("RedisSubscriberJob")
     def run(): Resource[IO, Unit] =
       (Logger[IO].info("Subscribing to fishnet-out") *>
         pubsub.subscribe(

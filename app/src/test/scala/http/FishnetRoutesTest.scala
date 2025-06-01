@@ -16,7 +16,7 @@ import java.time.Instant
 object FishnetRoutesTest extends SimpleIOSuite:
 
   given LoggerFactory[IO] = NoOpFactory[IO]
-  val acqurieRequestBody = json"""{
+  val acqurieRequestBody  = json"""{
     "fishnet": {
       "version": "1.0.0",
       "apikey": "apikey"
@@ -112,7 +112,7 @@ object FishnetRoutesTest extends SimpleIOSuite:
     FishnetRoutes(executor).routes
 
   def createExecutor(): Executor = new:
-    def acquire(key: ClientKey) = IO.pure(task.some)
+    def acquire(key: ClientKey)                                  = IO.pure(task.some)
     def move(id: WorkId, key: ClientKey, move: Option[BestMove]) =
       if id == task.id then IO.unit
       else IO.raiseError(new Exception("invalid work id"))
