@@ -23,7 +23,7 @@ lazy val app = project
       ScalacOptions.other("-indent"),
       ScalacOptions.explain,
       ScalacOptions.release("21"),
-      ScalacOptions.other("-Wsafe-init") // fix in: https://github.com/typelevel/scalac-options/pull/136
+      ScalacOptions.other("-Wall")
     ),
     resolvers ++= Seq(lilaMaven, jitpack),
     libraryDependencies ++= Seq(

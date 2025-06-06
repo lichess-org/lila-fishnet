@@ -7,7 +7,7 @@ import java.time.Instant
 object Work:
 
   case class Acquired(clientKey: ClientKey, date: Instant) derives Codec.AsObject:
-    override def toString = s"by $clientKey at $date"
+    override def toString = s"by $clientKey at ${date.toString}"
 
   case class Task(
       id: WorkId,
@@ -42,4 +42,4 @@ object Work:
       )
 
     override def toString =
-      s"id:$id game:${request.id} variant:${request.variant.key} level:${request.level} tries:$tries created:$createdAt acquired:$acquired move: ${request.moves}"
+      s"id:$id game:${request.id} variant:${request.variant.key} level:${request.level} tries:$tries created:${createdAt.toString} acquired:${acquired.toString} move: ${request.moves}"
