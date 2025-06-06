@@ -16,7 +16,7 @@ object App extends IOApp.Simple:
   def app: Resource[IO, Unit] =
     for
       config <- AppConfig.load().toResource
-      _      <- Logger[IO].info(s"Starting lila-fishnet with config: $config").toResource
+      _      <- Logger[IO].info(s"Starting lila-fishnet with config: ${config.toString}").toResource
       _      <- KamonInitiator().init(config.kamon).toResource
       res    <- AppResources.instance(config.redis)
       _      <- FishnetApp(res, config).run()
@@ -28,11 +28,13 @@ class FishnetApp(res: AppResources, config: AppConfig)(using LoggerFactory[IO]):
     for
       executor <- createExecutor
       httpRoutes = HttpApi(executor, HealthCheck(), config.server).routes
-      server <- MkHttpServer().newEmber(config.server, httpRoutes.orNotFound)
-      _      <- RedisSubscriberJob(executor, res.redisPubsub).run()
-      _      <- WorkCleaningJob(executor).run()
-      _      <- Logger[IO].info(s"Starting server on ${config.server.host}:${config.server.port}").toResource
-      _      <- Logger[IO].info(s"BuildInfo: $BuildInfo").toResource
+      _ <- MkHttpServer().newEmber(config.server, httpRoutes.orNotFound)
+      _ <- RedisSubscriberJob(executor, res.redisPubsub).run()
+      _ <- WorkCleaningJob(executor).run()
+      _ <- Logger[IO]
+        .info(s"Starting server on ${config.server.host.toString}:${config.server.port.toString}")
+        .toResource
+      _ <- Logger[IO].info(s"BuildInfo: ${BuildInfo.toString}").toResource
     yield ()
 
   private def createExecutor: Resource[IO, Executor] =

@@ -21,6 +21,6 @@ object RedisSubscriberJob:
           msg =>
             Lila
               .readMoveReq(msg.message)
-              .fold(Logger[IO].warn(s"Failed to parse message from lila: $msg"))(executor.add)
-              *> Logger[IO].debug(s"Received message: $msg")
+              .fold(Logger[IO].warn(s"Failed to parse message from lila: ${msg.message}"))(executor.add)
+              *> Logger[IO].debug(s"Received message: ${msg.message}")
         ) *> pubsub.runMessages).background.void
