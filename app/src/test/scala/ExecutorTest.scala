@@ -34,7 +34,7 @@ object ExecutorTest extends SimpleIOSuite:
     for
       executor <- createExecutor()
       acquired <- executor.acquire(key)
-    yield assert(acquired.isEmpty)
+    yield expect(acquired.isEmpty)
 
   test("acquire when there is work should return some work"):
     for
@@ -59,7 +59,7 @@ object ExecutorTest extends SimpleIOSuite:
       _        <- executor.add(request)
       _        <- executor.acquire(key)
       acquired <- executor.acquire(key2)
-    yield assert(acquired.isEmpty)
+    yield expect(acquired.isEmpty)
 
   test("post move after acquire should send move"):
     for
@@ -80,7 +80,7 @@ object ExecutorTest extends SimpleIOSuite:
       _        <- executor.clean(Instant.now.plusSeconds(37))
       _        <- executor.move(acquired.get.id, key, validMove.some)
       moves    <- ref.get
-    yield assert(moves.isEmpty)
+    yield expect(moves.isEmpty)
 
   test("after timeout move should be able to acquired again"):
     for
@@ -103,7 +103,7 @@ object ExecutorTest extends SimpleIOSuite:
       _        <- executor.move(acquired.get.id, key, none)
       response <- ref.get.map(_.headOption)
       acquired <- executor.acquire(key)
-    yield assert(acquired.isEmpty && response.isEmpty)
+    yield expect(acquired.isEmpty && response.isEmpty)
 
   test("should not give up after 2 tries"):
     for
@@ -111,7 +111,7 @@ object ExecutorTest extends SimpleIOSuite:
       _        <- executor.add(request)
       _ <- (executor.acquire(key).flatMap(_ => executor.clean(Instant.now.plusSeconds(17)))).replicateA_(2)
       acquired <- executor.acquire(key)
-    yield assert(acquired.isDefined)
+    yield expect(acquired.isDefined)
 
   test("should give up after 3 tries"):
     for
@@ -119,7 +119,7 @@ object ExecutorTest extends SimpleIOSuite:
       _        <- executor.add(request)
       _ <- (executor.acquire(key).flatMap(_ => executor.clean(Instant.now.plusSeconds(17)))).replicateA_(3)
       acquired <- executor.acquire(key)
-    yield assert(acquired.isEmpty)
+    yield expect(acquired.isEmpty)
 
   test("give up due to cleaning should reduce task's size"):
     for
@@ -132,7 +132,7 @@ object ExecutorTest extends SimpleIOSuite:
       _  <- executor.add(request.copy(id = GameId("3")))
       a1 <- executor.acquire(key)
       a2 <- executor.acquire(key2)
-    yield assert(a1.isDefined && a2.isDefined)
+    yield expect(a1.isDefined && a2.isDefined)
 
   test("if moves reach max size it should clear all moves"):
     for
@@ -143,7 +143,7 @@ object ExecutorTest extends SimpleIOSuite:
       _        <- executor.add(request.copy(id = GameId("4")))
       acquired <- executor.acquire(key)
       empty    <- executor.acquire(key2)
-    yield assert(acquired.isDefined && empty.isEmpty)
+    yield expect(acquired.isDefined && empty.isEmpty)
 
   def createExecutor(config: ExecutorConfig = ExecutorConfig(300)): IO[Executor] =
     createLilaClient.flatMap(ioExecutor(_)(noopMonitor, config))
