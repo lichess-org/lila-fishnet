@@ -7,9 +7,10 @@ inThisBuild(
     versionScheme := Some("early-semver"),
     run / fork    := true,
     run / javaOptions += "-Dconfig.override_with_env_vars=true",
-    semanticdbEnabled  := true, // for scalafix
-    dockerBaseImage    := "openjdk:21",
-    dockerUpdateLatest := true
+    semanticdbEnabled     := true, // for scalafix
+    dockerBaseImage       := "openjdk:21",
+    dockerUpdateLatest    := true,
+    dockerBuildxPlatforms := Seq("linux/amd64", "linux/arm64")
   )
 )
 
