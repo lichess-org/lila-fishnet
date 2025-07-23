@@ -6,7 +6,7 @@ object Dependencies {
   val jitpack   = "jitpack".at("https://jitpack.io")
 
   object V {
-    val catsEffect = "3.6.2"
+    val catsEffect = "3.6.3"
     val chess      = "17.9.0"
     val circe      = "0.14.14"
     val ciris      = "3.9.0"
