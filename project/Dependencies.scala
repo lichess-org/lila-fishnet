@@ -10,7 +10,7 @@ object Dependencies {
     val chess      = "17.9.1"
     val circe      = "0.14.14"
     val ciris      = "3.9.0"
-    val fs2        = "3.12.0"
+    val fs2        = "3.12.2"
     val http4s     = "0.23.30"
     val kamon      = "2.7.7"
   }
