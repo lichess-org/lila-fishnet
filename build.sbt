@@ -8,7 +8,7 @@ inThisBuild(
     run / fork    := true,
     run / javaOptions += "-Dconfig.override_with_env_vars=true",
     semanticdbEnabled     := true, // for scalafix
-    dockerBaseImage       := "openjdk:21",
+    dockerBaseImage       := "clipse-temurin:21-jdk-noble",
     dockerUpdateLatest    := true,
     dockerBuildxPlatforms := Seq("linux/amd64", "linux/arm64")
   )
