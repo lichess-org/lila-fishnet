@@ -7,10 +7,10 @@ object Dependencies {
 
   object V {
     val catsEffect = "3.6.3"
-    val chess      = "17.9.1"
+    val chess      = "17.9.6"
     val circe      = "0.14.14"
-    val ciris      = "3.9.0"
-    val fs2        = "3.12.0"
+    val ciris      = "3.10.0"
+    val fs2        = "3.12.2"
     val http4s     = "0.23.30"
     val kamon      = "2.7.7"
   }
@@ -47,7 +47,7 @@ object Dependencies {
 
   val chessTestKit     = "com.github.lichess-org.scalachess" %% "scalachess-test-kit"       % V.chess
   val testContainers   = "com.dimafeng"                      %% "testcontainers-scala-core" % "0.43.0" % Test
-  val weaver           = "org.typelevel"                     %% "weaver-cats"               % "0.9.3"  % Test
-  val weaverScalaCheck = "org.typelevel"                     %% "weaver-scalacheck"         % "0.9.3"  % Test
+  val weaver           = "org.typelevel"                     %% "weaver-cats"               % "0.10.1"  % Test
+  val weaverScalaCheck = "org.typelevel"                     %% "weaver-scalacheck"         % "0.10.1"  % Test
   val catsEffectTestKit = "org.typelevel" %% "cats-effect-testkit" % V.catsEffect % Test
 }
