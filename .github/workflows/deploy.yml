@@ -85,6 +85,6 @@ jobs:
           echo "rsync complete"
 
           echo "Restart lila-fishnet"
-          ssh deploy-host "chmod +x /home/lila-fishnet/bin/lila-fishnet && chown -R lila-fishnet:lila-fisnet /home/lila-fishnet && systemctl restart lila-fishnet"
+          ssh deploy-host "chmod +x /home/lila-fishnet/bin/lila-fishnet && chown -R lila-fishnet:lila-fishnet /home/lila-fishnet && systemctl restart lila-fishnet"
 
           echo "Deploy complete"
