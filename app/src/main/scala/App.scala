@@ -31,7 +31,6 @@ object App extends IOApp.Simple:
       _      <- registerRuntimeMetrics
       config <- AppConfig.load().toResource
       _      <- Logger[IO].info(s"Starting lila-fishnet with config: ${config.toString}").toResource
-      _      <- KamonInitiator().init(config.kamon).toResource
       res    <- AppResources.instance(config.redis)
       _      <- FishnetApp(res, config, MkPrometheusRoutes).run()
     yield ()
