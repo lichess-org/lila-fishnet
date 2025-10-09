@@ -18,8 +18,8 @@ object Monitor:
       meter.gauge[Long]("db.size").create,
       meter.gauge[Long]("db.queued").create,
       meter.gauge[Long]("db.acquired").create,
-      meter.histogram[Long]("move.acquired.lvl8").create,
-      meter.histogram[Long]("move.full.lvl1").create
+      meter.histogram[Long]("move.acquired.lvl8").withUnit("ms").create,
+      meter.histogram[Long]("move.full.lvl1").withUnit("ms").create
     ).mapN { case (dbSize, dbQueued, dbAccquired, moveAccquiredLvl8, moveFullLvl1) =>
       new Monitor:
         def success(work: Work.Task): IO[Unit] =
