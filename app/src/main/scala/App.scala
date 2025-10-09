@@ -3,18 +3,17 @@ package lila.fishnet
 import cats.effect.{ IO, IOApp, Resource }
 import cats.syntax.all.*
 import lila.fishnet.http.*
+import org.http4s.HttpRoutes
+import org.http4s.server.Router
 import org.typelevel.log4cats.slf4j.{ Slf4jFactory, Slf4jLogger }
 import org.typelevel.log4cats.{ Logger, LoggerFactory }
 import org.typelevel.otel4s.experimental.metrics.*
 import org.typelevel.otel4s.instrumentation.ce.IORuntimeMetrics
 import org.typelevel.otel4s.metrics.{ Meter, MeterProvider }
-import org.typelevel.otel4s.sdk.exporter.prometheus.PrometheusMetricExporter
+import org.typelevel.otel4s.sdk.exporter.prometheus.*
 import org.typelevel.otel4s.sdk.metrics.SdkMetrics
 import org.typelevel.otel4s.sdk.metrics.SdkMetrics.AutoConfigured.Builder
-import org.http4s.server.Router
-import org.typelevel.otel4s.sdk.exporter.prometheus.*
 import org.typelevel.otel4s.sdk.metrics.exporter.MetricExporter
-import org.http4s.HttpRoutes
 
 object App extends IOApp.Simple:
 
@@ -28,12 +27,11 @@ object App extends IOApp.Simple:
       given MetricExporter.Pull[IO] <- PrometheusMetricExporter.builder[IO].build.toResource
       otel4s                        <- SdkMetrics.autoConfigured[IO](configBuilder)
       given MeterProvider[IO] = otel4s.meterProvider
-      _               <- registerRuntimeMetrics
-      config          <- AppConfig.load().toResource
-      _               <- Logger[IO].info(s"Starting lila-fishnet with config: ${config.toString}").toResource
-      res             <- AppResources.instance(config.redis)
-      given Meter[IO] <- otel4s.meterProvider.get("lila.fishnet").toResource
-      _               <- FishnetApp(res, config, MkPrometheusRoutes).run()
+      _      <- registerRuntimeMetrics
+      config <- AppConfig.load().toResource
+      _      <- Logger[IO].info(s"Starting lila-fishnet with config: ${config.toString}").toResource
+      res    <- AppResources.instance(config.redis)
+      _      <- FishnetApp(res, config, MkPrometheusRoutes).run()
     yield ()
 
   private def registerRuntimeMetrics(using MeterProvider[IO]): Resource[IO, Unit] =
@@ -55,14 +53,15 @@ object App extends IOApp.Simple:
 
 class FishnetApp(res: AppResources, config: AppConfig, metricsRoute: HttpRoutes[IO])(using
     LoggerFactory[IO],
-    Meter[IO]
+    MeterProvider[IO]
 ):
   given Logger[IO]              = LoggerFactory[IO].getLoggerFromName("FishnetApp")
   def run(): Resource[IO, Unit] =
     for
-      executor <- createExecutor
-      httpRoutes = HttpApi(executor, HealthCheck(), config.server).routes
-      allRoutes  = httpRoutes <+> metricsRoute
+      given Meter[IO] <- MeterProvider[IO].get("lila.fishnet").toResource
+      executor        <- createExecutor
+      httpRoutes      <- HttpApi(executor, HealthCheck(), config.server).routes.toResource
+      allRoutes = httpRoutes <+> metricsRoute
       _ <- MkHttpServer().newEmber(config.server, allRoutes.orNotFound)
       _ <- RedisSubscriberJob(executor, res.redisPubsub).run()
       _ <- WorkCleaningJob(executor).run()

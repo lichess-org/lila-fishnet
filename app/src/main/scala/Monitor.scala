@@ -1,8 +1,9 @@
 package lila.fishnet
 
 import cats.effect.IO
-import org.typelevel.otel4s.metrics.Meter
 import cats.syntax.all.*
+import org.typelevel.otel4s.metrics.Meter
+
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
