@@ -15,9 +15,9 @@ object Monitor:
 
   def apply(using meter: Meter[IO]): IO[Monitor] =
     (
-      meter.observableGauge[Double]("db.size").createObserver,
-      meter.observableGauge[Double]("db.queued").createObserver,
-      meter.observableGauge[Double]("db.acquired").createObserver,
+      meter.gauge[Long]("db.size").create,
+      meter.gauge[Long]("db.queued").create,
+      meter.gauge[Long]("db.acquired").create,
       meter.histogram[Double]("move.acquired.lvl8").create,
       meter.histogram[Double]("move.full.lvl1").create
     ).mapN { case (dbSize, dbQueued, dbAccquired, moveAccquiredLvl8, moveFullLvl1) =>
@@ -30,10 +30,10 @@ object Monitor:
             else IO.unit
 
         def updateSize(state: AppState): IO[Unit] =
-          dbSize.record(state.size.toDouble) *>
-            dbQueued.record(state.count(_.nonAcquired).toDouble) *>
-            dbAccquired.record(state.count(_.isAcquired).toDouble)
+          dbSize.record(state.size) *>
+            dbQueued.record(state.count(_.nonAcquired)) *>
+            dbAccquired.record(state.count(_.isAcquired))
 
-        def record(f: Double => IO[Unit], start: Instant, end: Instant): IO[Unit] =
+        private def record(f: Double => IO[Unit], start: Instant, end: Instant): IO[Unit] =
           f(start.until(end, ChronoUnit.MILLIS).toDouble)
     }
