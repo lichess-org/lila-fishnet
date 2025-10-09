@@ -13,6 +13,8 @@ object Dependencies {
     val fs2        = "3.12.2"
     val http4s     = "0.23.32"
     val kamon      = "2.7.7"
+    val otel4s     = "0.13.2"
+    val otel4sHttp4s = "0.14.1"
   }
 
   def http4s(artifact: String) = "org.http4s" %% s"http4s-$artifact" % V.http4s
@@ -31,6 +33,8 @@ object Dependencies {
   val cirisCore  = "is.cir" %% "ciris"        % V.ciris
   val cirisHtt4s = "is.cir" %% "ciris-http4s" % V.ciris
 
+  val redis = "io.chrisdavenport" %% "rediculous" % "0.5.1"
+
   val kamonCore          = "io.kamon" %% "kamon-core"           % V.kamon
   val kamonInflux        = "io.kamon" %% "kamon-influxdb"       % V.kamon
   val kamonSystemMetrics = "io.kamon" %% "kamon-system-metrics" % V.kamon
@@ -43,7 +47,14 @@ object Dependencies {
   val log4Cats = "org.typelevel" %% "log4cats-slf4j"  % "2.7.0"
   val logback  = "ch.qos.logback" % "logback-classic" % "1.5.19"
 
-  val redis = "io.chrisdavenport" %% "rediculous" % "0.5.1"
+  val otel4sCore =  "org.typelevel" %% "otel4s-core" % V.otel4s
+  val otel4sPrometheusExporter = "org.typelevel" %% "otel4s-sdk-exporter-prometheus" % V.otel4s
+  val otel4sSdk = "org.typelevel" %% "otel4s-sdk" % V.otel4s
+  val otel4sInstrumentationMetrics =   "org.typelevel" %% "otel4s-instrumentation-metrics" % V.otel4s
+  val otel4sMetrics = "org.typelevel" %% "otel4s-experimental-metrics" % "0.7.0"
+
+  val otel4sHttp4sCore = "org.http4s" %% "http4s-otel4s-middleware-core" % V.otel4sHttp4s
+  val otel4sHttp4sMetrics = "org.http4s" %% "http4s-otel4s-middleware-metrics" % V.otel4sHttp4s
 
   val chessTestKit     = "com.github.lichess-org.scalachess" %% "scalachess-test-kit"       % V.chess
   val testContainers   = "com.dimafeng"                      %% "testcontainers-scala-core" % "0.43.0" % Test
