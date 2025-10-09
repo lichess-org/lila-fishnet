@@ -18,8 +18,8 @@ object Monitor:
       meter.gauge[Long]("db.size").create,
       meter.gauge[Long]("db.queued").create,
       meter.gauge[Long]("db.acquired").create,
-      meter.histogram[Double]("move.acquired.lvl8").create,
-      meter.histogram[Double]("move.full.lvl1").create
+      meter.histogram[Long]("move.acquired.lvl8").create,
+      meter.histogram[Long]("move.full.lvl1").create
     ).mapN { case (dbSize, dbQueued, dbAccquired, moveAccquiredLvl8, moveFullLvl1) =>
       new Monitor:
         def success(work: Work.Task): IO[Unit] =
@@ -34,6 +34,6 @@ object Monitor:
             dbQueued.record(state.count(_.nonAcquired)) *>
             dbAccquired.record(state.count(_.isAcquired))
 
-        private def record(f: Double => IO[Unit], start: Instant, end: Instant): IO[Unit] =
-          f(start.until(end, ChronoUnit.MILLIS).toDouble)
+        private def record(f: Long => IO[Unit], start: Instant, end: Instant): IO[Unit] =
+          f(start.until(end, ChronoUnit.MILLIS))
     }
