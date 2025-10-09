@@ -28,11 +28,12 @@ object App extends IOApp.Simple:
       given MetricExporter.Pull[IO] <- PrometheusMetricExporter.builder[IO].build.toResource
       otel4s                        <- SdkMetrics.autoConfigured[IO](configBuilder)
       given MeterProvider[IO] = otel4s.meterProvider
-      _      <- registerRuntimeMetrics
-      config <- AppConfig.load().toResource
-      _      <- Logger[IO].info(s"Starting lila-fishnet with config: ${config.toString}").toResource
-      res    <- AppResources.instance(config.redis)
-      _      <- FishnetApp(res, config, MkPrometheusRoutes).run()
+      _               <- registerRuntimeMetrics
+      config          <- AppConfig.load().toResource
+      _               <- Logger[IO].info(s"Starting lila-fishnet with config: ${config.toString}").toResource
+      res             <- AppResources.instance(config.redis)
+      given Meter[IO] <- otel4s.meterProvider.get("lila.fishnet").toResource
+      _               <- FishnetApp(res, config, MkPrometheusRoutes).run()
     yield ()
 
   private def registerRuntimeMetrics(using MeterProvider[IO]): Resource[IO, Unit] =
@@ -52,7 +53,10 @@ object App extends IOApp.Simple:
       )
       .addMeterProviderCustomizer((b, _) => b.registerMetricReader(exporter.metricReader))
 
-class FishnetApp(res: AppResources, config: AppConfig, metricsRoute: HttpRoutes[IO])(using LoggerFactory[IO]):
+class FishnetApp(res: AppResources, config: AppConfig, metricsRoute: HttpRoutes[IO])(using
+    LoggerFactory[IO],
+    Meter[IO]
+):
   given Logger[IO]              = LoggerFactory[IO].getLoggerFromName("FishnetApp")
   def run(): Resource[IO, Unit] =
     for
@@ -68,9 +72,9 @@ class FishnetApp(res: AppResources, config: AppConfig, metricsRoute: HttpRoutes[
       _ <- Logger[IO].info(s"BuildInfo: ${BuildInfo.toString}").toResource
     yield ()
 
-  private def createExecutor: Resource[IO, Executor] =
+  private def createExecutor(using meter: Meter[IO]): Resource[IO, Executor] =
     val lilaClient = LilaClient(res.redisPubsub)
-    Monitor().toResource >>= Executor.instance(lilaClient, config.executor)
+    Monitor.apply.toResource >>= Executor.instance(lilaClient, config.executor)
 
 def MkPrometheusRoutes(using exporter: MetricExporter.Pull[IO]): HttpRoutes[IO] =
   val writerConfig     = PrometheusWriter.Config.default

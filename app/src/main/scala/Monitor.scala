@@ -1,7 +1,10 @@
 package lila.fishnet
 
 import cats.effect.IO
-
+import org.typelevel.otel4s.metrics.Meter
+import cats.syntax.all.*
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 trait Monitor:
   def success(work: Work.Task): IO[Unit]
@@ -9,26 +12,27 @@ trait Monitor:
 
 object Monitor:
 
-  def apply(): IO[Monitor] = IO.raiseError(new Exception("Kamon monitor disabled"))
+  def apply(using meter: Meter[IO]): IO[Monitor] =
+    (
+      meter.observableGauge[Double]("db.size").createObserver,
+      meter.observableGauge[Double]("db.queued").createObserver,
+      meter.observableGauge[Double]("db.acquired").createObserver,
+      meter.histogram[Double]("move.acquired.lvl8").create,
+      meter.histogram[Double]("move.full.lvl1").create
+    ).mapN { case (dbSize, dbQueued, dbAccquired, moveAccquiredLvl8, moveFullLvl1) =>
+      new Monitor:
+        def success(work: Work.Task): IO[Unit] =
+          IO.realTimeInstant.flatMap: now =>
+            if work.request.level == 8 then
+              work.acquiredAt.traverse_(at => record(moveAccquiredLvl8.record(_), at, now))
+            else if work.request.level == 1 then record(moveFullLvl1.record(_), work.createdAt, now)
+            else IO.unit
 
-    // (
-    //   IO.blocking(Kamon.gauge("db.size").withoutTags()),
-    //   IO.blocking(Kamon.gauge("db.queued").withoutTags()),
-    //   IO.blocking(Kamon.gauge("db.acquired").withoutTags()),
-    //   IO.blocking(Kamon.timer("move.acquired.lvl8").withoutTags()),
-    //   IO.blocking(Kamon.timer("move.full.lvl1").withoutTags())
-    // ).parMapN: (dbSize, dbQueued, dbAcquired, lvl8AcquiredTimeRequest, lvl1FullTimeRequest) =>
-    //   new Monitor:
-    //     def success(work: Work.Task): IO[Unit] =
-    //       IO.realTimeInstant.map: now =>
-    //         if work.request.level == 8 then
-    //           work.acquiredAt.foreach(at => record(lvl8AcquiredTimeRequest, at, now))
-    //         else if work.request.level == 1 then record(lvl1FullTimeRequest, work.createdAt, now)
-    //
-    //     def updateSize(state: AppState): IO[Unit] =
-    //       IO(dbSize.update(state.size.toDouble)) *>
-    //         IO(dbQueued.update(state.count(_.nonAcquired).toDouble)) *>
-    //         IO(dbAcquired.update(state.count(_.isAcquired).toDouble)).void
-    //
-    //     private def record(timer: Timer, start: Instant, end: Instant): Unit =
-    //       val _ = timer.record(start.until(end, ChronoUnit.MILLIS), TimeUnit.MILLISECONDS)
+        def updateSize(state: AppState): IO[Unit] =
+          dbSize.record(state.size.toDouble) *>
+            dbQueued.record(state.count(_.nonAcquired).toDouble) *>
+            dbAccquired.record(state.count(_.isAcquired).toDouble)
+
+        def record(f: Double => IO[Unit], start: Instant, end: Instant): IO[Unit] =
+          f(start.until(end, ChronoUnit.MILLIS).toDouble)
+    }
