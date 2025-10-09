@@ -3,8 +3,17 @@ package lila.fishnet
 import cats.effect.{ IO, IOApp, Resource }
 import cats.syntax.all.*
 import lila.fishnet.http.*
+import org.http4s.HttpRoutes
+import org.http4s.server.Router
 import org.typelevel.log4cats.slf4j.{ Slf4jFactory, Slf4jLogger }
 import org.typelevel.log4cats.{ Logger, LoggerFactory }
+import org.typelevel.otel4s.experimental.metrics.*
+import org.typelevel.otel4s.instrumentation.ce.IORuntimeMetrics
+import org.typelevel.otel4s.metrics.{ Meter, MeterProvider }
+import org.typelevel.otel4s.sdk.exporter.prometheus.*
+import org.typelevel.otel4s.sdk.metrics.SdkMetrics
+import org.typelevel.otel4s.sdk.metrics.SdkMetrics.AutoConfigured.Builder
+import org.typelevel.otel4s.sdk.metrics.exporter.MetricExporter
 
 object App extends IOApp.Simple:
 
@@ -15,20 +24,45 @@ object App extends IOApp.Simple:
 
   def app: Resource[IO, Unit] =
     for
+      given MetricExporter.Pull[IO] <- PrometheusMetricExporter.builder[IO].build.toResource
+      otel4s                        <- SdkMetrics.autoConfigured[IO](configBuilder)
+      given MeterProvider[IO] = otel4s.meterProvider
+      _      <- registerRuntimeMetrics
       config <- AppConfig.load().toResource
       _      <- Logger[IO].info(s"Starting lila-fishnet with config: ${config.toString}").toResource
-      _      <- KamonInitiator().init(config.kamon).toResource
       res    <- AppResources.instance(config.redis)
-      _      <- FishnetApp(res, config).run()
+      _      <- FishnetApp(res, config, MkPrometheusRoutes).run()
     yield ()
 
-class FishnetApp(res: AppResources, config: AppConfig)(using LoggerFactory[IO]):
+  private def registerRuntimeMetrics(using MeterProvider[IO]): Resource[IO, Unit] =
+    for
+      _               <- IORuntimeMetrics.register[IO](runtime.metrics, IORuntimeMetrics.Config.default)
+      given Meter[IO] <- MeterProvider[IO].get("jvm.runtime").toResource
+      _               <- RuntimeMetrics.register[IO]
+    yield ()
+
+  private def configBuilder(builder: Builder[IO])(using exporter: MetricExporter.Pull[IO]) =
+    builder
+      .addPropertiesCustomizer(_ =>
+        Map(
+          "otel.metrics.exporter" -> "none",
+          "otel.traces.exporter"  -> "none"
+        )
+      )
+      .addMeterProviderCustomizer((b, _) => b.registerMetricReader(exporter.metricReader))
+
+class FishnetApp(res: AppResources, config: AppConfig, metricsRoute: HttpRoutes[IO])(using
+    LoggerFactory[IO],
+    MeterProvider[IO]
+):
   given Logger[IO]              = LoggerFactory[IO].getLoggerFromName("FishnetApp")
   def run(): Resource[IO, Unit] =
     for
-      executor <- createExecutor
-      httpRoutes = HttpApi(executor, HealthCheck(), config.server).routes
-      _ <- MkHttpServer().newEmber(config.server, httpRoutes.orNotFound)
+      given Meter[IO] <- MeterProvider[IO].get("lila.fishnet").toResource
+      executor        <- createExecutor
+      httpRoutes      <- HttpApi(executor, HealthCheck(), config.server).routes.toResource
+      allRoutes = httpRoutes <+> metricsRoute
+      _ <- MkHttpServer().newEmber(config.server, allRoutes.orNotFound)
       _ <- RedisSubscriberJob(executor, res.redisPubsub).run()
       _ <- WorkCleaningJob(executor).run()
       _ <- Logger[IO]
@@ -37,6 +71,11 @@ class FishnetApp(res: AppResources, config: AppConfig)(using LoggerFactory[IO]):
       _ <- Logger[IO].info(s"BuildInfo: ${BuildInfo.toString}").toResource
     yield ()
 
-  private def createExecutor: Resource[IO, Executor] =
+  private def createExecutor(using meter: Meter[IO]): Resource[IO, Executor] =
     val lilaClient = LilaClient(res.redisPubsub)
-    Monitor().toResource >>= Executor.instance(lilaClient, config.executor)
+    Monitor.apply.toResource >>= Executor.instance(lilaClient, config.executor)
+
+def MkPrometheusRoutes(using exporter: MetricExporter.Pull[IO]): HttpRoutes[IO] =
+  val writerConfig     = PrometheusWriter.Config.default
+  val prometheusRoutes = PrometheusHttpRoutes.routes[IO](exporter, writerConfig)
+  Router("/metrics" -> prometheusRoutes)

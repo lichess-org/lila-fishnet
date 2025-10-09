@@ -13,14 +13,12 @@ object AppConfig:
   def appConfig = (
     RedisConfig.config,
     HttpServerConfig.config,
-    KamonConfig.config,
     ExecutorConfg.config
   ).parMapN(AppConfig.apply)
 
 case class AppConfig(
     redis: RedisConfig,
     server: HttpServerConfig,
-    kamon: KamonConfig,
     executor: ExecutorConfig
 )
 
@@ -39,12 +37,6 @@ object RedisConfig:
   private def host = env("REDIS_HOST").or(prop("redis.host")).as[Host].default(ip"127.0.0.1")
   private def port = env("REDIS_PORT").or(prop("redis.port")).as[Port].default(port"6379")
   def config       = (host, port).parMapN(RedisConfig.apply)
-
-case class KamonConfig(enabled: Boolean)
-
-object KamonConfig:
-  def config =
-    env("KAMON_ENABLED").or(prop("kamon.enabled")).as[Boolean].default(false).map(KamonConfig.apply)
 
 case class ExecutorConfig(maxSize: Int)
 object ExecutorConfg:

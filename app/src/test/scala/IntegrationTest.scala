@@ -19,6 +19,7 @@ import org.http4s.implicits.*
 import org.testcontainers.containers.wait.strategy.Wait
 import org.typelevel.log4cats.LoggerFactory
 import org.typelevel.log4cats.noop.NoOpFactory
+import org.typelevel.otel4s.metrics.MeterProvider
 import weaver.*
 
 import scala.concurrent.duration.*
@@ -26,6 +27,7 @@ import scala.concurrent.duration.*
 object IntegrationTest extends IOSuite:
 
   given LoggerFactory[IO] = NoOpFactory[IO]
+  given MeterProvider[IO] = MeterProvider.noop[IO]
 
   override type Res = AppResources
   // start our server
@@ -34,13 +36,12 @@ object IntegrationTest extends IOSuite:
       redis <- RedisContainer.startRedis
       config = testAppConfig(redis = redis)
       res <- AppResources.instance(config.redis)
-      _   <- FishnetApp(res, config).run()
+      _   <- FishnetApp(res, config, HttpRoutes.empty).run()
     yield res
 
   def testAppConfig(redis: RedisConfig) = AppConfig(
     server = HttpServerConfig(ip"0.0.0.0", port"9999", apiLogger = false, shutdownTimeout = 30),
     redis = redis,
-    kamon = KamonConfig(enabled = false),
     executor = ExecutorConfig(maxSize = 300)
   )
 
