@@ -1,0 +1,45 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    branches: ['**']
+  push:
+    branches: ['master']
+    tags: [v*]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  ci:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        script:
+          - compile
+          - check
+          - test
+        java:
+          - 21
+          - 25
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
+      - run: sbt ${{ matrix.script }}
+
+  deploy:
+    uses: ./.github/workflows/deploy.yml
+    with:
+      env: starr
+    secrets: inherit
+    if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/v')
+    needs:
+      - ci
