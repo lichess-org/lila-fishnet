@@ -66,9 +66,8 @@ class FishnetApp(res: AppResources, config: AppConfig, metricsRoute: HttpRoutes[
 
   def makeResource() =
     for
-      given Meter[IO] <- MeterProvider[IO].get("lila.fishnet").toResource
-      executor        <- createExecutor
-      httpRoutes      <- HttpApi(executor, HealthCheck(), config.server).routes.toResource
+      executor   <- createExecutor.toResource
+      httpRoutes <- HttpApi(executor, HealthCheck(), config.server).routes.toResource
       allRoutes = httpRoutes <+> metricsRoute
       given Supervisor[IO] <- Supervisor[IO]
       fiber                <- RedisSubscriberJob(executor, res.redisPubsub).run()
@@ -82,9 +81,10 @@ class FishnetApp(res: AppResources, config: AppConfig, metricsRoute: HttpRoutes[
       Logger[IO].info(s"Starting server on ${config.server.host.toString}:${config.server.port.toString}") *>
       Logger[IO].info(s"BuildInfo: ${BuildInfo.toString}")
 
-  private def createExecutor(using meter: Meter[IO]): Resource[IO, Executor] =
-    val lilaClient = LilaClient(res.redisPubsub)
-    Monitor.apply.toResource >>= Executor.instance(lilaClient, config.executor)
+  private def createExecutor: IO[Executor] =
+    MeterProvider[IO].get("lila.fishnet")
+      >>= Monitor.apply
+      >>= Executor.instance(LilaClient(res.redisPubsub), config.executor)
 
 def MkPrometheusRoutes(using exporter: MetricExporter.Pull[IO]): HttpRoutes[IO] =
   val writerConfig     = PrometheusWriter.Config.default
