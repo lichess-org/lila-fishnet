@@ -1,6 +1,5 @@
 package lila.fishnet
 
-import cats.effect.kernel.Fiber
 import cats.effect.std.Supervisor
 import cats.effect.{ IO, IOApp, Resource }
 import cats.syntax.all.*
@@ -23,10 +22,9 @@ object App extends IOApp.Simple:
   given LoggerFactory[IO] = Slf4jFactory.create[IO]
 
   override def run: IO[Unit] =
-    app.use: fiber =>
-      IO.race(fiber.join, IO.never).void
+    appR.use(_.run())
 
-  def app: Resource[IO, Fiber[IO, Throwable, Unit]] =
+  def appR: Resource[IO, FishnetApp] =
     for
       given MetricExporter.Pull[IO] <- PrometheusMetricExporter.builder[IO].build.toResource
       otel4s                        <- SdkMetrics.autoConfigured[IO](configBuilder)
@@ -35,8 +33,7 @@ object App extends IOApp.Simple:
       config <- AppConfig.load().toResource
       _      <- Logger[IO].info(s"Starting lila-fishnet with config: ${config.toString}").toResource
       res    <- AppResources.instance(config.redis)
-      fiber  <- FishnetApp(res, config, MkPrometheusRoutes).run()
-    yield fiber
+    yield FishnetApp(res, config, MkPrometheusRoutes)
 
   private def registerRuntimeMetrics(using MeterProvider[IO]): Resource[IO, Unit] =
     for
@@ -61,7 +58,10 @@ class FishnetApp(res: AppResources, config: AppConfig, metricsRoute: HttpRoutes[
 ):
   given Logger[IO] = LoggerFactory[IO].getLoggerFromName("FishnetApp")
 
-  def run(): Resource[IO, Fiber[IO, Throwable, Unit]] =
+  def run(): IO[Unit] =
+    makeResource().use(_.join *> IO.raiseError(new Exception("FishnetApp fiber terminated")))
+
+  def makeResource() =
     for
       given Meter[IO] <- MeterProvider[IO].get("lila.fishnet").toResource
       executor        <- createExecutor

@@ -36,7 +36,7 @@ object IntegrationTest extends IOSuite:
       redis <- RedisContainer.startRedis
       config = testAppConfig(redis = redis)
       res <- AppResources.instance(config.redis)
-      _   <- FishnetApp(res, config, HttpRoutes.empty).run()
+      _   <- FishnetApp(res, config, HttpRoutes.empty).makeResource()
     yield res
 
   def testAppConfig(redis: RedisConfig) = AppConfig(
