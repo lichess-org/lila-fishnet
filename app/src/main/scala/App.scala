@@ -62,13 +62,13 @@ class FishnetApp(res: AppResources, config: AppConfig, metricsRoute: HttpRoutes[
       executor        <- createExecutor
       httpRoutes      <- HttpApi(executor, HealthCheck(), config.server).routes.toResource
       allRoutes = httpRoutes <+> metricsRoute
-      _ <- MkHttpServer().newEmber(config.server, allRoutes.orNotFound)
       _ <- RedisSubscriberJob(executor, res.redisPubsub).run()
       _ <- WorkCleaningJob(executor).run()
       _ <- Logger[IO]
         .info(s"Starting server on ${config.server.host.toString}:${config.server.port.toString}")
         .toResource
       _ <- Logger[IO].info(s"BuildInfo: ${BuildInfo.toString}").toResource
+      _ <- MkHttpServer().newEmber(config.server, allRoutes.orNotFound)
     yield ()
 
   private def createExecutor(using meter: Meter[IO]): Resource[IO, Executor] =
