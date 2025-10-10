@@ -70,12 +70,14 @@ class FishnetApp(res: AppResources, config: AppConfig, metricsRoute: HttpRoutes[
       supervisor <- Supervisor[IO]
       fiber      <- supervisor.supervise(RedisSubscriberJob(executor, res.redisPubsub).runIO).toResource
       _          <- WorkCleaningJob(executor).run()
-      _          <- Logger[IO]
-        .info(s"Starting server on ${config.server.host.toString}:${config.server.port.toString}")
-        .toResource
-      _ <- Logger[IO].info(s"BuildInfo: ${BuildInfo.toString}").toResource
-      _ <- MkHttpServer().newEmber(config.server, allRoutes.orNotFound)
+      _          <- banner.toResource
+      _          <- MkHttpServer().newEmber(config.server, allRoutes.orNotFound)
     yield fiber
+
+  private def banner =
+    Logger[IO].info(s"==============================================") *>
+      Logger[IO].info(s"Starting server on ${config.server.host.toString}:${config.server.port.toString}") *>
+      Logger[IO].info(s"BuildInfo: ${BuildInfo.toString}")
 
   private def createExecutor(using meter: Meter[IO]): Resource[IO, Executor] =
     val lilaClient = LilaClient(res.redisPubsub)
