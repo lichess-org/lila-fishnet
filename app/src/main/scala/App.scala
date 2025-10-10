@@ -56,10 +56,13 @@ class FishnetApp(res: AppResources, config: AppConfig, metricsRoute: HttpRoutes[
     LoggerFactory[IO],
     MeterProvider[IO]
 ):
-  given Logger[IO] = LoggerFactory[IO].getLoggerFromName("FishnetApp")
+  given Logger[IO] = LoggerFactory[IO].getLogger
 
   def run(): IO[Unit] =
-    makeResource().use(_.join *> IO.raiseError(new Exception("FishnetApp fiber terminated")))
+    makeResource().use:
+      _.join *>
+        Logger[IO].error("Redis Connection is closed. FishnetApp terminated") *>
+        IO.raiseError(new Exception("Redis Connection is closed. FishnetApp terminated"))
 
   def makeResource() =
     for
@@ -67,11 +70,11 @@ class FishnetApp(res: AppResources, config: AppConfig, metricsRoute: HttpRoutes[
       executor        <- createExecutor
       httpRoutes      <- HttpApi(executor, HealthCheck(), config.server).routes.toResource
       allRoutes = httpRoutes <+> metricsRoute
-      supervisor <- Supervisor[IO]
-      fiber      <- supervisor.supervise(RedisSubscriberJob(executor, res.redisPubsub).runIO).toResource
-      _          <- WorkCleaningJob(executor).run()
-      _          <- banner.toResource
-      _          <- MkHttpServer().newEmber(config.server, allRoutes.orNotFound)
+      given Supervisor[IO] <- Supervisor[IO]
+      fiber                <- RedisSubscriberJob(executor, res.redisPubsub).run()
+      _                    <- WorkCleaningJob(executor).run()
+      _                    <- banner.toResource
+      _                    <- MkHttpServer().newEmber(config.server, allRoutes.orNotFound)
     yield fiber
 
   private def banner =
