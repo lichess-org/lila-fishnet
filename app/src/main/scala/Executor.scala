@@ -1,6 +1,5 @@
 package lila.fishnet
 
-import cats.effect.kernel.Resource
 import cats.effect.{ IO, Ref }
 import cats.syntax.all.*
 import org.typelevel.log4cats.syntax.*
@@ -33,10 +32,9 @@ object Executor:
 
   def instance(client: LilaClient, config: ExecutorConfig)(monitor: Monitor)(using
       LoggerFactory[IO]
-  ): Resource[IO, Executor] =
+  ): IO[Executor] =
     Ref
       .of[IO, AppState](AppState.empty)
-      .toResource
       .map(instance(client, monitor, config))
 
   def instance(client: LilaClient, monitor: Monitor, config: ExecutorConfig)(ref: Ref[IO, AppState])(using

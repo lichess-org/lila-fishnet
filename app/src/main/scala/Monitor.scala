@@ -13,7 +13,7 @@ trait Monitor:
 
 object Monitor:
 
-  def apply(using meter: Meter[IO]): IO[Monitor] =
+  def apply(meter: Meter[IO]): IO[Monitor] =
     (
       meter.gauge[Long]("db.size").create,
       meter.gauge[Long]("db.queued").create,
