@@ -1,5 +1,6 @@
 package lila.fishnet
 
+import cats.effect.std.Supervisor
 import cats.effect.{ IO, IOApp, Resource }
 import cats.syntax.all.*
 import lila.fishnet.http.*
@@ -20,9 +21,10 @@ object App extends IOApp.Simple:
   given Logger[IO]        = Slf4jLogger.getLogger[IO]
   given LoggerFactory[IO] = Slf4jFactory.create[IO]
 
-  override def run: IO[Unit] = app.useForever
+  override def run: IO[Unit] =
+    appR.use(_.run())
 
-  def app: Resource[IO, Unit] =
+  def appR: Resource[IO, FishnetApp] =
     for
       given MetricExporter.Pull[IO] <- PrometheusMetricExporter.builder[IO].build.toResource
       otel4s                        <- SdkMetrics.autoConfigured[IO](configBuilder)
@@ -31,8 +33,7 @@ object App extends IOApp.Simple:
       config <- AppConfig.load().toResource
       _      <- Logger[IO].info(s"Starting lila-fishnet with config: ${config.toString}").toResource
       res    <- AppResources.instance(config.redis)
-      _      <- FishnetApp(res, config, MkPrometheusRoutes).run()
-    yield ()
+    yield FishnetApp(res, config, MkPrometheusRoutes)
 
   private def registerRuntimeMetrics(using MeterProvider[IO]): Resource[IO, Unit] =
     for
@@ -55,21 +56,31 @@ class FishnetApp(res: AppResources, config: AppConfig, metricsRoute: HttpRoutes[
     LoggerFactory[IO],
     MeterProvider[IO]
 ):
-  given Logger[IO]              = LoggerFactory[IO].getLoggerFromName("FishnetApp")
-  def run(): Resource[IO, Unit] =
+  given Logger[IO] = LoggerFactory[IO].getLogger
+
+  def run(): IO[Unit] =
+    makeResource().use:
+      _.join *>
+        Logger[IO].error("Redis Connection is closed. FishnetApp terminated") *>
+        IO.raiseError(new Exception("Redis Connection is closed. FishnetApp terminated"))
+
+  def makeResource() =
     for
       given Meter[IO] <- MeterProvider[IO].get("lila.fishnet").toResource
       executor        <- createExecutor
       httpRoutes      <- HttpApi(executor, HealthCheck(), config.server).routes.toResource
       allRoutes = httpRoutes <+> metricsRoute
-      _ <- RedisSubscriberJob(executor, res.redisPubsub).run()
-      _ <- WorkCleaningJob(executor).run()
-      _ <- Logger[IO]
-        .info(s"Starting server on ${config.server.host.toString}:${config.server.port.toString}")
-        .toResource
-      _ <- Logger[IO].info(s"BuildInfo: ${BuildInfo.toString}").toResource
-      _ <- MkHttpServer().newEmber(config.server, allRoutes.orNotFound)
-    yield ()
+      given Supervisor[IO] <- Supervisor[IO]
+      fiber                <- RedisSubscriberJob(executor, res.redisPubsub).run()
+      _                    <- WorkCleaningJob(executor).run()
+      _                    <- banner.toResource
+      _                    <- MkHttpServer().newEmber(config.server, allRoutes.orNotFound)
+    yield fiber
+
+  private def banner =
+    Logger[IO].info(s"==============================================") *>
+      Logger[IO].info(s"Starting server on ${config.server.host.toString}:${config.server.port.toString}") *>
+      Logger[IO].info(s"BuildInfo: ${BuildInfo.toString}")
 
   private def createExecutor(using meter: Meter[IO]): Resource[IO, Executor] =
     val lilaClient = LilaClient(res.redisPubsub)
