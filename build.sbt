@@ -3,9 +3,9 @@ import org.typelevel.scalacoptions.ScalacOptions
 
 inThisBuild(
   Seq(
-    scalaVersion  := "3.7.3",
-    versionScheme := Some("early-semver"),
-    run / fork    := true,
+    scalaVersion          := "3.7.3",
+    versionScheme         := Some("early-semver"),
+    run / fork            := true,
     semanticdbEnabled     := true, // for scalafix
     dockerBaseImage       := "eclipse-temurin:25-jdk-noble",
     dockerUpdateLatest    := true,

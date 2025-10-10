@@ -1,5 +1,7 @@
 package lila.fishnet
 
+import cats.effect.kernel.Fiber
+import cats.effect.std.Supervisor
 import cats.effect.{ IO, IOApp, Resource }
 import cats.syntax.all.*
 import lila.fishnet.http.*
@@ -20,9 +22,11 @@ object App extends IOApp.Simple:
   given Logger[IO]        = Slf4jLogger.getLogger[IO]
   given LoggerFactory[IO] = Slf4jFactory.create[IO]
 
-  override def run: IO[Unit] = app.useForever
+  override def run: IO[Unit] =
+    app.use: fiber =>
+      IO.race(fiber.join, IO.never).void
 
-  def app: Resource[IO, Unit] =
+  def app: Resource[IO, Fiber[IO, Throwable, Unit]] =
     for
       given MetricExporter.Pull[IO] <- PrometheusMetricExporter.builder[IO].build.toResource
       otel4s                        <- SdkMetrics.autoConfigured[IO](configBuilder)
@@ -31,8 +35,8 @@ object App extends IOApp.Simple:
       config <- AppConfig.load().toResource
       _      <- Logger[IO].info(s"Starting lila-fishnet with config: ${config.toString}").toResource
       res    <- AppResources.instance(config.redis)
-      _      <- FishnetApp(res, config, MkPrometheusRoutes).run()
-    yield ()
+      fiber  <- FishnetApp(res, config, MkPrometheusRoutes).run()
+    yield fiber
 
   private def registerRuntimeMetrics(using MeterProvider[IO]): Resource[IO, Unit] =
     for
@@ -55,21 +59,23 @@ class FishnetApp(res: AppResources, config: AppConfig, metricsRoute: HttpRoutes[
     LoggerFactory[IO],
     MeterProvider[IO]
 ):
-  given Logger[IO]              = LoggerFactory[IO].getLoggerFromName("FishnetApp")
-  def run(): Resource[IO, Unit] =
+  given Logger[IO] = LoggerFactory[IO].getLoggerFromName("FishnetApp")
+
+  def run(): Resource[IO, Fiber[IO, Throwable, Unit]] =
     for
       given Meter[IO] <- MeterProvider[IO].get("lila.fishnet").toResource
       executor        <- createExecutor
       httpRoutes      <- HttpApi(executor, HealthCheck(), config.server).routes.toResource
       allRoutes = httpRoutes <+> metricsRoute
-      _ <- RedisSubscriberJob(executor, res.redisPubsub).run()
-      _ <- WorkCleaningJob(executor).run()
-      _ <- Logger[IO]
+      supervisor <- Supervisor[IO]
+      fiber      <- supervisor.supervise(RedisSubscriberJob(executor, res.redisPubsub).runIO).toResource
+      _          <- WorkCleaningJob(executor).run()
+      _          <- Logger[IO]
         .info(s"Starting server on ${config.server.host.toString}:${config.server.port.toString}")
         .toResource
       _ <- Logger[IO].info(s"BuildInfo: ${BuildInfo.toString}").toResource
       _ <- MkHttpServer().newEmber(config.server, allRoutes.orNotFound)
-    yield ()
+    yield fiber
 
   private def createExecutor(using meter: Meter[IO]): Resource[IO, Executor] =
     val lilaClient = LilaClient(res.redisPubsub)
