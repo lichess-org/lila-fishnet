@@ -1,6 +1,5 @@
 package lila.fishnet
 
-import cats.effect.std.Supervisor
 import cats.effect.{ IO, IOApp, Resource }
 import cats.syntax.all.*
 import lila.fishnet.http.*
@@ -58,9 +57,9 @@ class FishnetApp(res: AppResources, config: AppConfig, metricsRoute: HttpRoutes[
 ):
   given Logger[IO] = LoggerFactory[IO].getLogger
 
-  def run(): IO[Unit] =
+  def run() =
     makeResource().use:
-      _.join *>
+      _ *>
         Logger[IO].error("Redis Connection is closed. FishnetApp terminated") *>
         IO.raiseError(new Exception("Redis Connection is closed. FishnetApp terminated"))
 
@@ -69,12 +68,11 @@ class FishnetApp(res: AppResources, config: AppConfig, metricsRoute: HttpRoutes[
       executor   <- createExecutor.toResource
       httpRoutes <- HttpApi(executor, HealthCheck(), config.server).routes.toResource
       allRoutes = httpRoutes <+> metricsRoute
-      given Supervisor[IO] <- Supervisor[IO]
-      fiber                <- RedisSubscriberJob(executor, res.redisPubsub).run()
-      _                    <- WorkCleaningJob(executor).run()
-      _                    <- banner.toResource
-      _                    <- MkHttpServer().newEmber(config.server, allRoutes.orNotFound)
-    yield fiber
+      io <- RedisSubscriberJob(executor, res.redisPubsub).run()
+      _  <- WorkCleaningJob(executor).run()
+      _  <- banner.toResource
+      _  <- MkHttpServer().newEmber(config.server, allRoutes.orNotFound)
+    yield io
 
   private def banner =
     Logger[IO].info(s"==============================================") *>
