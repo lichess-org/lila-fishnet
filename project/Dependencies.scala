@@ -6,13 +6,13 @@ object Dependencies {
   val jitpack   = "jitpack".at("https://jitpack.io")
 
   object V {
-    val catsEffect = "3.6.3"
-    val chess      = "17.12.3"
-    val circe      = "0.14.15"
-    val ciris      = "3.11.0"
-    val fs2        = "3.12.2"
-    val http4s     = "0.23.32"
-    val otel4s     = "0.13.2"
+    val catsEffect   = "3.6.3"
+    val chess        = "17.12.3"
+    val circe        = "0.14.15"
+    val ciris        = "3.11.0"
+    val fs2          = "3.12.2"
+    val http4s       = "0.23.32"
+    val otel4s       = "0.13.2"
     val otel4sHttp4s = "0.14.1"
   }
 
@@ -42,13 +42,13 @@ object Dependencies {
   val log4Cats = "org.typelevel" %% "log4cats-slf4j"  % "2.7.0"
   val logback  = "ch.qos.logback" % "logback-classic" % "1.5.19"
 
-  val otel4sCore =  "org.typelevel" %% "otel4s-core" % V.otel4s
-  val otel4sPrometheusExporter = "org.typelevel" %% "otel4s-sdk-exporter-prometheus" % V.otel4s
-  val otel4sSdk = "org.typelevel" %% "otel4s-sdk" % V.otel4s
-  val otel4sInstrumentationMetrics =   "org.typelevel" %% "otel4s-instrumentation-metrics" % V.otel4s
-  val otel4sMetrics = "org.typelevel" %% "otel4s-experimental-metrics" % "0.7.0"
+  val otel4sCore                   = "org.typelevel" %% "otel4s-core"                    % V.otel4s
+  val otel4sPrometheusExporter     = "org.typelevel" %% "otel4s-sdk-exporter-prometheus" % V.otel4s
+  val otel4sSdk                    = "org.typelevel" %% "otel4s-sdk"                     % V.otel4s
+  val otel4sInstrumentationMetrics = "org.typelevel" %% "otel4s-instrumentation-metrics" % V.otel4s
+  val otel4sMetrics                = "org.typelevel" %% "otel4s-experimental-metrics"    % "0.7.0"
 
-  val otel4sHttp4sCore = "org.http4s" %% "http4s-otel4s-middleware-core" % V.otel4sHttp4s
+  val otel4sHttp4sCore    = "org.http4s" %% "http4s-otel4s-middleware-core"    % V.otel4sHttp4s
   val otel4sHttp4sMetrics = "org.http4s" %% "http4s-otel4s-middleware-metrics" % V.otel4sHttp4s
 
   val chessTestKit     = "com.github.lichess-org.scalachess" %% "scalachess-test-kit"       % V.chess
