@@ -9,11 +9,11 @@ object Dependencies {
     val catsEffect   = "3.6.3"
     val chess        = "17.12.3"
     val circe        = "0.14.15"
-    val ciris        = "3.11.0"
+    val ciris        = "3.11.1"
     val fs2          = "3.12.2"
-    val http4s       = "0.23.32"
-    val otel4s       = "0.13.2"
-    val otel4sHttp4s = "0.14.1"
+    val http4s       = "0.23.33"
+    val otel4s       = "0.14.0"
+    val otel4sHttp4s = "0.15.0"
   }
 
   def http4s(artifact: String) = "org.http4s" %% s"http4s-$artifact" % V.http4s
@@ -46,13 +46,13 @@ object Dependencies {
   val otel4sPrometheusExporter     = "org.typelevel" %% "otel4s-sdk-exporter-prometheus" % V.otel4s
   val otel4sSdk                    = "org.typelevel" %% "otel4s-sdk"                     % V.otel4s
   val otel4sInstrumentationMetrics = "org.typelevel" %% "otel4s-instrumentation-metrics" % V.otel4s
-  val otel4sMetrics                = "org.typelevel" %% "otel4s-experimental-metrics"    % "0.7.0"
+  val otel4sMetrics                = "org.typelevel" %% "otel4s-experimental-metrics"    % "0.8.0"
 
   val otel4sHttp4sCore    = "org.http4s" %% "http4s-otel4s-middleware-core"    % V.otel4sHttp4s
   val otel4sHttp4sMetrics = "org.http4s" %% "http4s-otel4s-middleware-metrics" % V.otel4sHttp4s
 
   val chessTestKit     = "com.github.lichess-org.scalachess" %% "scalachess-test-kit"       % V.chess
-  val testContainers   = "com.dimafeng"                      %% "testcontainers-scala-core" % "0.43.0" % Test
+  val testContainers   = "com.dimafeng"                      %% "testcontainers-scala-core" % "0.43.6" % Test
   val weaver           = "org.typelevel"                     %% "weaver-cats"               % "0.10.1" % Test
   val weaverScalaCheck = "org.typelevel"                     %% "weaver-scalacheck"         % "0.10.1" % Test
   val catsEffectTestKit = "org.typelevel" %% "cats-effect-testkit" % V.catsEffect % Test
