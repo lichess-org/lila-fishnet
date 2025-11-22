@@ -7,7 +7,7 @@ object Dependencies {
 
   object V {
     val catsEffect   = "3.6.3"
-    val chess        = "17.12.3"
+    val chess        = "17.12.4"
     val circe        = "0.14.15"
     val ciris        = "3.11.1"
     val fs2          = "3.12.2"
@@ -40,7 +40,7 @@ object Dependencies {
   val http4sCirce  = http4s("circe")
 
   val log4Cats = "org.typelevel" %% "log4cats-slf4j"  % "2.7.0"
-  val logback  = "ch.qos.logback" % "logback-classic" % "1.5.20"
+  val logback  = "ch.qos.logback" % "logback-classic" % "1.5.21"
 
   val otel4sCore                   = "org.typelevel" %% "otel4s-core"                    % V.otel4s
   val otel4sPrometheusExporter     = "org.typelevel" %% "otel4s-sdk-exporter-prometheus" % V.otel4s
@@ -53,7 +53,7 @@ object Dependencies {
 
   val chessTestKit     = "com.github.lichess-org.scalachess" %% "scalachess-test-kit"       % V.chess
   val testContainers   = "com.dimafeng"                      %% "testcontainers-scala-core" % "0.43.6" % Test
-  val weaver           = "org.typelevel"                     %% "weaver-cats"               % "0.10.1" % Test
-  val weaverScalaCheck = "org.typelevel"                     %% "weaver-scalacheck"         % "0.10.1" % Test
+  val weaver           = "org.typelevel"                     %% "weaver-cats"               % "0.11.1" % Test
+  val weaverScalaCheck = "org.typelevel"                     %% "weaver-scalacheck"         % "0.11.1" % Test
   val catsEffectTestKit = "org.typelevel" %% "cats-effect-testkit" % V.catsEffect % Test
 }

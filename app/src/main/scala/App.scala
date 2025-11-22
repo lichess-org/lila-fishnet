@@ -20,6 +20,14 @@ object App extends IOApp.Simple:
   given Logger[IO]        = Slf4jLogger.getLogger[IO]
   given LoggerFactory[IO] = Slf4jFactory.create[IO]
 
+  override protected def computeWorkerThreadCount: Int =
+    val default = super.computeWorkerThreadCount
+    sys.env
+      .get("LILA_FISHNET_WORKER_THREADS")
+      .flatMap(_.toIntOption)
+      .filter(nb => nb > 2 && nb <= default) // at least 2 threads, at most default (number of cores)
+      .getOrElse(default)
+
   override def run: IO[Unit] =
     appR.use(_.run())
 
