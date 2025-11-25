@@ -14,8 +14,7 @@ import org.typelevel.otel4s.sdk.exporter.prometheus.*
 import org.typelevel.otel4s.sdk.metrics.SdkMetrics
 import org.typelevel.otel4s.sdk.metrics.SdkMetrics.AutoConfigured.Builder
 import org.typelevel.otel4s.sdk.metrics.exporter.MetricExporter
-import org.typelevel.otel4s.AttributeKey
-import org.typelevel.otel4s.Attribute
+import org.typelevel.otel4s.{ Attribute, AttributeKey }
 
 object App extends IOApp.Simple:
 
