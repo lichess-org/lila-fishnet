@@ -57,6 +57,7 @@ object App extends IOApp.Simple:
         Map(
           "otel.metrics.exporter"    -> "none",
           "otel.traces.exporter"     -> "none",
+          "otel.logs.exporter"       -> "none",
           "otel.resource.attributes" -> serviceAttributes
             .map(attr => s"${attr.key.name}=${attr.value.toString}")
             .mkString(",")
