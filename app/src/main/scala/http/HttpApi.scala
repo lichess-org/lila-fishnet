@@ -23,7 +23,7 @@ final class HttpApi(
   private def middleware =
     OtelMetrics
       .serverMetricsOps[IO]()
-      .map(org.http4s.server.middleware.Metrics[IO](_))
+      .map(org.http4s.server.middleware.Metrics[IO](_, none))
       .map: metrics =>
         ApiLogger(config.apiLogger).andThen(AutoSlash(_)).andThen(Timeout(60.seconds)).andThen(metrics)
 
