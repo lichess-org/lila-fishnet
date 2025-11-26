@@ -108,7 +108,7 @@ object IntegrationTest extends IOSuite:
   ).withEntity(move)
 
   private def sendWorkRequest(res: AppResources, work: String): IO[Unit] =
-    res.redisPubsub.publish("fishnet-out", work).void
+    res.redisPubsub.publish("fishnet-out", work).void *> IO.sleep(10.millis)
 
   private def client = EmberClientBuilder.default[IO].build
 
