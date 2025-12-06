@@ -7,7 +7,7 @@ object Dependencies {
 
   object V {
     val catsEffect   = "3.6.3"
-    val chess        = "17.12.5"
+    val chess        = "17.14.1"
     val circe        = "0.14.15"
     val ciris        = "3.11.1"
     val fs2          = "3.12.2"
@@ -52,7 +52,7 @@ object Dependencies {
   val otel4sHttp4sMetrics = "org.http4s" %% "http4s-otel4s-middleware-metrics" % V.otel4sHttp4s
 
   val chessTestKit     = "com.github.lichess-org.scalachess" %% "scalachess-test-kit"       % V.chess
-  val testContainers   = "com.dimafeng"                      %% "testcontainers-scala-core" % "0.43.6" % Test
+  val testContainers   = "com.dimafeng"                      %% "testcontainers-scala-core" % "0.44.0" % Test
   val weaver           = "org.typelevel"                     %% "weaver-cats"               % "0.11.2" % Test
   val weaverScalaCheck = "org.typelevel"                     %% "weaver-scalacheck"         % "0.11.2" % Test
   val catsEffectTestKit = "org.typelevel" %% "cats-effect-testkit" % V.catsEffect % Test
