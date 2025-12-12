@@ -68,7 +68,7 @@ object App extends IOApp.Simple:
     Seq(
       Attribute("service.name", "lila-fishnet"),
       Attribute("service.version", BuildInfo.version),
-      Attribute("service.instance.id", java.util.UUID.randomUUID().toString),
+      Attribute("instance", java.util.UUID.randomUUID().toString),
       Attribute("vcs.change.id", BuildInfo.gitHeadCommit)
     )
 
