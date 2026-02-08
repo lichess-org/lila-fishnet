@@ -12,7 +12,7 @@ object Dependencies {
     val ciris        = "3.12.0"
     val fs2          = "3.12.2"
     val http4s       = "0.23.33"
-    val otel4s       = "0.14.0"
+    val otel4s       = "0.15.1"
     val otel4sHttp4s = "0.15.0"
   }
 
