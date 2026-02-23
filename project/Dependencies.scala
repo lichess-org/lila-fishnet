@@ -12,8 +12,8 @@ object Dependencies {
     val ciris        = "3.12.0"
     val fs2          = "3.12.2"
     val http4s       = "0.23.33"
-    val otel4s       = "0.14.0"
-    val otel4sHttp4s = "0.15.0"
+    val otel4s       = "0.16.1"
+    val otel4sHttp4s = "0.16.0"
   }
 
   def http4s(artifact: String) = "org.http4s" %% s"http4s-$artifact" % V.http4s
@@ -42,11 +42,11 @@ object Dependencies {
   val log4Cats = "org.typelevel" %% "log4cats-slf4j"  % "2.7.0"
   val logback  = "ch.qos.logback" % "logback-classic" % "1.5.32"
 
-  val otel4sCore                   = "org.typelevel" %% "otel4s-core"                    % V.otel4s
-  val otel4sPrometheusExporter     = "org.typelevel" %% "otel4s-sdk-exporter-prometheus" % V.otel4s
-  val otel4sSdk                    = "org.typelevel" %% "otel4s-sdk"                     % V.otel4s
-  val otel4sInstrumentationMetrics = "org.typelevel" %% "otel4s-instrumentation-metrics" % V.otel4s
-  val otel4sMetrics                = "org.typelevel" %% "otel4s-experimental-metrics"    % "0.8.1"
+  val otel4sCore = "org.typelevel" %% "otel4s-core" % "0.15.1"
+  val otel4sPrometheusExporter = "org.typelevel" %% "otel4s-sdk-exporter-prometheus" % V.otel4s
+  val otel4sSdk = "org.typelevel" %% "otel4s-sdk" % V.otel4s
+  val otel4sInstrumentationMetrics = "org.typelevel" %% "otel4s-instrumentation-metrics" % "0.15.1"
+  val otel4sMetrics = "org.typelevel" %% "otel4s-experimental-metrics" % "0.9.0"
 
   val otel4sHttp4sCore    = "org.http4s" %% "http4s-otel4s-middleware-core"    % V.otel4sHttp4s
   val otel4sHttp4sMetrics = "org.http4s" %% "http4s-otel4s-middleware-metrics" % V.otel4sHttp4s
