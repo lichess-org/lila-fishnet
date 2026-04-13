@@ -3,7 +3,7 @@ import org.typelevel.scalacoptions.ScalacOptions
 
 inThisBuild(
   Seq(
-    scalaVersion          := "3.7.4",
+    scalaVersion          := "3.8.3",
     versionScheme         := Some("early-semver"),
     run / fork            := true,
     semanticdbEnabled     := true, // for scalafix
@@ -38,11 +38,11 @@ lazy val app = project
       http4sDsl,
       http4sServer,
       otel4sSdk,
-      otel4sMetrics,
       otel4sPrometheusExporter,
       otel4sInstrumentationMetrics,
       otel4sHttp4sCore,
       otel4sHttp4sMetrics,
+      otel4sSdkMetrics,
       log4Cats,
       logback % Runtime,
       redis,
