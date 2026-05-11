@@ -1,11 +1,11 @@
 import sbt.*
 
-object Dependencies {
+object Dependencies:
 
   val lilaMaven = "lila-maven".at("https://raw.githubusercontent.com/lichess-org/lila-maven/master")
   val jitpack   = "jitpack".at("https://jitpack.io")
 
-  object V {
+  object V:
     val catsEffect   = "3.7.0"
     val chess        = "17.14.1"
     val circe        = "0.14.15"
@@ -14,7 +14,6 @@ object Dependencies {
     val http4s       = "0.23.34"
     val otel4s       = "0.18.0"
     val otel4sHttp4s = "0.17.0"
-  }
 
   def http4s(artifact: String) = "org.http4s" %% s"http4s-$artifact" % V.http4s
   def circe(artifact: String)  = "io.circe"   %% s"circe-$artifact"  % V.circe
@@ -57,4 +56,3 @@ object Dependencies {
   val weaver           = "org.typelevel"                     %% "weaver-cats"               % "0.12.0" % Test
   val weaverScalaCheck = "org.typelevel"                     %% "weaver-scalacheck"         % "0.12.0" % Test
   val catsEffectTestKit = "org.typelevel" %% "cats-effect-testkit" % V.catsEffect % Test
-}

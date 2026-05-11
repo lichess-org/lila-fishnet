@@ -1,16 +1,15 @@
 import Dependencies.*
 import org.typelevel.scalacoptions.ScalacOptions
 
-inThisBuild(
-  Seq(
-    scalaVersion          := "3.8.3",
-    versionScheme         := Some("early-semver"),
-    run / fork            := true,
-    semanticdbEnabled     := true, // for scalafix
-    dockerBaseImage       := "eclipse-temurin:25-jdk-noble",
-    dockerUpdateLatest    := true,
-    dockerBuildxPlatforms := Seq("linux/amd64", "linux/arm64")
-  )
+scalaVersion      := "3.8.3"
+versionScheme     := Some("early-semver")
+run / fork := true
+semanticdbEnabled := true // for scalafix
+
+val dockerSettings = Seq(
+  dockerBaseImage       := "eclipse-temurin:25-jdk-noble",
+  dockerUpdateLatest    := true,
+  dockerBuildxPlatforms := Seq("linux/amd64", "linux/arm64")
 )
 
 lazy val app = project
@@ -54,6 +53,7 @@ lazy val app = project
       http4sClient,
       catsEffectTestKit
     ),
+    dockerSettings,
     Docker / packageName      := "lichess-org/lila-fishnet",
     Docker / maintainer       := "lichess.org",
     Docker / dockerRepository := Some("ghcr.io"),
@@ -65,9 +65,17 @@ lazy val app = project
   )
   .enablePlugins(JavaAppPackaging, DockerPlugin, BuildInfoPlugin)
 
-lazy val root = project
-  .in(file("."))
-  .aggregate(app)
+lazy val root = rootProject.autoAggregate
+
+Global / excludeLintKeys ++= Set(
+  git.gitDescribedVersion,
+  git.gitUncommittedChanges,
+  com.typesafe.sbt.packager.Keys.executableScriptName,
+  com.typesafe.sbt.packager.Keys.daemonStdoutLogFile,
+  com.typesafe.sbt.packager.Keys.rpmScriptsDirectory,
+  Keys.sourceDirectory,
+  Keys.name
+)
 
 addCommandAlias("prepare", "scalafixAll; scalafmtAll")
 addCommandAlias(
