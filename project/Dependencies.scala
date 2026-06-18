@@ -39,7 +39,7 @@ object Dependencies:
   val http4sCirce  = http4s("circe")
 
   val log4Cats = "org.typelevel" %% "log4cats-slf4j"  % "2.7.0"
-  val logback  = "ch.qos.logback" % "logback-classic" % "1.5.32"
+  val logback  = "ch.qos.logback" % "logback-classic" % "1.5.34"
 
   val otel4sCore                   = "org.typelevel" %% "otel4s-core"                    % "0.16.0"
   val otel4sPrometheusExporter     = "org.typelevel" %% "otel4s-sdk-exporter-prometheus" % V.otel4s
