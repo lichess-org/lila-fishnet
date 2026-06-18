@@ -3,7 +3,7 @@ import org.typelevel.scalacoptions.ScalacOptions
 
 scalaVersion      := "3.8.3"
 versionScheme     := Some("early-semver")
-run / fork := true
+run / fork        := true
 semanticdbEnabled := true // for scalafix
 
 val dockerSettings = Seq(
