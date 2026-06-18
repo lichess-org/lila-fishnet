@@ -12,7 +12,7 @@ object Dependencies:
     val ciris        = "3.14.1"
     val fs2          = "3.13.0"
     val http4s       = "0.23.34"
-    val otel4s       = "0.18.0"
+    val otel4s       = "0.19.0"
     val otel4sHttp4s = "0.17.0"
 
   def http4s(artifact: String) = "org.http4s" %% s"http4s-$artifact" % V.http4s
