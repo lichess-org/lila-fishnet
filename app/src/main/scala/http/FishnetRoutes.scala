@@ -5,9 +5,11 @@ import cats.*
 import cats.effect.IO
 import cats.syntax.all.*
 import org.http4s.*
+import org.http4s.Credentials.Token
 import org.http4s.circe.CirceEntityDecoder.*
 import org.http4s.circe.CirceEntityEncoder.*
 import org.http4s.dsl.Http4sDsl
+import org.http4s.headers.Authorization
 import org.http4s.server.Router
 import org.typelevel.log4cats.{ Logger, LoggerFactory }
 
@@ -20,15 +22,36 @@ final class FishnetRoutes(executor: Executor)(using LoggerFactory[IO]) extends H
   private val httpRoutes = HttpRoutes.of[IO]:
 
     case req @ POST -> Root / "acquire" =>
-      req
-        .decode[Fishnet.Acquire]: input =>
-          acquire(input.fishnet.apikey)
+      extractClientKey(req)
+        .flatMap:
+          _.fold(handleAcquireRequestBc(req))(acquire)
 
     case req @ POST -> Root / "move" / WorkIdVar(id) =>
       req
         .decode[Fishnet.PostMove]: move =>
-          executor.move(id, move.fishnet.apikey, move.move.bestmove)
-            >> acquire(move.fishnet.apikey)
+          extractClientKey(req)
+            .map(_.getOrElse(move.fishnet.apikey))
+            .flatMap: key =>
+              executor.move(id, key, move.move.bestmove)
+                >> acquire(move.fishnet.apikey)
+
+  private def extractClientKey(req: Request[IO]): IO[Option[ClientKey]] =
+    req.headers
+      .get[Authorization]
+      .fold(
+        Logger[IO].warn(s"Client doesn't provide apikey: ${req.headers.headers.mkString(";")}").as(None)
+      ) { auth =>
+        auth.credentials match
+          case Token(authScheme, token) if authScheme == AuthScheme.Bearer =>
+            ClientKey(token).some.pure[IO]
+          case _ =>
+            Logger[IO].warn(s"Client doesn't provide valid bearer token: ${auth.toString}").as(None)
+      }
+
+  private def handleAcquireRequestBc(request: Request[IO]) =
+    request
+      .decode[Fishnet.Acquire]: input =>
+        acquire(input.fishnet.apikey)
 
   private def acquire(key: ClientKey): IO[Response[IO]] =
     executor
