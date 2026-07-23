@@ -54,10 +54,8 @@ object IntegrationTest extends IOSuite:
       )
 
   test("let's play a game"): res =>
-    val fishnet               = Fishnet("2.7.2", ClientKey("secret-key"))
-    val fishnetAcquireRequest = Acquire(fishnet)
-    val bestMoves             = List(uci"e7e6", uci"d7d5", uci"d8d6")
-    val postMoves             = bestMoves.map(m => PostMove(fishnet, Move(BestMove(m).some)))
+    val bestMoves = List(uci"e7e6", uci"d7d5", uci"d8d6")
+    val postMoves = bestMoves.map(m => PostMove(Move(BestMove(m).some)))
 
     val gameId       = "CPzkP0tq"
     val lilaRequests =
@@ -76,7 +74,7 @@ object IntegrationTest extends IOSuite:
 
     def simulateFishnetClient(client: Client[IO]) =
       client
-        .expect[Json](acquireRequest(fishnetAcquireRequest))
+        .expect[Json](acquireRequest)
         .map(toWorkId)
         .flatMap: workId =>
           postMoves.foldM(workId): (workId, move) =>
@@ -98,9 +96,8 @@ object IntegrationTest extends IOSuite:
     yield x
     x.use(x => IO.pure(expect.same(x, expectedMoves)))
 
-  def acquireRequest(acquire: Acquire) =
+  def acquireRequest =
     Request[IO](method = Method.POST, uri = uri"http://localhost:9999/fishnet/acquire")
-      .withEntity(acquire)
       .transformHeaders(_.put(Authorization(Credentials.Token(AuthScheme.Bearer, "secret-key"))))
 
   def bestMoveRequest(workId: WorkId, move: PostMove) =

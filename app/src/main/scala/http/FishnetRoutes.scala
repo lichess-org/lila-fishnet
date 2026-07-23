@@ -24,16 +24,17 @@ final class FishnetRoutes(executor: Executor)(using LoggerFactory[IO]) extends H
     case req @ POST -> Root / "acquire" =>
       extractClientKey(req)
         .flatMap:
-          _.fold(handleAcquireRequestBc(req))(acquire)
+          _.fold(BadRequest("Invalid request"))(acquire)
 
     case req @ POST -> Root / "move" / WorkIdVar(id) =>
-      req
-        .decode[Fishnet.PostMove]: move =>
-          extractClientKey(req)
-            .map(_.getOrElse(move.fishnet.apikey))
-            .flatMap: key =>
-              executor.move(id, key, move.move.bestmove)
-                >> acquire(move.fishnet.apikey)
+      extractClientKey(req)
+        .flatMap:
+          _.fold(BadRequest("Invalid request")) { key =>
+            req
+              .decode[Fishnet.PostMove]: move =>
+                executor.move(id, key, move.move.bestmove)
+                  >> acquire(key)
+          }
 
   private def extractClientKey(req: Request[IO]): IO[Option[ClientKey]] =
     req.headers
@@ -47,11 +48,6 @@ final class FishnetRoutes(executor: Executor)(using LoggerFactory[IO]) extends H
           case _ =>
             Logger[IO].warn(s"Client doesn't provide valid bearer token: ${auth.toString}").as(None)
       }
-
-  private def handleAcquireRequestBc(request: Request[IO]) =
-    request
-      .decode[Fishnet.Acquire]: input =>
-        acquire(input.fishnet.apikey)
 
   private def acquire(key: ClientKey): IO[Response[IO]] =
     executor

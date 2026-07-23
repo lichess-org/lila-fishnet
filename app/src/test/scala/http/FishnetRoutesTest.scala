@@ -7,6 +7,7 @@ import io.circe.*
 import io.circe.literal.*
 import org.http4s.*
 import org.http4s.circe.*
+import org.http4s.headers.Authorization
 import org.http4s.implicits.*
 import org.typelevel.log4cats.noop.{ NoOpFactory, NoOpLogger }
 import org.typelevel.log4cats.{ Logger, LoggerFactory }
@@ -16,28 +17,14 @@ import java.time.Instant
 object FishnetRoutesTest extends SimpleIOSuite:
 
   given LoggerFactory[IO] = NoOpFactory[IO]
-  val acqurieRequestBody  = json"""{
-    "fishnet": {
-      "version": "1.0.0",
-      "apikey": "apikey"
-    }
-  }"""
 
   val postMoveRequestBody = json"""{
-    "fishnet": {
-      "version": "1.0.0",
-      "apikey": "apikey"
-    },
     "move": {
       "bestmove": "e2e4"
     }
   }"""
 
   val postNullMoveRequestBody = json"""{
-    "fishnet": {
-      "version": "1.0.0",
-      "apikey": "apikey"
-    },
     "move": {
       "bestmove": null
     }
@@ -80,19 +67,24 @@ object FishnetRoutesTest extends SimpleIOSuite:
   test("POST /fishnet/acquire should return work response"):
     val executor = createExecutor()
     val routes   = createRoutes(executor)
-    val req      = Request[IO](Method.POST, uri"/fishnet/acquire").withEntity(acqurieRequestBody)
+    val req      = Request[IO](Method.POST, uri"/fishnet/acquire")
+      .transformHeaders(_.put(Authorization(Credentials.Token(AuthScheme.Bearer, "secret-key"))))
     exepectHttpBodyAndStatus(routes, req)(expectedBody = workResponse, expectedStatus = Status.Ok)
 
   test("POST /fishnet/move should return work response"):
     val executor = createExecutor()
     val routes   = createRoutes(executor)
-    val req      = Request[IO](Method.POST, uri"/fishnet/move/workid").withEntity(postMoveRequestBody)
+    val req      = Request[IO](Method.POST, uri"/fishnet/move/workid")
+      .withEntity(postMoveRequestBody)
+      .transformHeaders(_.put(Authorization(Credentials.Token(AuthScheme.Bearer, "secret-key"))))
     exepectHttpBodyAndStatus(routes, req)(expectedBody = workResponse, expectedStatus = Status.Ok)
 
   test("POST /fishnet/move with null move should also return work response"):
     val executor = createExecutor()
     val routes   = createRoutes(executor)
-    val req      = Request[IO](Method.POST, uri"/fishnet/move/workid").withEntity(postNullMoveRequestBody)
+    val req      = Request[IO](Method.POST, uri"/fishnet/move/workid")
+      .withEntity(postNullMoveRequestBody)
+      .transformHeaders(_.put(Authorization(Credentials.Token(AuthScheme.Bearer, "secret-key"))))
     exepectHttpBodyAndStatus(routes, req)(expectedBody = workResponse, expectedStatus = Status.Ok)
 
   def exepectHttpBodyAndStatus(routes: HttpRoutes[IO], req: Request[IO])(

@@ -48,9 +48,9 @@ object Fishnet:
 
   import ChessCirceCodecs.given
 
-  case class Acquire(fishnet: Fishnet) derives Codec.AsObject
+  // case class Acquire(fishnet: Fishnet) derives Codec.AsObject
   case class Fishnet(version: String, apikey: ClientKey) derives Codec.AsObject
-  case class PostMove(fishnet: Fishnet, move: Move) derives Codec.AsObject
+  case class PostMove(move: Move) derives Codec.AsObject
   case class Move(bestmove: Option[BestMove]) derives Codec.AsObject
 
   case class Work(id: WorkId, level: Int, clock: Option[Lila.Clock], `type`: String = "move")
