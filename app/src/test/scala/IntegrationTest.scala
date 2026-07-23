@@ -15,6 +15,7 @@ import org.http4s.circe.CirceEntityDecoder.*
 import org.http4s.circe.CirceEntityEncoder.*
 import org.http4s.client.Client
 import org.http4s.ember.client.EmberClientBuilder
+import org.http4s.headers.Authorization
 import org.http4s.implicits.*
 import org.testcontainers.containers.wait.strategy.Wait
 import org.typelevel.log4cats.LoggerFactory
@@ -97,15 +98,15 @@ object IntegrationTest extends IOSuite:
     yield x
     x.use(x => IO.pure(expect.same(x, expectedMoves)))
 
-  def acquireRequest(acquire: Acquire) = Request[IO](
-    method = Method.POST,
-    uri = uri"http://localhost:9999/fishnet/acquire"
-  ).withEntity(acquire)
+  def acquireRequest(acquire: Acquire) =
+    Request[IO](method = Method.POST, uri = uri"http://localhost:9999/fishnet/acquire")
+      .withEntity(acquire)
+      .transformHeaders(_.put(Authorization(Credentials.Token(AuthScheme.Bearer, "secret-key"))))
 
-  def bestMoveRequest(workId: WorkId, move: PostMove) = Request[IO](
-    method = Method.POST,
-    uri = uri"http://localhost:9999/fishnet/move" / workId.value
-  ).withEntity(move)
+  def bestMoveRequest(workId: WorkId, move: PostMove) =
+    Request[IO](method = Method.POST, uri = uri"http://localhost:9999/fishnet/move" / workId.value)
+      .withEntity(move)
+      .transformHeaders(_.put(Authorization(Credentials.Token(AuthScheme.Bearer, "secret-key"))))
 
   private def sendWorkRequest(res: AppResources, work: String): IO[Unit] =
     res.redisPubsub.publish("fishnet-out", work).void *> IO.sleep(10.millis)
