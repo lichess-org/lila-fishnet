@@ -6,6 +6,8 @@ versionScheme     := Some("early-semver")
 run / fork        := true
 semanticdbEnabled := true // for scalafix
 
+Universal / target := baseDirectory.value / "target" / "universal"
+
 val dockerSettings = Seq(
   dockerBaseImage       := "eclipse-temurin:25-jdk-noble",
   dockerUpdateLatest    := true,
