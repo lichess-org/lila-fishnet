@@ -40,7 +40,7 @@ object Dependencies:
   val http4sCirce  = http4s("circe")
 
   val log4Cats = "org.typelevel" %% "log4cats-slf4j"  % "2.7.0"
-  val logback  = "ch.qos.logback" % "logback-classic" % "1.5.38"
+  val logback  = "ch.qos.logback" % "logback-classic" % "1.6.0"
 
   val otel4sCore                   = "org.typelevel" %% "otel4s-core"                    % V.otel4sCore
   val otel4sInstrumentationMetrics = "org.typelevel" %% "otel4s-instrumentation-metrics" % V.otel4sCore
