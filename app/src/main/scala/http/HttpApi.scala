@@ -17,7 +17,7 @@ final class HttpApi(
     config: HttpServerConfig
 )(using LoggerFactory[IO], MeterProvider[IO]):
 
-  private def fishnetRoutes = FishnetRoutes(executor).routes
+  private def fishnetRoutes = FishnetRoutes(executor, config.authMask).routes
   private def healthRoutes  = HealthRoutes(healthCheck).routes
 
   private def middleware =

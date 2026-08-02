@@ -13,7 +13,10 @@ import org.http4s.headers.Authorization
 import org.http4s.server.Router
 import org.typelevel.log4cats.{ Logger, LoggerFactory }
 
-final class FishnetRoutes(executor: Executor)(using LoggerFactory[IO]) extends Http4sDsl[IO]:
+import com.comcast.ip4s.Ipv4Address
+
+final class FishnetRoutes(executor: Executor, authMask: Ipv4Address)(using LoggerFactory[IO])
+    extends Http4sDsl[IO]:
 
   given Logger[IO] = LoggerFactory[IO].getLoggerFromName("FishnetRoutes")
 
@@ -38,7 +41,7 @@ final class FishnetRoutes(executor: Executor)(using LoggerFactory[IO]) extends H
           }
 
   private def extractClientKey(req: Request[IO]): IO[Option[ClientKey]] =
-    if req.remoteAddr.exists(addr => req.serverAddr.contains(addr)) then localClient.some.pure[IO]
+    if isLocalRequest(req) then localClient.some.pure[IO]
     else
       req.headers
         .get[Authorization]
@@ -50,6 +53,13 @@ final class FishnetRoutes(executor: Executor)(using LoggerFactory[IO]) extends H
             case _                               =>
               Logger[IO].warn(s"Client doesn't provide valid bearer token: ${auth.toString}").as(None)
         }
+
+  private def isLocalRequest(req: Request[IO]): Boolean =
+    (req.remoteAddr.flatMap(_.asIpv4), req.serverAddr.flatMap(_.asIpv4)) match
+      case (Some(remoteAddr), Some(serverAddr)) =>
+        remoteAddr.masked(authMask) == serverAddr.masked(authMask)
+      case _ => false
+
   private def acquire(key: ClientKey): IO[Response[IO]] =
     executor
       .acquire(key)
