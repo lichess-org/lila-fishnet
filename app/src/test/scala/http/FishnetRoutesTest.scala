@@ -3,6 +3,7 @@ package http
 
 import cats.effect.IO
 import cats.syntax.all.*
+import com.comcast.ip4s.Ipv4Address
 import io.circe.*
 import io.circe.literal.*
 import org.http4s.*
@@ -14,7 +15,6 @@ import org.typelevel.log4cats.{ Logger, LoggerFactory }
 import weaver.*
 
 import java.time.Instant
-import com.comcast.ip4s.Ipv4Address
 
 object FishnetRoutesTest extends SimpleIOSuite:
 

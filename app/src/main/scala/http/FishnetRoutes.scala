@@ -4,6 +4,7 @@ package http
 import cats.*
 import cats.effect.IO
 import cats.syntax.all.*
+import com.comcast.ip4s.Ipv4Address
 import org.http4s.*
 import org.http4s.Credentials.Token
 import org.http4s.circe.CirceEntityDecoder.*
@@ -12,8 +13,6 @@ import org.http4s.dsl.Http4sDsl
 import org.http4s.headers.Authorization
 import org.http4s.server.Router
 import org.typelevel.log4cats.{ Logger, LoggerFactory }
-
-import com.comcast.ip4s.Ipv4Address
 
 final class FishnetRoutes(executor: Executor, authMask: Ipv4Address)(using LoggerFactory[IO])
     extends Http4sDsl[IO]:
