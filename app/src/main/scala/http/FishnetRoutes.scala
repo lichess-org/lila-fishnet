@@ -17,7 +17,8 @@ final class FishnetRoutes(executor: Executor)(using LoggerFactory[IO]) extends H
 
   given Logger[IO] = LoggerFactory[IO].getLoggerFromName("FishnetRoutes")
 
-  private val prefixPath = "/fishnet"
+  private val prefixPath  = "/fishnet"
+  private val localClient = ClientKey("localClient")
 
   private val httpRoutes = HttpRoutes.of[IO]:
 
@@ -37,18 +38,18 @@ final class FishnetRoutes(executor: Executor)(using LoggerFactory[IO]) extends H
           }
 
   private def extractClientKey(req: Request[IO]): IO[Option[ClientKey]] =
-    req.headers
-      .get[Authorization]
-      .fold(
-        Logger[IO].warn(s"Client doesn't provide apikey: ${req.headers.headers.mkString(";")}").as(None)
-      ) { auth =>
-        auth.credentials match
-          case Token(authScheme, token) if authScheme == AuthScheme.Bearer =>
-            ClientKey(token).some.pure[IO]
-          case _ =>
-            Logger[IO].warn(s"Client doesn't provide valid bearer token: ${auth.toString}").as(None)
-      }
-
+    if req.remoteAddr.exists(addr => req.serverAddr.contains(addr)) then localClient.some.pure[IO]
+    else
+      req.headers
+        .get[Authorization]
+        .fold(
+          Logger[IO].warn(s"Client doesn't provide apikey: ${req.headers.headers.mkString(";")}").as(None)
+        ) { auth =>
+          auth.credentials match
+            case Token(AuthScheme.Bearer, token) => ClientKey(token).some.pure[IO]
+            case _                               =>
+              Logger[IO].warn(s"Client doesn't provide valid bearer token: ${auth.toString}").as(None)
+        }
   private def acquire(key: ClientKey): IO[Response[IO]] =
     executor
       .acquire(key)
