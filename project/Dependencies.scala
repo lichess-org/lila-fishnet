@@ -10,7 +10,7 @@ object Dependencies:
     val chess        = "17.14.1"
     val circe        = "0.14.16"
     val ciris        = "3.15.0"
-    val fs2          = "3.13.0"
+    val fs2          = "3.14.0"
     val http4s       = "0.23.36"
     val otel4sCore   = "1.0.1"
     val otel4sSdk    = "0.19.0"
