@@ -11,7 +11,7 @@ object Dependencies:
     val circe        = "0.14.16"
     val ciris        = "3.15.0"
     val fs2          = "3.14.0"
-    val http4s       = "0.23.36"
+    val http4s       = "0.23.37"
     val otel4sCore   = "1.1.0"
     val otel4sSdk    = "0.19.3"
     val otel4sHttp4s = "0.19.0"
