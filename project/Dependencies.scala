@@ -10,11 +10,11 @@ object Dependencies:
     val chess        = "17.14.1"
     val circe        = "0.14.16"
     val ciris        = "3.15.0"
-    val fs2          = "3.13.0"
-    val http4s       = "0.23.36"
-    val otel4sCore   = "1.0.1"
-    val otel4sSdk    = "0.19.0"
-    val otel4sHttp4s = "0.18.0"
+    val fs2          = "3.14.0"
+    val http4s       = "0.23.37"
+    val otel4sCore   = "1.1.0"
+    val otel4sSdk    = "0.19.3"
+    val otel4sHttp4s = "0.19.0"
 
   def http4s(artifact: String) = "org.http4s" %% s"http4s-$artifact" % V.http4s
   def circe(artifact: String)  = "io.circe"   %% s"circe-$artifact"  % V.circe
@@ -40,7 +40,7 @@ object Dependencies:
   val http4sCirce  = http4s("circe")
 
   val log4Cats = "org.typelevel" %% "log4cats-slf4j"  % "2.7.0"
-  val logback  = "ch.qos.logback" % "logback-classic" % "1.5.38"
+  val logback  = "ch.qos.logback" % "logback-classic" % "1.6.1"
 
   val otel4sCore                   = "org.typelevel" %% "otel4s-core"                    % V.otel4sCore
   val otel4sInstrumentationMetrics = "org.typelevel" %% "otel4s-instrumentation-metrics" % V.otel4sCore
