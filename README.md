@@ -42,6 +42,8 @@ sbt prepare
 
 ### release
 
+To tag new version and push to Github:
+
 ```bash
-sbt release with-defaults
+sbt "release with-defaults"
 ```
