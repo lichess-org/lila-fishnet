@@ -3,6 +3,7 @@ package http
 
 import cats.effect.IO
 import cats.syntax.all.*
+import com.comcast.ip4s.Ipv4Address
 import io.circe.*
 import io.circe.literal.*
 import org.http4s.*
@@ -14,6 +15,7 @@ import org.typelevel.log4cats.{ Logger, LoggerFactory }
 import weaver.*
 
 import java.time.Instant
+
 object FishnetRoutesTest extends SimpleIOSuite:
 
   given LoggerFactory[IO] = NoOpFactory[IO]
@@ -101,7 +103,7 @@ object FishnetRoutesTest extends SimpleIOSuite:
         case _ => IO.pure(failure("expected response but not found"))
 
   def createRoutes(executor: Executor): HttpRoutes[IO] =
-    FishnetRoutes(executor).routes
+    FishnetRoutes(executor, Ipv4Address.fromString("255.255.255.255").get).routes
 
   def createExecutor(): Executor = new:
     def acquire(key: ClientKey)                                  = IO.pure(task.some)

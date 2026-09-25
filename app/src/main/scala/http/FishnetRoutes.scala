@@ -4,6 +4,7 @@ package http
 import cats.*
 import cats.effect.IO
 import cats.syntax.all.*
+import com.comcast.ip4s.Ipv4Address
 import org.http4s.*
 import org.http4s.Credentials.Token
 import org.http4s.circe.CirceEntityDecoder.*
@@ -13,11 +14,13 @@ import org.http4s.headers.Authorization
 import org.http4s.server.Router
 import org.typelevel.log4cats.{ Logger, LoggerFactory }
 
-final class FishnetRoutes(executor: Executor)(using LoggerFactory[IO]) extends Http4sDsl[IO]:
+final class FishnetRoutes(executor: Executor, authMask: Ipv4Address)(using LoggerFactory[IO])
+    extends Http4sDsl[IO]:
 
   given Logger[IO] = LoggerFactory[IO].getLoggerFromName("FishnetRoutes")
 
-  private val prefixPath = "/fishnet"
+  private val prefixPath  = "/fishnet"
+  private val localClient = ClientKey("localClient")
 
   private val httpRoutes = HttpRoutes.of[IO]:
 
@@ -37,17 +40,24 @@ final class FishnetRoutes(executor: Executor)(using LoggerFactory[IO]) extends H
           }
 
   private def extractClientKey(req: Request[IO]): IO[Option[ClientKey]] =
-    req.headers
-      .get[Authorization]
-      .fold(
-        Logger[IO].warn(s"Client doesn't provide apikey: ${req.headers.headers.mkString(";")}").as(None)
-      ) { auth =>
-        auth.credentials match
-          case Token(authScheme, token) if authScheme == AuthScheme.Bearer =>
-            ClientKey(token).some.pure[IO]
-          case _ =>
-            Logger[IO].warn(s"Client doesn't provide valid bearer token: ${auth.toString}").as(None)
-      }
+    if isLocalRequest(req) then localClient.some.pure[IO]
+    else
+      req.headers
+        .get[Authorization]
+        .fold(
+          Logger[IO].warn(s"Client doesn't provide apikey: ${req.headers.headers.mkString(";")}").as(None)
+        ) { auth =>
+          auth.credentials match
+            case Token(AuthScheme.Bearer, token) => ClientKey(token).some.pure[IO]
+            case _                               =>
+              Logger[IO].warn(s"Client doesn't provide valid bearer token: ${auth.toString}").as(None)
+        }
+
+  private def isLocalRequest(req: Request[IO]): Boolean =
+    (req.remoteAddr.flatMap(_.asIpv4), req.serverAddr.flatMap(_.asIpv4)) match
+      case (Some(remoteAddr), Some(serverAddr)) =>
+        remoteAddr.masked(authMask) == serverAddr.masked(authMask)
+      case _ => false
 
   private def acquire(key: ClientKey): IO[Response[IO]] =
     executor

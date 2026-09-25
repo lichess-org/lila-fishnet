@@ -41,7 +41,13 @@ object IntegrationTest extends IOSuite:
     yield res
 
   def testAppConfig(redis: RedisConfig) = AppConfig(
-    server = HttpServerConfig(ip"0.0.0.0", port"9999", apiLogger = false, shutdownTimeout = 30),
+    server = HttpServerConfig(
+      ip"0.0.0.0",
+      port"9999",
+      apiLogger = false,
+      shutdownTimeout = 30,
+      ipv4"255.255.255.255"
+    ),
     redis = redis,
     executor = ExecutorConfig(maxSize = 300)
   )
