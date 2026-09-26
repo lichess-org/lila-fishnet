@@ -13,7 +13,7 @@ object Dependencies:
     val fs2          = "3.14.0"
     val http4s       = "0.23.37"
     val otel4sCore   = "1.1.0"
-    val otel4sSdk    = "0.19.3"
+    val otel4sSdk    = "0.19.4"
     val otel4sHttp4s = "0.19.0"
 
   def http4s(artifact: String) = "org.http4s" %% s"http4s-$artifact" % V.http4s
