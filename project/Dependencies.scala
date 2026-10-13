@@ -32,7 +32,7 @@ object Dependencies:
   val cirisCore  = "is.cir" %% "ciris"        % V.ciris
   val cirisHtt4s = "is.cir" %% "ciris-http4s" % V.ciris
 
-  val redis = "io.chrisdavenport" %% "rediculous" % "0.5.1"
+  val redis = "io.chrisdavenport" %% "rediculous" % "0.6.0"
 
   val http4sDsl    = http4s("dsl")
   val http4sServer = http4s("ember-server")
