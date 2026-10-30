@@ -9,3 +9,16 @@ RUNNING_PID
 # docker sbt
 /?
 backup.json
+.bsp
+.vscode
+
+# Devenv
+.devenv*
+devenv.local.nix
+devenv.local.yaml
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
