@@ -9,7 +9,7 @@ object Dependencies:
     val catsEffect   = "3.7.1"
     val chess        = "17.14.1"
     val circe        = "0.14.17"
-    val ciris        = "3.15.1"
+    val ciris        = "3.15.2"
     val fs2          = "3.14.0"
     val http4s       = "0.23.38"
     val otel4sCore   = "1.1.0"
@@ -40,7 +40,7 @@ object Dependencies:
   val http4sCirce  = http4s("circe")
 
   val log4Cats = "org.typelevel" %% "log4cats-slf4j"  % "2.7.0"
-  val logback  = "ch.qos.logback" % "logback-classic" % "1.6.4"
+  val logback  = "ch.qos.logback" % "logback-classic" % "1.6.6"
 
   val otel4sCore                   = "org.typelevel" %% "otel4s-core"                    % V.otel4sCore
   val otel4sInstrumentationMetrics = "org.typelevel" %% "otel4s-instrumentation-metrics" % V.otel4sCore
