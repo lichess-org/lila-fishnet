@@ -14,7 +14,7 @@ object Dependencies:
     val http4s       = "0.23.38"
     val otel4sCore   = "1.1.0"
     val otel4sSdk    = "0.19.4"
-    val otel4sHttp4s = "0.19.0"
+    val otel4sHttp4s = "0.20.0"
 
   def http4s(artifact: String) = "org.http4s" %% s"http4s-$artifact" % V.http4s
   def circe(artifact: String)  = "io.circe"   %% s"circe-$artifact"  % V.circe
