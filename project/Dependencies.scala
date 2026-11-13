@@ -12,7 +12,7 @@ object Dependencies:
     val ciris        = "3.15.2"
     val fs2          = "3.14.0"
     val http4s       = "0.23.38"
-    val otel4sCore   = "1.1.0"
+    val otel4sCore   = "1.2.0"
     val otel4sSdk    = "0.19.4"
     val otel4sHttp4s = "0.20.0"
 
