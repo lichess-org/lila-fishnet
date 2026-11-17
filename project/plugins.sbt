@@ -11,7 +11,7 @@ addSbtPlugin("com.github.sbt" % "sbt-git" % "2.2.0")
 
 addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.13.0")
 
-addSbtPlugin("com.github.sbt" % "sbt-release" % "1.5.0")
+addSbtPlugin("com.github.sbt" % "sbt-release" % "1.6.0")
 
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.6.2")
 
